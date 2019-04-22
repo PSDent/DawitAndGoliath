@@ -2,15 +2,16 @@
 .vs/
 
 # assets
-Content/Geometry/
-Content/IgnoringAssets/
-Content/Sounds/
-Content/Mannequin/
-Content/ParagonMinions/
-Content/ParagonWraith/
-Content/StartContent/
-Content/ThirdPerson/
-Content/ThirdPersonBP/
+Content/Geometry/*
+Content/IgnoringAssets/*
+Content/Sounds/*
+Content/Mannequin/*
+Content/ParagonMinions/*
+Content/ParagonWraith/*
+Content/StartContent/*
+Content/ThirdPerson/*
+Content/ThirdPersonBP/*
+.vs/*
 
 # Compiled Object files
 *.slo
