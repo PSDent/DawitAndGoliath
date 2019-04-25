@@ -5,6 +5,9 @@
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
 #include "Online.h"
+#include "FindSessionsCallbackProxy.h"
+#include "MyGameStateBase.h"
+#include "DNGStruct.h"
 #include "Engine.h"
 #include "MyGameInstance.generated.h"
 
@@ -31,17 +34,27 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Network|Test")
 		void DestroySessionAndLeaveGame();
 
-
-
-
 	bool HostSession(TSharedPtr<const FUniqueNetId> userId, FName SessionName, bool bIsLAN, bool bIsPresence, int32 MaxNumPlayers);
 	void FindSessions(TSharedPtr<const FUniqueNetId> userId, bool bIsLAN, bool bIsPresence);
 	void OnFindSessionsComplete(bool bWasSuccessful);
 	bool JoinSession(TSharedPtr<const FUniqueNetId> UserId, FName SessionName, const FOnlineSessionSearchResult &SearchResult);
 	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Network", meta = (DisplayName = "JoinOnClicked"))
+		void JoinOnClicked(FBlueprintSessionResult sessionResult);
+	virtual void JoinOnClicked_Implementation(FBlueprintSessionResult sessionResult);
+
+	UFUNCTION(BlueprintCallable, Category = "Network")
+		void TravelToGameLevel();
+
+public:
+	UPROPERTY(BlueprintReadOnly, Category = "Network|Test")
+		TArray<FBlueprintSessionResult> sessionResultArray;
+
 protected:
+
 	TSharedPtr<FOnlineSessionSearch> SessionSearch;
+	
 	TSharedPtr<FOnlineSessionSettings> SessionSetting;
 	FName mMapName;
 
@@ -69,8 +82,6 @@ protected:
 	virtual void OnStartOnlineGameComplete(FName SessionName, bool bWasSuccessful);
 	virtual void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
 
-
 private:
-
-
+	TMap<FString, FSessionPlayersInfo> sessionRoleInfo;
 };

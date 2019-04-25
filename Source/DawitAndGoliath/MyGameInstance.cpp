@@ -9,7 +9,6 @@ UMyGameInstance::UMyGameInstance(const FObjectInitializer& ObjectInitializer) : 
 	OnFindSessionsCompleteDelegate = FOnFindSessionsCompleteDelegate::CreateUObject(this, &UMyGameInstance::OnFindSessionsComplete);
 	OnJoinSessionCompleteDelegate = FOnJoinSessionCompleteDelegate::CreateUObject(this, &UMyGameInstance::OnJoinSessionComplete);
 	OnDestroySessionCompleteDelegate = FOnDestroySessionCompleteDelegate::CreateUObject(this, &UMyGameInstance::OnDestroySessionComplete);
-
 }
 
 bool UMyGameInstance::HostSession(TSharedPtr<const FUniqueNetId> userId, FName SessionName, bool bIsLAN, bool bIsPresence, int32 MaxNumPlayers)
@@ -34,10 +33,11 @@ bool UMyGameInstance::HostSession(TSharedPtr<const FUniqueNetId> userId, FName S
 			SessionSetting->bAllowJoinViaPresence = true;
 			SessionSetting->bAllowJoinViaPresenceFriendsOnly = false;
 			SessionSetting->Set(SETTING_MAPNAME, FString("NewMap"), EOnlineDataAdvertisementType::ViaOnlineService);
+			
+			//SessionSetting->Settings.Add(FName("SESSION_NAME"), SessionSetting);
 
 			OnCreateSessionCompleteDelegateHandle = Sessions->AddOnCreateSessionCompleteDelegate_Handle(OnCreateSessionCompleteDelegate);
 			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, "SUCCESS");
-
 
 			return Sessions->CreateSession(*userId, SessionName, *SessionSetting);
 		}
@@ -135,21 +135,33 @@ void UMyGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 		IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();
 		if (Sessions.IsValid())
 		{
+			UGameplayStatics::OpenLevel(GetWorld(), "ServerList", true, "listen");
+
 			Sessions->ClearOnFindSessionsCompleteDelegate_Handle(OnFindSessionsCompleteDelegateHandle);
 			GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("Num Search Results: %d"), SessionSearch->SearchResults.Num()));
 
 			if (SessionSearch->SearchResults.Num() > 0)
 			{
+				//SessionSearch->SearchResults
+				int sessionNum = SessionSearch->SearchResults.Num();
+				sessionResultArray.Init(FBlueprintSessionResult(), sessionNum);
 				for (int32 SearchIdx = 0; SearchIdx < SessionSearch->SearchResults.Num(); ++SearchIdx)
 				{
+					sessionResultArray[SearchIdx].OnlineResult = SessionSearch->SearchResults[SearchIdx];
+
 					GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("Session Number: %d | Sessionname: %s "), SearchIdx + 1, *(SessionSearch->SearchResults[SearchIdx].Session.OwningUserName)));
 				}
 			}
 
 		}
-	}
+	} 
 }
 
+// 호스트가 레벨을 옮기면
+// 세션이 종료되고 새로운 세션이 만들어지거나 파괴되는것으로 보임.
+// 아니면, 호스트를 제외한 클라이언트들이 호스트의 레벨을 따라오지 못하여
+// 생기는 문제로서 판단이 됨.
+// 이를 염두에 둘 것.
 bool UMyGameInstance::JoinSession(TSharedPtr<const FUniqueNetId> UserId, FName SessionName, const FOnlineSessionSearchResult &SearchResult)
 {
 	bool bSuccessful = false;
@@ -183,12 +195,16 @@ void UMyGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCom
 		{
 			Sessions->ClearOnJoinSessionCompleteDelegate_Handle(OnJoinSessionCompleteDelegateHandle);
 			APlayerController * const PlayerController = GetFirstLocalPlayerController();
-		
+			
 			FString TravelURL;
-
+			
 			if (PlayerController && Sessions->GetResolvedConnectString(SessionName, TravelURL))
 			{
-				PlayerController->ClientTravel(TravelURL, ETravelType::TRAVEL_Absolute);
+				PlayerController->ClientTravel(TravelURL, ETravelType::TRAVEL_Absolute, true);
+				AGameStateBase *gameStateBase =  UGameplayStatics::GetGameState(GetWorld());
+				TArray<APlayerState*> playerArr = gameStateBase->PlayerArray;
+
+				//CallFunctionByNameWithArguments
 			}
 		}
 	}
@@ -203,7 +219,7 @@ void UMyGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSucce
 	if (OnlineSub)
 	{
 		IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();
-
+		
 		if (Sessions.IsValid())
 		{
 			Sessions->ClearOnDestroySessionCompleteDelegate_Handle(OnDestroySessionCompleteDelegateHandle);
@@ -267,4 +283,23 @@ void UMyGameInstance::DestroySessionAndLeaveGame()
 			Sessions->DestroySession(GameSessionName);
 		}
 	}
+}
+
+void UMyGameInstance::JoinOnClicked_Implementation(FBlueprintSessionResult sessionResult)
+{
+	ULocalPlayer * const Player = GetFirstGamePlayer();
+
+	JoinSession(Player->GetPreferredUniqueNetId().GetUniqueNetId(), GameSessionName, sessionResult.OnlineResult);
+}
+
+void UMyGameInstance::TravelToGameLevel()
+{
+	AMyGameStateBase *gameState = Cast<AMyGameStateBase>(GetWorld()->GetGameState());
+
+	// 로비의 플레이어 직군 정보를 GameInstance에 전달
+	// 게임 플레이 레벨로 이동
+	// GameInstance에 있는 플레이어 직군 정보를 반영하여 각각 알맞은 컨트롤러를 배정
+	// 게임 시작!!
+
+	GetWorld()->ServerTravel("/Game/ThirdPersonBP/Maps/ThirdPersonExampleMap");
 }
