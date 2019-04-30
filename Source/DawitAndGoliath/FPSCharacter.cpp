@@ -108,6 +108,7 @@ bool AFPSCharacter::ServerFire_Validate(FVector loc, FRotator rot)
 void AFPSCharacter::MulticastFire_Implementation(FVector loc, FRotator rot)
 {
 	AActor* target = GetRaycastTarget(loc, rot, 10000.0f);
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, TEXT("Raycast"));
 	if (target && target->IsA(APawn::StaticClass()))
 	{
 		DealDamage(this, target, 2);

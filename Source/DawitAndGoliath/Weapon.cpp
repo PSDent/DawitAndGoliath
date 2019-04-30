@@ -12,12 +12,12 @@ Gun::Gun()
 
 }
 
-AActor* Weapon::GetTarget(FVector loc, FVector socLoc, FRotator rot, UWorld* world, Weapon weapon)
+AActor* Weapon::GetTarget(FVector loc, FVector socLoc, FRotator rot, UWorld* world, Weapon* weapon)
 {
 	return nullptr;
 }
 
-AActor* Gun::GetTarget(FVector loc, FVector socLoc, FRotator rot, UWorld* world, Weapon gun)
+AActor* Gun::GetTarget(FVector loc, FVector socLoc, FRotator rot, UWorld* world, Weapon* gun)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, TEXT("Raycast"));
 	FCollisionQueryParams params(FName(TEXT("PlayerAimCheck")), true);
@@ -25,9 +25,8 @@ AActor* Gun::GetTarget(FVector loc, FVector socLoc, FRotator rot, UWorld* world,
 	params.bReturnPhysicalMaterial = true;
 
 	FHitResult hit(ForceInit);
-
 	FVector start = loc;
-	FVector end = loc + (rot.Vector() * Cast<Gun>(gun).Range);
+	FVector end = loc + (rot.Vector() * Cast<Gun>(gun)->Range);
 
 	if (world->LineTraceSingleByChannel(hit, start, end, ECC_Visibility, params))
 	{

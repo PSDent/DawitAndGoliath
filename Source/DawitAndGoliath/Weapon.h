@@ -26,7 +26,7 @@ public:
 	USoundBase* GetFireSound() { return FireSound; }
 	FString GetName() { return Name; }
 	UClass* GetTargetClass() { return TargetClass; }
-	virtual AActor* GetTarget(FVector loc, FVector socLoc, FRotator rot, UWorld* world, Weapon weapon);
+	virtual AActor* GetTarget(FVector loc, FVector socLoc, FRotator rot, UWorld* world, Weapon* weapon);
 };
 
 class DAWITANDGOLIATH_API Gun : public Weapon
@@ -39,5 +39,5 @@ public:
 	Gun();
 
 	Gun(FString name, float damage, float attackRate, float range, float splitRange, USoundBase* fireSound, UClass* targetClass);
-	virtual AActor* GetTarget(FVector loc, FVector socLoc, FRotator rot, UWorld* world, Weapon gun) override;
+	virtual AActor* GetTarget(FVector loc, FVector socLoc, FRotator rot, UWorld* world, Weapon* gun) override;
 };
