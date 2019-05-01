@@ -9,6 +9,8 @@
 #include "MyGameStateBase.h"
 #include "DNGStruct.h"
 #include "Engine.h"
+#include "FPSCharacter.h"
+#include "DNG_RTSPawn.h"
 #include "MyGameInstance.generated.h"
 
 /**
@@ -22,17 +24,20 @@ class DAWITANDGOLIATH_API UMyGameInstance : public UGameInstance
 public:
 	UMyGameInstance(const FObjectInitializer& ObjectInitializer);
 
-	UFUNCTION(BlueprintCallable, Category = "Network|Test")
+	UFUNCTION(BlueprintCallable, Category = "Network|DNG")
 		void StartOnlineGame();
 
-	UFUNCTION(BlueprintCallable, Category = "Network|Test")
+	UFUNCTION(BlueprintCallable, Category = "Network|DNG")
 		void FindOnlineGames();
 
-	UFUNCTION(BlueprintCallable, Category = "Network|Test")
+	UFUNCTION(BlueprintCallable, Category = "Network|DNG")
 		void JoinOnlineGame();
 
-	UFUNCTION(BlueprintCallable, Category = "Network|Test")
+	UFUNCTION(BlueprintCallable, Category = "Network|DNG")
 		void DestroySessionAndLeaveGame();
+
+	UFUNCTION(BlueprintCallable, Category = "Network|DNG")
+		void InitPlayersPawn();
 
 	bool HostSession(TSharedPtr<const FUniqueNetId> userId, FName SessionName, bool bIsLAN, bool bIsPresence, int32 MaxNumPlayers);
 	void FindSessions(TSharedPtr<const FUniqueNetId> userId, bool bIsLAN, bool bIsPresence);
@@ -40,14 +45,23 @@ public:
 	bool JoinSession(TSharedPtr<const FUniqueNetId> UserId, FName SessionName, const FOnlineSessionSearchResult &SearchResult);
 	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 
+
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Network", meta = (DisplayName = "JoinOnClicked"))
 		void JoinOnClicked(FBlueprintSessionResult sessionResult);
 	virtual void JoinOnClicked_Implementation(FBlueprintSessionResult sessionResult);
 
 	UFUNCTION(BlueprintCallable, Category = "Network")
-		void TravelToGameLevel();
+		void TravelToGameLevel(FName sessionHostName);
+
+	FTimerHandle ha;
 
 public:
+	UPROPERTY(EditDefaultsOnly)
+		TSubclassOf<class AFPSCharacter> fpsClass;
+
+	UPROPERTY(EditDefaultsOnly)
+		TSubclassOf<class ADNG_RTSPawn> rtsClass;
+
 	UPROPERTY(BlueprintReadOnly, Category = "Network|Test")
 		TArray<FBlueprintSessionResult> sessionResultArray;
 

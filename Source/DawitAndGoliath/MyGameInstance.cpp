@@ -1,6 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MyGameInstance.h"
+#include "Kismet/GameplayStatics.h"
+#include "BaseController.h"
+
+#include "MyPlayerState.h"
 
 UMyGameInstance::UMyGameInstance(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -50,6 +54,9 @@ bool UMyGameInstance::HostSession(TSharedPtr<const FUniqueNetId> userId, FName S
 	return false;
 }
 
+// 게임 시작할 때 
+// Game Instance에 방 정보를 저장 후
+// 저장 된 정보를 통해 플레이어의 Player Controller를 달리 한다. (RTS / TPS)
 void UMyGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("OnCreateSessionComplete %s, %d"), *SessionName.ToString(), bWasSuccessful));
@@ -74,8 +81,6 @@ void UMyGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSucces
 
 void UMyGameInstance::OnStartOnlineGameComplete(FName SessionName, bool bWasSuccessful)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, FString::Printf(TEXT("a")));
-
 	IOnlineSubsystem *OnlineSub = IOnlineSubsystem::Get();
 
 	if (OnlineSub)
@@ -89,6 +94,15 @@ void UMyGameInstance::OnStartOnlineGameComplete(FName SessionName, bool bWasSucc
 
 	if (bWasSuccessful)
 	{
+		IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();
+
+		if (Sessions.IsValid())
+		{
+			FString serverName = Sessions.Get()->GetNamedSession(SessionName)->OwningUserName;
+			GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "Server Name : " + serverName);
+			sessionRoleInfo.Add(serverName, FSessionPlayersInfo());
+		}
+
 		UGameplayStatics::OpenLevel(GetWorld(), "Lobby", true, "listen");
 	}
 }
@@ -289,17 +303,85 @@ void UMyGameInstance::JoinOnClicked_Implementation(FBlueprintSessionResult sessi
 {
 	ULocalPlayer * const Player = GetFirstGamePlayer();
 
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Emerald, Player->Id);
+	
 	JoinSession(Player->GetPreferredUniqueNetId().GetUniqueNetId(), GameSessionName, sessionResult.OnlineResult);
 }
 
-void UMyGameInstance::TravelToGameLevel()
+void UMyGameInstance::TravelToGameLevel(FName sessionHostName)
 {
 	AMyGameStateBase *gameState = Cast<AMyGameStateBase>(GetWorld()->GetGameState());
+	TArray<FString> keys = gameState->GetLobbyKey();
+	TArray<FName> values = gameState->GetLobbyValue();
+	TArray<APlayerState*> playerStates = gameState->PlayerArray;
 
-	// 로비의 플레이어 직군 정보를 GameInstance에 전달
-	// 게임 플레이 레벨로 이동
-	// GameInstance에 있는 플레이어 직군 정보를 반영하여 각각 알맞은 컨트롤러를 배정
-	// 게임 시작!!
+	for (int i = 0; i < 5; ++i)
+	{
+		if (values[i] == "None") continue;
 
+		for (int j = 0; j < playerStates.Num(); ++j)
+		{
+			FString name = playerStates[j]->GetPlayerName();
+
+			if (name == values[i].ToString())
+			{
+				AMyPlayerState *state = Cast<AMyPlayerState>(playerStates[j]);
+				FString roleName;
+
+				if (keys[i].Contains("Shooter"))
+					roleName = "Shooter";
+				else if (keys[i].Contains("RTS"))
+					roleName = "RTS";
+
+				state->SetPlayRole(roleName);
+				break;
+			}
+		}
+	}
+
+	GetWorld()->GetAuthGameMode()->bUseSeamlessTravel = true;
 	GetWorld()->ServerTravel("/Game/ThirdPersonBP/Maps/ThirdPersonExampleMap");
+	
+	GetWorld()->GetTimerManager().SetTimer(ha, this, &UMyGameInstance::InitPlayersPawn, 0.1f, false, 3.0f);
+
+	//InitPlayersPawn();
+}
+
+void UMyGameInstance::InitPlayersPawn()
+{
+	AMyGameStateBase *gameState = Cast<AMyGameStateBase>(GetWorld()->GetGameState());
+	IOnlineSubsystem *OnlineSub = IOnlineSubsystem::Get();
+	IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();
+
+	if (Sessions.IsValid())
+	{
+		FString serverName = Sessions.Get()->GetNamedSession(GameSessionName)->OwningUserName;
+		TArray<AActor*> playerCtrlArr;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerController::StaticClass(), playerCtrlArr);
+
+		TArray<AActor*> startingPoint;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), startingPoint);
+
+		for (int i = 0; i < playerCtrlArr.Num(); ++i)
+		{
+			if (sessionRoleInfo.Find(serverName))
+			{
+				APawn *pawn = nullptr;
+				FActorSpawnParameters spawnInfo;
+				spawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+				FString roleName = Cast<AMyPlayerState>(Cast<APlayerController>(playerCtrlArr[i])->PlayerState)->playRoleName;
+				
+				FVector pos(startingPoint[0]->GetActorLocation());
+				FRotator rot(0,0,0);
+				if (roleName == "Shooter")
+					pawn = GetWorld()->SpawnActor<AFPSCharacter>(fpsClass, pos, rot, spawnInfo);
+				else if (roleName == "RTS")
+					pawn = GetWorld()->SpawnActor<ADNG_RTSPawn>(ADNG_RTSPawn::StaticClass(), spawnInfo);
+
+				APlayerController* playerController = Cast<APlayerController>(playerCtrlArr[i]);
+				playerController->Possess(pawn);
+			}
+		}
+	}
 }

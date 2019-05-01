@@ -19,14 +19,33 @@ class DAWITANDGOLIATH_API AMyGameStateBase : public AGameStateBase
 public:
 	AMyGameStateBase();
 
+
+	void ChoosePlayerRole(const FString &roleName, const FName &playerName);
+
+	UFUNCTION(BlueprintCallable)
+		TArray<FString> GetLobbyKey();
+
+	UFUNCTION(BlueprintCallable)
+		TArray<FName> GetLobbyValue();
+
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
+
+
 public:
 	void SetSessionPlayersInfo(FSessionPlayersInfo &sessionPlayersInfo);
-	FSessionPlayersInfo GetSessionPlayersInfo();
-
-
-private:
 	
+	
+	FSessionPlayersInfo GetSessionPlayersInfo();
 private:
+
+private:
+	UPROPERTY(Replicated)
+		TArray<FString> lobbyKey;
+
+	UPROPERTY(Replicated)
+		TArray<FName> lobbyValue;
+
 	FSessionPlayersInfo sessionPlayersInfo;
 	
+
 };

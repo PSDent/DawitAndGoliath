@@ -67,12 +67,15 @@ void AFPSCharacter::BeginPlay()
 		if (c->GetFName() == FName(TEXT("DefaultStatePos")))
 			Cam3rd->RelativeLocation = c->RelativeLocation;
 
+	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "FPSCHARACTER");
+
 }
 
 // Called every frame
 void AFPSCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, GetController()->GetName());
 
 	if (IsLeftMousePressed && IsFireable)
 	{
@@ -107,6 +110,8 @@ bool AFPSCharacter::ServerFire_Validate(FVector loc, FRotator rot)
 
 void AFPSCharacter::MulticastFire_Implementation(FVector loc, FRotator rot)
 {
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, "Fire");
+
 	AActor* target = GetRaycastTarget(loc, rot, 10000.0f);
 	if (target && target->IsA(APawn::StaticClass()))
 	{
