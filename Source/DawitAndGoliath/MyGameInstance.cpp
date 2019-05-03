@@ -149,7 +149,7 @@ void UMyGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 		IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();
 		if (Sessions.IsValid())
 		{
-			UGameplayStatics::OpenLevel(GetWorld(), "ServerList", true, "listen");
+			UGameplayStatics::OpenLevel(GetWorld(), "ServerList_Level", true, "listen");
 
 			Sessions->ClearOnFindSessionsCompleteDelegate_Handle(OnFindSessionsCompleteDelegateHandle);
 			GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("Num Search Results: %d"), SessionSearch->SearchResults.Num()));
@@ -340,7 +340,7 @@ void UMyGameInstance::TravelToGameLevel(FName sessionHostName)
 	}
 
 	GetWorld()->GetAuthGameMode()->bUseSeamlessTravel = true;
-	GetWorld()->ServerTravel("/Game/ThirdPersonBP/Maps/ThirdPersonExampleMap");
+	GetWorld()->ServerTravel("/Game/Blueprints/ThirdPersonExampleMap");
 	
 	GetWorld()->GetTimerManager().SetTimer(ha, this, &UMyGameInstance::InitPlayersPawn, 0.1f, false, 3.0f);
 
@@ -377,9 +377,9 @@ void UMyGameInstance::InitPlayersPawn()
 				if (roleName == "Shooter")
 					pawn = GetWorld()->SpawnActor<AFPSCharacter>(fpsClass, pos, rot, spawnInfo);
 				else if (roleName == "RTS")
-					pawn = GetWorld()->SpawnActor<ADNG_RTSPawn>(ADNG_RTSPawn::StaticClass(), spawnInfo);
+					pawn = GetWorld()->SpawnActor<ADNG_RTSPawn>(rtsClass, pos, rot, spawnInfo);
 
-				APlayerController* playerController = Cast<APlayerController>(playerCtrlArr[i]);
+				ABaseController* playerController = Cast<ABaseController>(playerCtrlArr[i]);
 				playerController->Possess(pawn);
 			}
 		}

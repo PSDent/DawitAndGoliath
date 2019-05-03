@@ -15,7 +15,10 @@ public class DawitAndGoliath : ModuleRules
             "InputCore",
             "OnlineSubsystem",
             "OnlineSubsystemNull",
-            "OnlineSubsystemUtils"
+            "OnlineSubsystemUtils",
+            "UMG",
+            "Slate",
+            "SlateCore"
         }
         );
 

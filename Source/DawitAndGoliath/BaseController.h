@@ -17,6 +17,7 @@ class DAWITANDGOLIATH_API ABaseController : public APlayerController
 public:
 	ABaseController();
 	void BeginPlay() override;
+	void Possess(APawn *pawn) override;
 
 private:
 
