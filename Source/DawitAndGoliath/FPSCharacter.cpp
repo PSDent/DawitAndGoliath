@@ -1,16 +1,21 @@
-	// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "FPSCharacter.h"
 #include "FPSGameMode.h"
 #include "TestEnemyPawn.h"
+#include "UnrealNetwork.h"
+#include "FireParam.h"
 
 // Sets default values
 AFPSCharacter::AFPSCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
 	bAlwaysRelevant = true;
+
+	IsFireable = true;
+	IsLeftMousePressed = false;
 
 	SpringArm3rd = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm3rd"));
 	SpringArm3rd->SetupAttachment(RootComponent);
@@ -22,17 +27,13 @@ AFPSCharacter::AFPSCharacter()
 
 	Cam3rd = CreateDefaultSubobject<UCameraComponent>(FName(TEXT("Camera3rd")));
 	Cam3rd->SetupAttachment(SpringArm3rd, USpringArmComponent::SocketName);
-	SpringArm3rd->SetNetAddressable();
+	Cam3rd->SetIsReplicated(true);
 	SpringArm3rd->SetNetAddressable();
 	SpringArm3rd->SetIsReplicated(true);
-	SpringArm3rd->SetIsReplicated(true);
+
 
 	ConstructorHelpers::FObjectFinder<USoundBase> gunFireSound(
 		TEXT("/Game/Sounds/WR_fire")
-	);
-
-	ConstructorHelpers::FObjectFinder<UAnimMontage> fireMontage(
-		TEXT("/Game/ParagonWraith/Characters/Heroes/Wraith/Animations/Fire_A_Fast_V1_Montage")
 	);
 
 	ConstructorHelpers::FObjectFinder<UParticleSystem> fireParticle(
@@ -43,13 +44,9 @@ AFPSCharacter::AFPSCharacter()
 		TEXT("/Game/ParagonWraith/FX/Particles/Abilities/Primary/FX/P_Wraith_Primary_MuzzleFlash")
 	);
 
-	GunFireSound = gunFireSound.Object;
-	FireMontage = fireMontage.Object;
 	FireParticle = fireParticle.Object;
 	MuzzleFlame = muzzleFlame.Object;
-
-	IsFireable = true;
-	IsLeftMousePressed = false;
+	GunFireSound = gunFireSound.Object;
 }
 
 // Called when the game starts or when spawned
@@ -65,7 +62,25 @@ void AFPSCharacter::BeginPlay()
 	SpringArm3rd->GetChildrenComponents(true, comps);
 	for (USceneComponent* c : comps)
 		if (c->GetFName() == FName(TEXT("DefaultStatePos")))
+		{
 			Cam3rd->RelativeLocation = c->RelativeLocation;
+		}
+
+
+	UGun* gun = NewObject<UGun>();
+	gun->GunInit(TEXT("Rifle"), 20, 0.1f, 10000, 1.0f, GunFireSound);
+	gun->SetParticle(FireParticle, MuzzleFlame);
+	Weapons.Add(gun);
+	gun = NewObject<UGun>();
+	gun->GunInit(TEXT("MachineGun"), 10, 0.03f, 10000, 3.0f, GunFireSound);
+	gun->SetParticle(FireParticle, MuzzleFlame);
+	Weapons.Add(gun);
+	CurrentWeapon = Weapons[0];
+
+
+	FireDele.BindLambda([&] {
+		Fire(FFireParam());
+	});
 
 }
 
@@ -74,118 +89,107 @@ void AFPSCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (IsLeftMousePressed && IsFireable)
-	{
-		FRotator rot = Cam3rd->GetComponentRotation();
-		rot.Yaw = FMath::RandRange(rot.Yaw - 1.f, rot.Yaw + 1.f);
-		rot.Pitch = FMath::RandRange(rot.Pitch - 1.f, rot.Pitch + 1.f);
-		Fire(Cam3rd->GetComponentLocation(), rot);
-	}
+	//if (IsLeftMousePressed && IsFireable)
+	//{
+	//	FFireParam params;
+
+	//	Fire(params);
+	//}
 }
 
-void AFPSCharacter::Fire(FVector loc, FRotator rot)
+void AFPSCharacter::Fire(FFireParam params)
 {
+
 	if (Role == ROLE_Authority)
 	{
-		MulticastFire(loc, rot);
+		MulticastFire(params);
 	}
 	else
 	{
-		ServerFire(loc, rot);
+		params.Location = Cam3rd->GetComponentLocation();
+		params.Rotation = Cam3rd->GetComponentRotation();
+		params.World = GetWorld();
+		params.Damage = CurrentWeapon->GetDamage();
+		params.AttackRate = CurrentWeapon->GetAttackRate();
+		params.SocketLocation = GetMesh()->GetSocketLocation(TEXT("gun_barrel"));
+
+		FRotator& rot = params.Rotation;
+		rot.Yaw = FMath::RandRange(rot.Yaw - SplitRange, rot.Yaw + SplitRange);
+		rot.Pitch = FMath::RandRange(rot.Pitch - SplitRange, rot.Pitch + SplitRange);
+		ServerFire(params);
 	}
 }
 
-void AFPSCharacter::ServerFire_Implementation(FVector loc, FRotator rot)
+void AFPSCharacter::ServerFire_Implementation(FFireParam params)
 {
-	Fire(loc, rot);
+	Fire(params);
 }
 
-bool AFPSCharacter::ServerFire_Validate(FVector loc, FRotator rot)
+void AFPSCharacter::MulticastFire_Implementation(FFireParam params)
 {
-	return true;
-}
-
-void AFPSCharacter::MulticastFire_Implementation(FVector loc, FRotator rot)
-{
-	AActor* target = GetRaycastTarget(loc, rot, 10000.0f);
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, TEXT("Raycast"));
-	if (target && target->IsA(APawn::StaticClass()))
-	{
-		DealDamage(this, target, 2);
-	}
-
 	UGameplayStatics::PlaySoundAtLocation(
 		GetWorld(),
 		GunFireSound,
-		RootComponent->GetComponentLocation() + FVector(100.f, 0.f, 0.f)
+		RootComponent->GetComponentLocation()
 	);
+
+	//CurrentWeapon 줄에서 계속 크래시 (무기 바꾸면서 총 쏘다보면 가끔 크래시)
+	AActor* target = CurrentWeapon->GetTarget(params.Location, params.SocketLocation, params.Rotation, GetWorld(), this);
+	if (target)
+	{
+		//UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), FireParticle, target->GetActorLocation(), FRotator::ZeroRotator);
+
+	}
+	//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, FString::SanitizeFloat(params.AttackRate));
 	IsFireable = false;
-	PlayAnimMontage(FireMontage, 1.f);
-	GetWorldTimerManager().SetTimer(GunFireTimerHandle, this, &AFPSCharacter::EnableFire, 0.1f);
 }
 
-bool AFPSCharacter::MulticastFire_Validate(FVector loc, FRotator rot)
+void AFPSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AFPSCharacter, Cam3rd);
+	DOREPLIFETIME(AFPSCharacter, CurrentWeapon);
+
+}
+
+bool AFPSCharacter::ServerFire_Validate(FFireParam params)
 {
 	return true;
 }
 
-AActor* AFPSCharacter::GetRaycastTarget(FVector loc, FRotator rot, float length)
+bool AFPSCharacter::MulticastFire_Validate(FFireParam params)
 {
-	FCollisionQueryParams params(FName(TEXT("PlayerAimCheck")), true);
-	params.bTraceAsyncScene = true;
-	params.bReturnPhysicalMaterial = true;
+	return true;
+}
 
-	FHitResult hit(ForceInit);
-
-	FVector start = loc;
-	FVector end = loc + (rot.Vector() * length);
-
-	FTransform soc = GetMesh()->GetSocketTransform(TEXT("gun_barrel"));
-	if (GetWorld()->LineTraceSingleByChannel(hit, start, end, ECC_Visibility, params))
+void AFPSCharacter::ChangeWeapon(EWeaponType type)
+{
+	switch (type)
 	{
-		GetWorld()->LineTraceSingleByChannel(
-			hit,
-			soc.GetLocation(),
-			end,
-			ECC_Visibility,
-			params
-		);
-
-		if (!hit.GetActor()) return nullptr;
-
-		if (!hit.GetActor()->IsA(APawn::StaticClass()))
-			DrawDebugLine(GetWorld(), start, end, FColor::Red, false, 3.0f);
-		else
-			DrawDebugLine(GetWorld(), soc.GetLocation(), hit.Location, FColor::Yellow, false, 3.0f);
-
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), FireParticle, hit.Location, FRotator::ZeroRotator);
+	case EWeaponType::Rifle:
+		CurrentWeapon = Weapons[0];
+		break;
+	case EWeaponType::MachineGun:
+		CurrentWeapon = Weapons[1];
+		break;
+	default:
+		CurrentWeapon = Weapons[0];
 	}
 
-	//FRotator socRot = rot.Add(0, 90, 0);
-	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleFlame,
-		soc.GetLocation(), rot);
-
-	return hit.GetActor();
+	if (IsLeftMousePressed)
+	{
+		GetWorldTimerManager().ClearTimer(GunFireTimerHandle);
+		SplitRange = Cast<UGun>(CurrentWeapon)->GetSplitRange();
+		GetWorldTimerManager().SetTimer(GunFireTimerHandle, FireDele, CurrentWeapon->GetAttackRate(), true, 0.0f);
+	}
 }
 
-void AFPSCharacter::DealDamage(AActor* dealer, AActor* target, float dmg)
+template <AFPSCharacter::EWeaponType T>
+void AFPSCharacter::ChangeWeapon()
 {
-	TArray<UActorComponent*> arr;
-	target->GetComponents(arr);
-
-	for (UActorComponent* c : arr)
-		if (c->IsA(UDNGProperty::StaticClass()))
-		{
-			UDNGProperty* prop = Cast<UDNGProperty>(c);
-			if (prop)
-				prop->DealDamage(dmg);
-		}
-}
-
-void AFPSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Change weapon"));
+	ChangeWeapon(T);
 }
 
 void AFPSCharacter::EnableFire()
@@ -206,6 +210,8 @@ void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AFPSCharacter::Jump);
 	PlayerInputComponent->BindAction("LeftFire", IE_Pressed, this, &AFPSCharacter::OnMousePressed);
 	PlayerInputComponent->BindAction("LeftFire", IE_Released, this, &AFPSCharacter::OnMouseReleased);
+	PlayerInputComponent->BindAction("Rifle", IE_Pressed, this, &AFPSCharacter::ChangeWeapon<EWeaponType::Rifle>);
+	PlayerInputComponent->BindAction("MachineGun", IE_Pressed, this, &AFPSCharacter::ChangeWeapon<EWeaponType::MachineGun>);
 
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
@@ -213,11 +219,14 @@ void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 void AFPSCharacter::OnMousePressed()
 {
 	IsLeftMousePressed = true;
+	SplitRange = Cast<UGun>(CurrentWeapon)->GetSplitRange();
+	GetWorldTimerManager().SetTimer(GunFireTimerHandle, FireDele, CurrentWeapon->GetAttackRate(), true, 0.0f);
 }
 
 void AFPSCharacter::OnMouseReleased()
 {
 	IsLeftMousePressed = false;
+	GetWorldTimerManager().ClearTimer(GunFireTimerHandle);
 }
 
 void AFPSCharacter::MoveForward(float amount)

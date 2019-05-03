@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Gun.h"
+#include "FireParam.h"
 #include "Engine.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
@@ -24,25 +26,25 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	virtual void Fire(FVector loc, FRotator rot);
+	virtual void Fire(FFireParam params);
 
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerFire(FVector loc, FRotator rot);
+		void ServerFire(FFireParam params);
 
-	virtual void ServerFire_Implementation(FVector loc, FRotator rot);
+	virtual void ServerFire_Implementation(FFireParam params);
 
-	virtual bool ServerFire_Validate(FVector loc, FRotator rot);
+	virtual bool ServerFire_Validate(FFireParam params);
 
 	UFUNCTION(NetMulticast, Reliable, WithValidation)
-		void MulticastFire(FVector loc, FRotator rot);
+		void MulticastFire(FFireParam params);
 
-	virtual void MulticastFire_Implementation(FVector loc, FRotator rot);
+	virtual void MulticastFire_Implementation(FFireParam params);
 
-	virtual bool MulticastFire_Validate(FVector loc, FRotator rot);
+	virtual bool MulticastFire_Validate(FFireParam params);	
 
-	virtual AActor* GetRaycastTarget(FVector loc, FRotator rot, float length);
+	//virtual AActor* GetRaycastTarget(FVector loc, FRotator rot, float length);
 
-	virtual void DealDamage(AActor* dealer, AActor* target, float dmg);
+	//virtual void DealDamage(AActor* dealer, AActor* target, float dmg);
 
 	virtual void OnMousePressed();
 
@@ -62,8 +64,21 @@ protected:
 
 	virtual void EnableFire();
 
+	enum class EWeaponType : uint8
+	{
+		Rifle,
+		MachineGun,
+		FlameThrower
+	};
+
+	template <EWeaponType T>
+	void ChangeWeapon();
+
+	void ChangeWeapon(EWeaponType type);
+
 	USpringArmComponent* SpringArm3rd;
 
+	UPROPERTY(Replicated)
 	UCameraComponent* Cam3rd;
 
 	USoundBase* GunFireSound;
@@ -75,6 +90,15 @@ protected:
 	UParticleSystem* FireParticle;
 
 	UParticleSystem* MuzzleFlame;
+
+	FTimerDelegate FireDele;
+
+	TArray<UWeapon*> Weapons;
+
+	UPROPERTY(Replicated)
+	UWeapon* CurrentWeapon;
+
+	float SplitRange;
 
 	bool IsLeftMousePressed;
 
