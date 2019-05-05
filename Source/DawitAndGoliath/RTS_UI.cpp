@@ -10,15 +10,16 @@ URTS_UI::URTS_UI(const FObjectInitializer &objInitializer) : Super(objInitialize
 }
 
 
-void URTS_UI::DrawBox(float lx, float ly, float rx, float ry)
+void URTS_UI::DrawBox(FVector2D start, FVector2D end)
 {
 	selectionBoxImage->SetVisibility(ESlateVisibility::Visible);
 	UCanvasPanelSlot *test = Cast<UCanvasPanelSlot>(selectionBoxImage->Slot);
 
-	test->SetPosition(FVector2D(lx, ly));
+	test->SetPosition(FVector2D(start.X, start.Y));
 
-	float sizeX = rx - lx;
-	float sizeY = ry - ly;
+	
+	float sizeX = end.X - start.X;
+	float sizeY = end.Y - start.Y;
 	FVector2D size(sizeX, sizeY);
 	test->SetSize(size);
 }

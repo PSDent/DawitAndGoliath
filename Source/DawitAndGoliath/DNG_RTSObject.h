@@ -4,8 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
-#include "DNG_RTSObject.generated.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/PawnMovementComponent.h"
+#include "Components/DecalComponent.h"
+#include "Materials/Material.h"
+#include "DNG_RTSUnitAIController.h"
+#include "DNG_RTSObject.generated.h"
 
 UCLASS()
 class DAWITANDGOLIATH_API ADNG_RTSObject : public APawn
@@ -15,6 +19,8 @@ class DAWITANDGOLIATH_API ADNG_RTSObject : public APawn
 public:
 	// Sets default values for this pawn's properties
 	ADNG_RTSObject();
+
+	void SetSelectedStatus(bool status);
 
 protected:
 	// Called when the game starts or when spawned
@@ -27,8 +33,19 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
+	// Basic RTS Object Command
+	void Move(FVector dest);
+
+
+public:
+	
 private:
-	UCharacterMovementComponent *characterMovementComponent;
+	UPawnMovementComponent *characterMovementComponent;
+	UDecalComponent *ringDecal;
+	ADNG_RTSUnitAIController *aiController;
+	
+
+	bool bisSelected;
 
 protected:
 

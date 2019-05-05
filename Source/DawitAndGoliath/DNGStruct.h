@@ -14,3 +14,13 @@ public:
 	TMap<FString, FString> playersRole_TMap;
 
 };
+
+USTRUCT()
+struct FCommandShortcut
+{
+	GENERATED_BODY()
+
+public:
+
+
+};

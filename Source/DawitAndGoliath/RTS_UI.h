@@ -22,7 +22,7 @@ class DAWITANDGOLIATH_API URTS_UI : public UUserWidget
 
 public:
 	URTS_UI(const FObjectInitializer &objInitializer);
-	void DrawBox(float lx, float ly, float rx, float ry);
+	void DrawBox(FVector2D start, FVector2D end);
 
 	// DPI 스케일 문제로 인해 마우스 커서 위치와
 	// 셀렉트 박스 위치가 일치하지 않는다. 

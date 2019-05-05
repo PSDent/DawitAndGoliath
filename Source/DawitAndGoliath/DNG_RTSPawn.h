@@ -7,6 +7,9 @@
 #include "Camera/CameraComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "RTS_UI.h"
+#include "DNG_RTSObject.h"
+#include "DNG_RTSBaseObject.h"
+#include "Components/BoxComponent.h"
 #include "DNG_RTSPawn.generated.h"
 
 UCLASS()
@@ -38,8 +41,8 @@ private:
 	void RMousePress();
 
 	// Unit Command
-	void SelectBox();
-
+	void DrawSelectBox();
+	void SelectionUnitsInBox();
 
 public:	
 	// Called every frame
@@ -56,15 +59,23 @@ public:
 		UCameraComponent *rtsCamera;
 
 private:
-	// TArray<ADNG_Unit> selectedUnits;
+	TArray<ADNG_RTSBaseObject*> selectedUnits;
 
+	// UI 
 	URTS_UI *userUI;
 	UGameViewportClient *viewPort;
 
+	// Mouse
 	FVector2D mousePos;
 	FVector2D mouseStartPos;
 	FVector2D viewportSize;
 
+	// SelectionBox
+	UBoxComponent *selectionBox;
+	FVector2D selectionStartPos;
+	FVector2D selectionEndPos;
+
+	// Cam
 	float camScrollBoundary;
 	float scrollSpeed;
 	float height;
