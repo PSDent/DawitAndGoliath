@@ -20,6 +20,8 @@ public:
 	ADNG_RTSBaseObject();
 
 	void SetSelectedStatus(bool status);
+	bool GetSelectedStatus() { return bIsSelected; };
+	FString GetUnitName() { return unitName; };
 
 protected:
 	// Called when the game starts or when spawned
@@ -45,6 +47,8 @@ public:
 private:
 	UDecalComponent *ringDecal;
 	ADNG_RTSUnitAIController *aiController;
+
+	FString unitName;
 
 	bool bIsHold;
 	bool bIsSelected;

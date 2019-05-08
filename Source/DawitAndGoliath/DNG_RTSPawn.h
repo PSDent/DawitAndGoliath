@@ -22,14 +22,17 @@ public:
 	ADNG_RTSPawn();
 
 	void Init();
+	void PressShiftKey() { bPressedShiftKey = true; }
+	void ReleasedShiftKey() { bPressedShiftKey = false; }
+
+	void PressCtrlKey() { bPressedCtrlKey = true; }
+	void ReleasedCtrlKey() { bPressedCtrlKey = false; }
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-
 private:
-	
 	// Cam
 	void MoveCam(float DeltaTime);
 	void MoveRightCam(float direction);
@@ -39,10 +42,13 @@ private:
 	void LMousePress();
 	void LMouseRelease();
 	void RMousePress();
+	void SelectAllSameType();
+	void DoubleClick();
 
 	// Unit Command
 	void DrawSelectBox();
 	void SelectionUnitsInBox();
+	void MoveUnits(FVector dest);
 
 public:	
 	// Called every frame
@@ -70,10 +76,18 @@ private:
 	FVector2D mouseStartPos;
 	FVector2D viewportSize;
 
+	float selectionAllRadius;
+	float unitsPlacementOffset;
+	bool bIsDoubleClicked;
+
 	// SelectionBox
 	UBoxComponent *selectionBox;
-	FVector2D selectionStartPos;
-	FVector2D selectionEndPos;
+	UCapsuleComponent *selectionCapsule;
+	FVector selectionStartPos;
+	FVector selectionEndPos;
+
+	// Selection All
+	ADNG_RTSBaseObject *baseUnit;
 
 	// Cam
 	float camScrollBoundary;
@@ -81,4 +95,6 @@ private:
 	float height;
 
 	bool bPressedLeftMouse;
+	bool bPressedShiftKey;
+	bool bPressedCtrlKey;
 };

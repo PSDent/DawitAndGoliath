@@ -19,6 +19,10 @@ ADNG_RTSBaseObject::ADNG_RTSBaseObject() : Super()
 
 	bIsHold = false;
 	bIsSelected = false;
+
+	Tags.Add("Object");
+
+	unitName = "Object";
 }
 
 // Called when the game starts or when spawned

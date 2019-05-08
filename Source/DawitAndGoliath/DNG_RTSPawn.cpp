@@ -17,11 +17,25 @@ ADNG_RTSPawn::ADNG_RTSPawn() : Super()
 	rtsCamera->SetRelativeRotation(FRotator(-60.0f, 0.0f, 0.0f));
 
 	selectionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("SelectionBox"));
+	selectionCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("SelectionCapsule"));
 
 	camScrollBoundary = 20.0f;
 	scrollSpeed = 3000.0f;
 	height = 1400.0f;
+	
+	unitsPlacementOffset = 300.0f;
+	selectionAllRadius = 2000.0f;
+
 	bPressedLeftMouse = false;
+	bPressedShiftKey = false;
+	bPressedCtrlKey = false;
+	bIsDoubleClicked = false;
+
+	baseUnit = nullptr;
+
+	
+
+	selectedUnits.Empty();
 }
 
 // Called when the game starts or when spawned
@@ -66,8 +80,17 @@ void ADNG_RTSPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 	PlayerInputComponent->BindAction("LMousePress", IE_Pressed, this, &ADNG_RTSPawn::LMousePress);
 	PlayerInputComponent->BindAction("LMousePress", IE_Released, this, &ADNG_RTSPawn::LMouseRelease);
+
 	PlayerInputComponent->BindAction("RMousePress", IE_Pressed, this, &ADNG_RTSPawn::RMousePress);
 
+	PlayerInputComponent->BindAction("Shift", IE_Pressed, this, &ADNG_RTSPawn::PressShiftKey);
+	PlayerInputComponent->BindAction("Shift", IE_Released, this, &ADNG_RTSPawn::ReleasedShiftKey);
+
+	PlayerInputComponent->BindAction("Ctrl", IE_Pressed, this, &ADNG_RTSPawn::PressCtrlKey);
+	PlayerInputComponent->BindAction("Ctrl", IE_Released, this, &ADNG_RTSPawn::ReleasedCtrlKey);
+	
+	PlayerInputComponent->BindAction("LMousePress", IE_DoubleClick, this, &ADNG_RTSPawn::SelectAllSameType);
+	PlayerInputComponent->BindAction("CtrlLMouse", IE_Pressed, this, &ADNG_RTSPawn::SelectAllSameType);
 }
 
 void ADNG_RTSPawn::Init()
@@ -138,67 +161,126 @@ void ADNG_RTSPawn::LMousePress()
 
 	FHitResult outHit;
 	Cast<APlayerController>(Controller)->GetHitResultUnderCursor(ECC_Visibility, false, outHit);
-	Cast<APlayerController>(Controller)->GetMousePosition(selectionStartPos.X, selectionStartPos.Y);
-	//selectionStartPos = outHit.Location;
-	//DrawDebugSphere(GetWorld(), selectionStartPos, 64.0f, 64, FColor::Red, true, 5.0f);
+	selectionStartPos = outHit.Location;
+	baseUnit = Cast<ADNG_RTSBaseObject>(outHit.GetActor());
+
+	if (bPressedCtrlKey)
+	{
+		SelectAllSameType();
+		baseUnit = nullptr;
+	}
+	// 이후 해당 유닛의 정보를 UI 화면 중앙 밑에 띄우게 할 것.
+	// 또한 유닛들을 2개 이상 선택했을 때, 정보창에 그 개체수들을 띄우도록 할 것.
 }
 
 void ADNG_RTSPawn::LMouseRelease()
 {
 	bPressedLeftMouse = false;
-	//mouseStartPos = FVector2D::ZeroVector;
 	userUI->selectionBoxImage->SetVisibility(ESlateVisibility::Collapsed);
+	
+	if (bIsDoubleClicked)
+	{
+		bIsDoubleClicked = false;
+		return;
+	}
 
 	FHitResult outHit;
 	Cast<APlayerController>(Controller)->GetHitResultUnderCursor(ECC_Visibility, false, outHit);
-	Cast<APlayerController>(Controller)->GetMousePosition(selectionEndPos.X, selectionEndPos.Y);
+	selectionEndPos = outHit.Location;
 
-	//selectionEndPos = outHit.Location;
-	//DrawDebugSphere(GetWorld(), selectionEndPos, 64.0f, 64, FColor::Red, true, 5.0f);
-
-
+	//if (bPressedCtrlKey || bIsStartDoubleClick)
+	//{
+	//	if (outHit.GetActor() && outHit.GetActor()->IsA(ADNG_RTSBaseObject::StaticClass()))
+	//	{
+	//		SelectAllSameType(outHit.GetActor());
+	//	}
+	//}
+	//else
+	//{
+	//	SelectionUnitsInBox();
+	//}
 	SelectionUnitsInBox();
 }
 
-// 여기 박스
-// 원래 하던 방식 말고
-// 바꾸려는 방식 기억하고 있을거야
-// 그 방식으로 좀 바꿔봐
-// 안그러면 선택이 잘 안된다야 
+// 더블클릭 or Ctrl + 좌클릭
+void ADNG_RTSPawn::SelectAllSameType()
+{
+	if (!baseUnit) return;
+
+	// Shift키를 눌렀다면 선택 유닛 리스트에 추가한다
+
+	// 아니라면 그냥 그 유닛 뭉치들만 유닛 리스트에 추가한다.
+
+	// 별도의 변수들을 유저 폰 자체에 넣어서 이 함수를 작동시킨다.
+	selectionCapsule->SetCapsuleRadius(selectionAllRadius);
+	selectionCapsule->SetCapsuleHalfHeight(1000.0f); 
+	selectionCapsule->SetWorldLocation(baseUnit->GetActorLocation());
+
+	DrawDebugCapsule(GetWorld(), baseUnit->GetActorLocation(), 1000.0f, selectionAllRadius, FQuat::Identity, FColor::Orange, true, 3.0f);
+
+	TArray<AActor*> selectedAllUnits;
+	selectionCapsule->GetOverlappingActors(selectedAllUnits, TSubclassOf<ADNG_RTSBaseObject>());
+	
+	selectedUnits.Empty();
+
+	FString baseUnitName = baseUnit->GetUnitName();
+
+	for (auto actor : selectedAllUnits)
+	{
+		ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(actor);
+
+		if (!unit) continue;
+
+		if (baseUnitName == unit->GetUnitName())
+		{
+			unit->SetSelectedStatus(true);
+			selectedUnits.Add(unit);
+		}
+	}
+
+	bIsDoubleClicked = true;
+	baseUnit = nullptr;
+}
+
 void ADNG_RTSPawn::SelectionUnitsInBox()
 {
 	float extentX = (selectionEndPos.X - selectionStartPos.X) * 0.5f;
 	float extentY = (selectionEndPos.Y - selectionStartPos.Y) * 0.5f;
 	float extentZ = 2000.0f;
 	FVector extent(extentX, extentY, extentZ);
-	
-	float midPosX = selectionStartPos.X + extentX * 0.5f;
-	float midPosY = selectionStartPos.Y + extentY * 0.5f;
-	//float midPosZ = selectionStartPos.Z/* - extentZ */;
-	//FVector midPos(midPosX, midPosY, midPosZ);
-	
-	//FRotator rot(-rtsCamera->GetComponentRotation().Pitch, rtsCamera->GetComponentRotation().Yaw, rtsCamera->GetComponentRotation().Roll);
-	//selectionBox->SetWorldRotation(rot);
-		
-	//selectionBox->SetWorldLocation(midPos);
-	
-	TArray<ADNG_RTSBaseObject*> selectedActors;
-	GetWorld()->GetFirstPlayerController()->GetHUD()->GetActorsInSelectionRectangle<ADNG_RTSBaseObject>(selectionStartPos, selectionEndPos, selectedActors, false, false);
-	//selectionBox->SetBoxExtent(extent);
 
+	float midPosX = selectionStartPos.X + extentX;
+	float midPosY = selectionStartPos.Y + extentY;
+	float midPosZ = selectionStartPos.Z - extentZ * 0.5f;
+	FVector midPos(midPosX, midPosY, midPosZ);
 
-	//selectionBox->GetOverlappingActors(selectedActors);
+	TArray<AActor*> selectedActors;
 
-	//DrawDebugBox(GetWorld(), midPos, extent, rot.Quaternion(), FColor::Red, true, 5.0f);
+	extent = FVector(abs(extent.X), abs(extent.Y), abs(extent.Z));
+	selectionBox->SetWorldLocation(midPos);
+	selectionBox->SetBoxExtent(extent);
+	selectionBox->GetOverlappingActors(selectedActors, TSubclassOf<ADNG_RTSBaseObject>());
 
-	bool bIsThereUnit = false;
+	bool bIsEmpty = false;
 
-	for (auto unit : selectedActors)
+	// 여기 뭔가 문제있음
+	for (auto actor : selectedActors)
 	{
-		if (unit)
+		ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(actor);
+
+		if (!unit)
+			selectedActors.Remove(actor);
+	}
+
+	if (!bPressedShiftKey)
+	{
+		for (auto actor : selectedActors)
 		{
-			if (!bIsThereUnit)
+			ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(actor);
+
+			if (!bIsEmpty)
 			{
+				bIsEmpty = true;
 
 				for (int i = 0; i < selectedUnits.Num(); ++i)
 				{
@@ -207,14 +289,35 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 
 				selectedUnits.Empty();
 			}
-			bIsThereUnit = true;
 
-			GEngine->AddOnScreenDebugMessage(-1, 4.0f, FColor::Yellow, "UNIT");
 			unit->SetSelectedStatus(true);
 			selectedUnits.Add(unit);
 		}
 	}
+	else if (bPressedShiftKey)
+	{
+		if (selectedActors.Num() == 1)
+		{
+			ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(selectedActors[0]);
 
+			bool status = !unit->GetSelectedStatus();
+			unit->SetSelectedStatus(status);
+			if(status)
+				selectedUnits.Add(unit);
+			else
+				selectedUnits.Remove(unit);
+
+		}
+		else if (selectedActors.Num() > 1)
+		{
+			for (auto actor : selectedActors)
+			{
+				ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(actor);
+				unit->SetSelectedStatus(true);
+				selectedUnits.Add(unit);
+			}
+		}
+	}
 }
 
 void ADNG_RTSPawn::RMousePress()
@@ -222,20 +325,57 @@ void ADNG_RTSPawn::RMousePress()
 	FHitResult outHit;
 	Cast<APlayerController>(Controller)->GetHitResultUnderCursor(ECC_Visibility, false, outHit);
 	FVector dest = outHit.Location;
-	// 적을 눌렀을 시 공격
+	
+	// 적 클릭 시 공격
 
-	DrawDebugSphere(GetWorld(), dest, 64, 16, FColor::Red, true, 5.0f);
+	// 땅 바닥 클릭 시 이동
+	MoveUnits(dest);
 
-	// 땅을 눌렀을 시 이동
-	for (auto unit : selectedUnits)
+
+}
+
+void ADNG_RTSPawn::MoveUnits(FVector dest)
+{
+	int size = selectedUnits.Num();
+	float root = sqrt(size);
+	float side = (int)root;
+
+	if (size == 0) return;
+
+	if (root != side)
 	{
-		unit->Move(dest);
+		side += 1;
 	}
 
+	int offsetX = (size / side + (size % (int)side == 0 ? 0 : 1)) - 1;
+	int offsetY = side - 1;
+
+	// X -> 위 아래, Y -> 왼 오른
+
+	float startPointX = unitsPlacementOffset * (offsetX * 0.5f);
+	float startPointY = unitsPlacementOffset * (-offsetY * 0.5f);
+
+	float x = dest.X + startPointX, y = dest.Y + startPointY;
+
+	// GEngine->AddOnScreenDebugMessage(-1, 4.0f, FColor::Yellow, FString::Printf(TEXT("%d"), side));
+	for (int i = 0; i < (int)side; ++i)
+	{
+		float nX = x - (unitsPlacementOffset * i);
+		for (int j = 0; ((j < (int)side) && (i * (int)side + j < size)); ++j)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 4.0f, FColor::Yellow, "LOOPING");
+
+			float nY = y + (unitsPlacementOffset * j);
+
+			FVector pos(nX, nY, dest.Z);
+			int idx = i * (int)side + j;
+			DrawDebugSphere(GetWorld(), pos, 32.0f, 16, FColor::Yellow, 5.0f);
+			selectedUnits[idx]->Move(pos);
+		} 
+	}
 }
 
 void ADNG_RTSPawn::DrawSelectBox()
 {
-	//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, FString::Printf(TEXT("%f %f"), mousePos.X, mousePos.Y));
 	userUI->DrawBox(mouseStartPos, mousePos);
 }
