@@ -24,3 +24,11 @@ void URTS_UI::DrawBox(FVector2D start, FVector2D end)
 	test->SetSize(size);
 }
 
+void URTS_UI::SetCommandOnPanel(FCommandInfo cmdInfo)
+{
+	int index = cmdInfo.row * 4 + cmdInfo.column;
+
+	UWidget *cmdBtn = commandPanel->GetChildAt(index);
+	UTextBlock *shortCutText = Cast<UTextBlock>(Cast<UCanvasPanel>(cmdBtn)->GetChildAt(1));
+	UTextBlock *cmdName = Cast<UTextBlock>(Cast<UCanvasPanel>(cmdBtn)->GetChildAt(2));
+}

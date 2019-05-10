@@ -21,6 +21,7 @@ public:
 
 	void SetSelectedStatus(bool status);
 	bool GetSelectedStatus() { return bIsSelected; };
+	TArray<FCommandInfo>& GetCmdInfoArray() { return commandInfoArray; };
 	FString GetUnitName() { return unitName; };
 
 protected:
@@ -40,11 +41,12 @@ public:
 	void Hold();
 	void Patrol();
 
-
-
 public:
+	class UDNGProperty *objProperty;
 
 private:
+	TArray<FCommandInfo> commandInfoArray;
+
 	UDecalComponent *ringDecal;
 	ADNG_RTSUnitAIController *aiController;
 

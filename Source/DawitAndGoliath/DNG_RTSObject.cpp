@@ -9,20 +9,6 @@ ADNG_RTSObject::ADNG_RTSObject() : Super()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	//RootComponent = RootComponent->
-
-	//ringDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("RingDecal"));
-	////ringDecal->SetupAttachment(RootComponent);
-	////
-	//ringDecal->SetDecalMaterial(ringMaterial);
-	//ringDecal->RelativeLocation = FVector(0.f, 0.0f, 40.0f);
-	//ringDecal->DecalSize = FVector(32.0f, 64.0f, 64.0f);
-	//ringDecal->SetRelativeRotation(FRotator(90.0f, 0.0f, 0.0f).Quaternion());
-	//ringDecal->SetVisibility(true);
-
-	//characterMovementComponent->MaxWalkSpeed = 600.0f;
-	//characterMovementComponent->Velocity
-
 	bisSelected = false;
 }
 
@@ -41,9 +27,6 @@ void ADNG_RTSObject::BeginPlay()
 	}
 	ringDecal->SetVisibility(false);
 	aiController = Cast<ADNG_RTSUnitAIController>(Controller);
-	//ringDecal->SetupAttachment(RootComponent);
-
-	// characterMovementComponent->MaxWalkSpeed = 600.0f;
 }
 
 // Called every frame
@@ -77,7 +60,7 @@ void ADNG_RTSObject::SetSelectedStatus(bool status)
 
 void ADNG_RTSObject::Move(FVector dest)
 {
-	// aiController->MoveToLocation(dest);
+	
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Emerald, "Moving");
 }
 

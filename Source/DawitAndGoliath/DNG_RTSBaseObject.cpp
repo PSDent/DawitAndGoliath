@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "DNG_RTSBaseObject.h"
+#include "DNGProperty.h"
+
 #include "Engine.h"
 
 // Sets default values
@@ -9,21 +11,22 @@ ADNG_RTSBaseObject::ADNG_RTSBaseObject() : Super()
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	//GetCharacterMovement()->MaxWalkSpeed = 600.0f;
-
-	/*
-	characterMovementComponent = CreateDefaultSubobject<UPawnMovementComponent>(TEXT("UPawnMovementComponent"));
-	characterMovementComponent->UpdatedComponent = RootComponent;*/
 	GetCharacterMovement()->MaxWalkSpeed = 600.0f;
-	//characterMovementComponent->Velocity
 
 	bIsHold = false;
 	bIsSelected = false;
 
-	Tags.Add("Object");
+	objProperty = CreateDefaultSubobject<UDNGProperty>(TEXT("DNGProperty"));
 
+	Tags.Add("Object");
+	
 	unitName = "Object";
-}
+
+	commandInfoArray.Add(FCommandInfo("Move", "Move Unit to Clicked Location", EKeys::M, 0, 0));
+	commandInfoArray.Add(FCommandInfo("Stop", "Stop Unit Movement", EKeys::S, 0, 1));
+	commandInfoArray.Add(FCommandInfo("Hold", "Hold Unit Movement", EKeys::H, 0, 2));
+	commandInfoArray.Add(FCommandInfo("Patrol", "Patrol Unit point to point", EKeys::P, 0, 3));
+   }
 
 // Called when the game starts or when spawned
 void ADNG_RTSBaseObject::BeginPlay()
@@ -41,9 +44,6 @@ void ADNG_RTSBaseObject::BeginPlay()
 		}
 	}
 	aiController = Cast<ADNG_RTSUnitAIController>(Controller);
-	//ringDecal->SetupAttachment(RootComponent);
-
-	// characterMovementComponent->MaxWalkSpeed = 600.0f;
 }
 
 // Called every frame
@@ -58,7 +58,7 @@ void ADNG_RTSBaseObject::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-
+		
 
 }
 
@@ -78,7 +78,6 @@ void ADNG_RTSBaseObject::SetSelectedStatus(bool status)
 void ADNG_RTSBaseObject::Move(FVector dest)
 {
 	aiController->MoveToLocation(dest);
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Emerald, "Moving");
 }
 
 void ADNG_RTSBaseObject::Stop()

@@ -33,8 +33,6 @@ ADNG_RTSPawn::ADNG_RTSPawn() : Super()
 
 	baseUnit = nullptr;
 
-	
-
 	selectedUnits.Empty();
 }
 
@@ -61,7 +59,6 @@ void ADNG_RTSPawn::Tick(float DeltaTime)
 	check(viewPort);
 	viewPort->GetViewportSize(viewportSize);
 
-
 	if (viewPort->IsFocused(viewPort->Viewport))
 	{
 		viewPort->GetMousePosition(mousePos);
@@ -71,6 +68,8 @@ void ADNG_RTSPawn::Tick(float DeltaTime)
 		if (bPressedLeftMouse)
 			DrawSelectBox();
 	}
+
+	//FindMostUnit();
 }
 
 // Called to bind functionality to input
@@ -183,22 +182,15 @@ void ADNG_RTSPawn::LMouseRelease()
 		bIsDoubleClicked = false;
 		return;
 	}
+	else if (bPressedCtrlKey)
+	{
+		return;
+	}
 
 	FHitResult outHit;
 	Cast<APlayerController>(Controller)->GetHitResultUnderCursor(ECC_Visibility, false, outHit);
 	selectionEndPos = outHit.Location;
 
-	//if (bPressedCtrlKey || bIsStartDoubleClick)
-	//{
-	//	if (outHit.GetActor() && outHit.GetActor()->IsA(ADNG_RTSBaseObject::StaticClass()))
-	//	{
-	//		SelectAllSameType(outHit.GetActor());
-	//	}
-	//}
-	//else
-	//{
-	//	SelectionUnitsInBox();
-	//}
 	SelectionUnitsInBox();
 }
 
@@ -210,7 +202,6 @@ void ADNG_RTSPawn::SelectAllSameType()
 	// Shift키를 눌렀다면 선택 유닛 리스트에 추가한다
 
 	// 아니라면 그냥 그 유닛 뭉치들만 유닛 리스트에 추가한다.
-
 	// 별도의 변수들을 유저 폰 자체에 넣어서 이 함수를 작동시킨다.
 	selectionCapsule->SetCapsuleRadius(selectionAllRadius);
 	selectionCapsule->SetCapsuleHalfHeight(1000.0f); 
@@ -263,7 +254,6 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 
 	bool bIsEmpty = false;
 
-	// 여기 뭔가 문제있음
 	for (auto actor : selectedActors)
 	{
 		ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(actor);
@@ -378,4 +368,53 @@ void ADNG_RTSPawn::MoveUnits(FVector dest)
 void ADNG_RTSPawn::DrawSelectBox()
 {
 	userUI->DrawBox(mouseStartPos, mousePos);
+}
+
+void ADNG_RTSPawn::FindMostUnit()
+{
+	//int len = selectedUnits.Num();
+
+	//if (len == 0)
+	//{
+	//	// 이 곳에 명령 패널을 초기화하는 로직을 넣어둘 것.
+	//	mostUnit = nullptr;
+	//	return;
+	//}
+
+	//TMap<FString, int> unitCount;
+
+	//for (auto unit : selectedUnits)
+	//{
+	//	FString name = unit->GetUnitName();
+	//	
+	//	if(!unitCount.Find(name))
+	//		unitCount.Add(name, 1);
+	//	else
+	//		++unitCount[name];
+
+	//	if (!mostUnit)
+	//	{
+	//		mostUnit = unit;
+	//	}
+	//	else
+	//	{
+	//		FString mostUnitName = mostUnit->GetUnitName();
+	//		if (unitCount[name] > unitCount[mostUnitName])
+	//		{
+	//			mostUnit = unit;
+	//		}
+	//	}
+	//}
+	//MappingCmdPanel();
+}
+
+void ADNG_RTSPawn::MappingCmdPanel()
+{
+	//TArray<FCommandInfo>& cmdInfo = mostUnit->GetCmdInfoArray();
+
+	//for (int i = 0; i < cmdInfo.Num(); ++i)
+	//{
+	//	userUI->SetCommandOnPanel(cmdInfo[i]);
+	//}
+
 }

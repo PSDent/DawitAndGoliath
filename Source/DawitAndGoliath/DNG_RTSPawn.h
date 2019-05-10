@@ -46,6 +46,9 @@ private:
 	void DoubleClick();
 
 	// Unit Command
+	void FindMostUnit();
+	void MappingCmdPanel();
+
 	void DrawSelectBox();
 	void SelectionUnitsInBox();
 	void MoveUnits(FVector dest);
@@ -88,6 +91,7 @@ private:
 
 	// Selection All
 	ADNG_RTSBaseObject *baseUnit;
+	ADNG_RTSBaseObject *mostUnit;
 
 	// Cam
 	float camScrollBoundary;
