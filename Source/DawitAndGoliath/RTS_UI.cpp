@@ -28,7 +28,11 @@ void URTS_UI::SetCommandOnPanel(FCommandInfo cmdInfo)
 {
 	int index = cmdInfo.row * 4 + cmdInfo.column;
 
-	UWidget *cmdBtn = commandPanel->GetChildAt(index);
-	UTextBlock *shortCutText = Cast<UTextBlock>(Cast<UCanvasPanel>(cmdBtn)->GetChildAt(1));
-	UTextBlock *cmdName = Cast<UTextBlock>(Cast<UCanvasPanel>(cmdBtn)->GetChildAt(2));
+	UUserWidget *cmdBtn = Cast<UUserWidget>(commandPanel->GetChildAt(index));
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Purple, cmdBtn->GetName());
+
+	UTextBlock *shortCutText = Cast<UTextBlock>(cmdBtn->WidgetTree->FindWidget("ShortCut"));
+	UTextBlock *cmdNameText = Cast<UTextBlock>(cmdBtn->WidgetTree->FindWidget("Name"));
+	shortCutText->SetText(FText::FromString(cmdInfo.shortCut.ToString()));
+	cmdNameText->SetText(FText::FromString(cmdInfo.name));
 }

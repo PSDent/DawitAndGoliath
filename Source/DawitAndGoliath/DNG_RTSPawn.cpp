@@ -30,10 +30,14 @@ ADNG_RTSPawn::ADNG_RTSPawn() : Super()
 	bPressedShiftKey = false;
 	bPressedCtrlKey = false;
 	bIsDoubleClicked = false;
+	bIsCommanding = false;
 
 	baseUnit = nullptr;
 
 	selectedUnits.Empty();
+	EKeys::GetAllKeys(keys);
+	commandArray.Init(CommandDelegate(), keys.Num());
+
 }
 
 // Called when the game starts or when spawned
@@ -47,7 +51,6 @@ void ADNG_RTSPawn::BeginPlay()
 	
 	FVector newPos = GetActorLocation() + FVector::UpVector * height;
 	SetActorLocation(newPos);
-	
 }
 
 // Called every frame
@@ -69,7 +72,7 @@ void ADNG_RTSPawn::Tick(float DeltaTime)
 			DrawSelectBox();
 	}
 
-	//FindMostUnit();
+	FindMostUnit();
 }
 
 // Called to bind functionality to input
@@ -94,7 +97,9 @@ void ADNG_RTSPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 void ADNG_RTSPawn::Init()
 {
-	Cast<APlayerController>(Controller)->bShowMouseCursor = true;
+	playerController = Cast<APlayerController>(Controller);
+
+	playerController->bShowMouseCursor = true;
 	
 	userUI = CreateWidget<URTS_UI>(GetWorld(), UI_Class);
 
@@ -159,7 +164,7 @@ void ADNG_RTSPawn::LMousePress()
 	mouseStartPos.Y = mousePos.Y;
 
 	FHitResult outHit;
-	Cast<APlayerController>(Controller)->GetHitResultUnderCursor(ECC_Visibility, false, outHit);
+	playerController->GetHitResultUnderCursor(ECC_Visibility, false, outHit);
 	selectionStartPos = outHit.Location;
 	baseUnit = Cast<ADNG_RTSBaseObject>(outHit.GetActor());
 
@@ -188,7 +193,7 @@ void ADNG_RTSPawn::LMouseRelease()
 	}
 
 	FHitResult outHit;
-	Cast<APlayerController>(Controller)->GetHitResultUnderCursor(ECC_Visibility, false, outHit);
+	playerController->GetHitResultUnderCursor(ECC_Visibility, false, outHit);
 	selectionEndPos = outHit.Location;
 
 	SelectionUnitsInBox();
@@ -372,49 +377,60 @@ void ADNG_RTSPawn::DrawSelectBox()
 
 void ADNG_RTSPawn::FindMostUnit()
 {
-	//int len = selectedUnits.Num();
+	int len = selectedUnits.Num();
 
-	//if (len == 0)
-	//{
-	//	// 이 곳에 명령 패널을 초기화하는 로직을 넣어둘 것.
-	//	mostUnit = nullptr;
-	//	return;
-	//}
+	if (len == 0)
+	{
+		// 이 곳에 명령 패널을 초기화하는 로직을 넣어둘 것.
+		mostUnit = nullptr;
+		return;
+	}
 
-	//TMap<FString, int> unitCount;
+	TMap<FString, int> unitCount;
 
-	//for (auto unit : selectedUnits)
-	//{
-	//	FString name = unit->GetUnitName();
-	//	
-	//	if(!unitCount.Find(name))
-	//		unitCount.Add(name, 1);
-	//	else
-	//		++unitCount[name];
+	for (auto unit : selectedUnits)
+	{
+		FString name = unit->GetUnitName();
+		
+		if(!unitCount.Find(name))
+			unitCount.Add(name, 1);
+		else
+			++unitCount[name];
 
-	//	if (!mostUnit)
-	//	{
-	//		mostUnit = unit;
-	//	}
-	//	else
-	//	{
-	//		FString mostUnitName = mostUnit->GetUnitName();
-	//		if (unitCount[name] > unitCount[mostUnitName])
-	//		{
-	//			mostUnit = unit;
-	//		}
-	//	}
-	//}
-	//MappingCmdPanel();
+		if (!mostUnit)
+		{
+			mostUnit = unit;
+		}
+		else
+		{
+			FString mostUnitName = mostUnit->GetUnitName();
+			if (unitCount[name] > unitCount[mostUnitName])
+			{
+				mostUnit = unit;
+			}
+		}
+	}
+	MappingCmdPanel();
 }
 
 void ADNG_RTSPawn::MappingCmdPanel()
 {
-	//TArray<FCommandInfo>& cmdInfo = mostUnit->GetCmdInfoArray();
+	TArray<FCommandInfo>& cmdInfo = mostUnit->GetCmdInfoArray();
 
-	//for (int i = 0; i < cmdInfo.Num(); ++i)
-	//{
-	//	userUI->SetCommandOnPanel(cmdInfo[i]);
-	//}
+	for (int i = 0; i < cmdInfo.Num(); ++i)
+	{
+		userUI->SetCommandOnPanel(cmdInfo[i]);
+	}
 
+}
+
+void ADNG_RTSPawn::CheckKeys()
+{
+	for (int i = 0; i < keys.Num(); ++i)
+	{
+		if (playerController->IsInputKeyDown(keys[i]))
+		{
+			commandArray[i].ExecuteIfBound();
+		}
+	}
 }

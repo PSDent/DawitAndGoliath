@@ -9,6 +9,7 @@
 #include "RTS_UI.h"
 #include "DNG_RTSObject.h"
 #include "DNG_RTSBaseObject.h"
+#include "DNGDelegates.h"
 #include "Components/BoxComponent.h"
 #include "DNG_RTSPawn.generated.h"
 
@@ -53,6 +54,9 @@ private:
 	void SelectionUnitsInBox();
 	void MoveUnits(FVector dest);
 
+	// key
+	void CheckKeys();
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -68,6 +72,7 @@ public:
 		UCameraComponent *rtsCamera;
 
 private:
+	APlayerController *playerController;
 	TArray<ADNG_RTSBaseObject*> selectedUnits;
 
 	// UI 
@@ -82,6 +87,12 @@ private:
 	float selectionAllRadius;
 	float unitsPlacementOffset;
 	bool bIsDoubleClicked;
+	bool bIsCommanding;
+
+	// Key
+	CommandDelegate dele;
+	TArray<FKey> keys;
+	TArray<CommandDelegate> commandArray;
 
 	// SelectionBox
 	UBoxComponent *selectionBox;
@@ -92,6 +103,7 @@ private:
 	// Selection All
 	ADNG_RTSBaseObject *baseUnit;
 	ADNG_RTSBaseObject *mostUnit;
+	ADNG_RTSBaseObject *prevMostUnit;
 
 	// Cam
 	float camScrollBoundary;
