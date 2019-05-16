@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Weapon.h"
-#include "CollisionQueryParams.h"
 #include "Gun.generated.h"
 
 /**
@@ -16,15 +15,12 @@ class DAWITANDGOLIATH_API UGun : public UWeapon
 	GENERATED_BODY()
 
 protected:
-	float Range;
+	UPROPERTY()
 	float SplitRange;
-	UParticleSystem* FireParticle;
-	UParticleSystem* MuzzleFlame;
 
 public:
-	virtual AActor* GetTarget(FVector loc, FVector socLoc, FRotator rot, UWorld* world, AActor* ignore) override;
+	virtual FHitResult GetTarget(FVector loc, FVector socLoc, FRotator rot, UWorld* world, AActor* ignore, float range) override;
 
-	void GunInit(FString name, float damage, float attackRate, float range, float splitRange, USoundBase* fireSound);
-	virtual void SetParticle(UParticleSystem* fireParticle, UParticleSystem* muzzleFlame);
-	float GetSplitRange() { return SplitRange; }
+	void GunInit(FString name, float damage, float attackRate, float range, float splitRange, float reloadTime, int maxBulletCount, USoundBase* fireSound);
+	virtual float GetSplitRange() { return SplitRange; }
 };

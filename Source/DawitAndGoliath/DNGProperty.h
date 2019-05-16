@@ -32,5 +32,6 @@ public:
 	virtual float GetHp();
 	virtual void SetMaxHp(float hp);
 	virtual void SetHp(float hp);
+
 	virtual void DealDamage(float dmg);
 };

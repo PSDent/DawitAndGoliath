@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AreaWeapon.h"
 #include "Gun.h"
 #include "FireParam.h"
 #include "Engine.h"
@@ -40,9 +41,9 @@ protected:
 
 	virtual void MulticastFire_Implementation(FFireParam params);
 
-	virtual bool MulticastFire_Validate(FFireParam params);	
+	virtual bool MulticastFire_Validate(FFireParam params);
 
-	//virtual AActor* GetRaycastTarget(FVector loc, FRotator rot, float length);
+	virtual bool CheckFlameHit(FVector socLoc, AActor* target);
 
 	//virtual void DealDamage(AActor* dealer, AActor* target, float dmg);
 
@@ -62,46 +63,91 @@ protected:
 
 	virtual void Jump() override;
 
-	virtual void EnableFire();
+	virtual void Heal();
 
-	enum class EWeaponType : uint8
-	{
-		Rifle,
-		MachineGun,
-		FlameThrower
-	};
+	virtual void EnableHeal();
 
-	template <EWeaponType T>
-	void ChangeWeapon();
+	virtual void GiveDamage(AActor* target, float dmg, FVector, FRotator);
 
-	void ChangeWeapon(EWeaponType type);
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerGiveDamage(AActor* target, float dmg, FVector loc, FRotator rot);
 
+	virtual void ServerGiveDamage_Implementation(AActor* target, float dmg, FVector, FRotator);
+
+	virtual bool ServerGiveDamage_Validate(AActor* target, float dmg, FVector, FRotator);
+
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+		void MulticastGiveDamage(AActor* target, float dmg, FVector loc, FRotator rot);
+
+	virtual void MulticastGiveDamage_Implementation(AActor* target, float dmg, FVector, FRotator);
+
+	virtual bool MulticastGiveDamage_Validate(AActor* target, float dmg, FVector, FRotator);
+
+	virtual void Boost();
+
+	virtual void SetBoost();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		virtual void ServerSetBoost(bool value);
+
+	virtual void ServerSetBoost_Implementation(bool value);
+	
+	virtual bool ServerSetBoost_Validate(bool value);
+
+	UFUNCTION(Client, Reliable, WithValidation)
+		virtual void ClientSetBoost(bool value);
+
+	virtual void ClientSetBoost_Implementation(bool value);
+
+	virtual bool ClientSetBoost_Validate(bool value);
+	
 	USpringArmComponent* SpringArm3rd;
 
 	UPROPERTY(Replicated)
 	UCameraComponent* Cam3rd;
 
+	UCharacterMovementComponent* MovementComponent;
+
 	USoundBase* GunFireSound;
 
-	UAnimMontage* FireMontage;	//기본 연사 0.4초간격
+	UAnimMontage* FireMontage;
+
+	UAnimMontage* BoostMontage;
 
 	FTimerHandle GunFireTimerHandle;
 
+	FTimerHandle HealTimerHandle;
+
+	FTimerHandle ReloadTimerHandle;
+
 	UParticleSystem* FireParticle;
+
+	UParticleSystem* FlameParticle;
 
 	UParticleSystem* MuzzleFlame;
 
+	UParticleSystem* BoosterParticle;
+
+	UDNGProperty* Prop;
+
 	FTimerDelegate FireDele;
 
+	//UPROPERTY(Transient, Replicated)
 	TArray<UWeapon*> Weapons;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Transient, Replicated)
 	UWeapon* CurrentWeapon;
+
+	EWeaponType CurrentWeaponType;
 
 	float SplitRange;
 
 	bool IsLeftMousePressed;
 
+	bool IsReloading;
+
+	bool IsBoosting;
+	
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -109,5 +155,27 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	bool IsFireable;
+	bool IsHealable;
+
+
+	template <EWeaponType T>
+	void ChangeWeapon();
+
+	virtual void ChangeWeapon(EWeaponType type);
+
+	UFUNCTION(BlueprintCallable)
+		float GetHp();
+
+	UFUNCTION(BlueprintCallable)
+		float GetAmmoPer();
+
+	UFUNCTION(BlueprintCallable)
+		float GetReloadTimePer();
+
+	//UFUNCTION(Server, Reliable, WithValidation)
+	//virtual void ServerSetWeapon(EWeaponType type);
+
+	//virtual void ServerSetWeapon_Implementation(EWeaponType type);
+
+	//virtual bool ServerSetWeapon_Validate(EWeaponType type);
 };

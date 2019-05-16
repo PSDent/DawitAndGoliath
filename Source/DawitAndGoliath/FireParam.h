@@ -5,6 +5,15 @@
 #include "CoreMinimal.h"
 #include "FireParam.generated.h"
 
+UENUM()
+enum class EWeaponType : uint8
+{
+	Rifle,
+	MachineGun,
+	FlameThrower
+};
+
+
 USTRUCT()
 struct FFireParam
 {
@@ -28,4 +37,13 @@ public:
 
 	UPROPERTY()
 		float AttackRate;
+
+	UPROPERTY()
+		float Range;
+
+	UPROPERTY()
+		EWeaponType WeaponType;
+
+	UPROPERTY()
+		bool IsGun;
 };

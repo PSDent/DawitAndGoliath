@@ -5,14 +5,14 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
 
-void UGun::GunInit(FString name, float damage, float attackRate, float range, float splitRange, USoundBase * fireSound)
+void UGun::GunInit(FString name, float damage, float attackRate, float range, float splitRange, float reloadTime, int maxBulletCount, USoundBase * fireSound)
 {
-	WeaponInit(name, damage, attackRate, fireSound);
+	WeaponInit(name, damage, attackRate, reloadTime, maxBulletCount, fireSound);
 	Range = range;
 	SplitRange = splitRange;
 }
 
-AActor* UGun::GetTarget(FVector loc, FVector socLoc, FRotator rot, UWorld* world, AActor* ignore)
+FHitResult UGun::GetTarget(FVector loc, FVector socLoc, FRotator rot, UWorld* world, AActor* ignore, float range)
 {
 	FCollisionQueryParams params(FName(TEXT("PlayerAimCheck")), true);
 	params.bTraceAsyncScene = true;
@@ -22,9 +22,9 @@ AActor* UGun::GetTarget(FVector loc, FVector socLoc, FRotator rot, UWorld* world
 	FHitResult hit(ForceInit);
 
 	FVector start = loc;
-	FVector end = loc + (rot.Vector() * Range);
+	FVector end = loc + (rot.Vector() * range);
 
-	DrawDebugLine(world, start, end, FColor::Red, false, 3.0f);
+	//DrawDebugLine(world, start, end, FColor::Red, false, 3.0f);
 
 	if (world->LineTraceSingleByChannel(hit, start, end, ECC_GameTraceChannel1, params))
 	{
@@ -36,25 +36,15 @@ AActor* UGun::GetTarget(FVector loc, FVector socLoc, FRotator rot, UWorld* world
 			params
 		);
 
-		if (!hit.GetActor())
+
+		if (hit.GetActor())
 		{
-			DrawDebugLine(world, start, end, FColor::Red, false, 3.0f);
-			return nullptr;
+			if (!hit.GetActor()->IsA(APawn::StaticClass()))
+				DrawDebugLine(world, start, end, FColor::Red, false, 3.0f);	
+			else
+				DrawDebugLine(world, socLoc, hit.Location, FColor::Yellow, false, 3.0f);
 		}
-
-		if (!hit.GetActor()->IsA(APawn::StaticClass()))
-			DrawDebugLine(world, start, end, FColor::Red, false, 3.0f);
-		else
-			DrawDebugLine(world, socLoc, hit.Location, FColor::Yellow, false, 3.0f);
-
-		UGameplayStatics::SpawnEmitterAtLocation(world, FireParticle, hit.Location, FRotator::ZeroRotator);
 	}
 
-	return hit.GetActor();
-}
-
-void UGun::SetParticle(UParticleSystem* fireParticle, UParticleSystem* muzzleFlame)
-{
-	FireParticle = fireParticle;
-	MuzzleFlame = muzzleFlame;
+	return hit;
 }
