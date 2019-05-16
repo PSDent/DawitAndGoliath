@@ -23,11 +23,20 @@ public:
 	ADNG_RTSPawn();
 
 	void Init();
+	void ReceiveCmdPanel(FKey key);
+
+	// Key
 	void PressShiftKey() { bPressedShiftKey = true; }
 	void ReleasedShiftKey() { bPressedShiftKey = false; }
 
 	void PressCtrlKey() { bPressedCtrlKey = true; }
 	void ReleasedCtrlKey() { bPressedCtrlKey = false; }
+
+	// getter
+	bool GetLeftMouseStatus() { return bPressedLeftMouse; }
+	bool GetRightMouseStatus() { return bPressedRightMouse; }
+	APlayerController* GetPlayerController() { return playerController; }
+	URTS_UI* GetUI() { return userUI; };
 
 protected:
 	// Called when the game starts or when spawned
@@ -43,19 +52,22 @@ private:
 	void LMousePress();
 	void LMouseRelease();
 	void RMousePress();
+	void RMouseRelease();
+
 	void SelectAllSameType();
 	void DoubleClick();
 
 	// Unit Command
 	void FindMostUnit();
 	void MappingCmdPanel();
+	void ExecuteCommand(FKey key);
 
 	void DrawSelectBox();
 	void SelectionUnitsInBox();
 	void MoveUnits(FVector dest);
 
 	// key
-	void CheckKeys();
+	void CheckKeysAndExecute();
 
 public:	
 	// Called every frame
@@ -70,6 +82,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 		UCameraComponent *rtsCamera;
+
+	FVector targetPos;
+	AActor *targetActor;
 
 private:
 	APlayerController *playerController;
@@ -88,11 +103,15 @@ private:
 	float unitsPlacementOffset;
 	bool bIsDoubleClicked;
 	bool bIsCommanding;
+	bool bIsTargeted;
+	bool bIsClickedPanel;
+	
+	bool bIsInitialized;
 
 	// Key
-	CommandDelegate dele;
+	FCommandDelegate dele;
 	TArray<FKey> keys;
-	TArray<CommandDelegate> commandArray;
+	TMap<FKey, FCommandInfo> commandMap;
 
 	// SelectionBox
 	UBoxComponent *selectionBox;
@@ -110,6 +129,7 @@ private:
 	float scrollSpeed;
 	float height;
 
+	bool bPressedRightMouse;
 	bool bPressedLeftMouse;
 	bool bPressedShiftKey;
 	bool bPressedCtrlKey;

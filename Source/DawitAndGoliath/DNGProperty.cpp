@@ -17,7 +17,7 @@ UDNGProperty::UDNGProperty()
 void UDNGProperty::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	 
 	// ...
 	
 }

@@ -3,6 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Delegates/Delegate.h"
 //#include "DNGDelegates.generated.h"
 
-DECLARE_DELEGATE(CommandDelegate);
+DECLARE_DELEGATE(FCommandDelegate);
+//DECLARE_DYNAMIC_DELEGATE(FCommandDelegate);
+//DECLARE_DYNAMIC_DELEGATE_OneParam(FCommandDelegate, int, test);

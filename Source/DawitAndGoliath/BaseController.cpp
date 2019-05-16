@@ -5,14 +5,14 @@
 #include "DNG_RTSPawn.h"
 #include "Engine.h"
 
-ABaseController::ABaseController()
+ABaseController::ABaseController() : Super()
 {
 
 }
 
 void ABaseController::BeginPlay()
 {
-
+	Super::BeginPlay();
 }
 
 void ABaseController::Possess(APawn *pawn)

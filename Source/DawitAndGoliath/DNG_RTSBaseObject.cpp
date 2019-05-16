@@ -2,6 +2,9 @@
 
 #include "DNG_RTSBaseObject.h"
 #include "DNGProperty.h"
+#include "DNGDelegates.h"
+#include "DNG_RTSPawn.h"
+#include "RTS_UI.h"
 
 #include "Engine.h"
 
@@ -13,8 +16,19 @@ ADNG_RTSBaseObject::ADNG_RTSBaseObject() : Super()
 
 	GetCharacterMovement()->MaxWalkSpeed = 600.0f;
 
-	bIsHold = false;
-	bIsSelected = false;
+	ringDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("SelectionRing"));
+	ringDecal->SetupAttachment(RootComponent);
+
+	static ConstructorHelpers::FObjectFinder<UMaterial> decalMaterial(TEXT("Material'/Game/Blueprints/FriendlyRing.FriendlyRing'"));
+	if (decalMaterial.Succeeded())
+	{
+		ringDecal->SetDecalMaterial(decalMaterial.Object);
+		ringDecal->RelativeLocation = FVector(0.0f, 0.0f, -80.0f);
+		ringDecal->DecalSize = FVector(32.f, 64.f, 64.f);
+		ringDecal->SetRelativeRotation(FRotator(90.0f, 0.0f, 0.0f).Quaternion());
+		ringDecal->SetVisibility(false);
+	}
+
 
 	objProperty = CreateDefaultSubobject<UDNGProperty>(TEXT("DNGProperty"));
 
@@ -22,27 +36,15 @@ ADNG_RTSBaseObject::ADNG_RTSBaseObject() : Super()
 	
 	unitName = "Object";
 
-	commandInfoArray.Add(FCommandInfo("Move", "Move Unit to Clicked Location", EKeys::M, 0, 0));
-	commandInfoArray.Add(FCommandInfo("Stop", "Stop Unit Movement", EKeys::S, 0, 1));
-	commandInfoArray.Add(FCommandInfo("Hold", "Hold Unit Movement", EKeys::H, 0, 2));
-	commandInfoArray.Add(FCommandInfo("Patrol", "Patrol Unit point to point", EKeys::P, 0, 3));
-   }
+	bIsSelected = false;
+	
+}
 
 // Called when the game starts or when spawned
 void ADNG_RTSBaseObject::BeginPlay()
 {
 	Super::BeginPlay();
 
-	for (int i = 0; i < RootComponent->GetNumChildrenComponents(); ++i)
-	{
-		if (RootComponent->GetChildComponent(i)->GetName() == "Decal")
-		{
-			ringDecal = Cast<UDecalComponent>(RootComponent->GetChildComponent(i));
-			ringDecal->SetVisibility(false);
-
-			break;
-		}
-	}
 	aiController = Cast<ADNG_RTSUnitAIController>(Controller);
 }
 
@@ -50,16 +52,12 @@ void ADNG_RTSBaseObject::BeginPlay()
 void ADNG_RTSBaseObject::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 // Called to bind functionality to input
 void ADNG_RTSBaseObject::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-		
-
 }
 
 void ADNG_RTSBaseObject::SetSelectedStatus(bool status)
@@ -75,25 +73,3 @@ void ADNG_RTSBaseObject::SetSelectedStatus(bool status)
 
 }
 
-void ADNG_RTSBaseObject::Move(FVector dest)
-{
-	aiController->MoveToLocation(dest);
-}
-
-void ADNG_RTSBaseObject::Stop()
-{
-	aiController->StopMovement();
-}
-
-
-void ADNG_RTSBaseObject::Hold()
-{
-	Stop();
-	bIsHold = true;
-}
-
-
-void ADNG_RTSBaseObject::Patrol()
-{
-
-}

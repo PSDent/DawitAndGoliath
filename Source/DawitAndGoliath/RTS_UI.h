@@ -13,6 +13,8 @@
 #include "DNGStruct.h"
 #include "Components/CanvasPanel.h"
 #include "Components/TextBlock.h"
+#include "Components/Button.h"
+#include "Components/HorizontalBox.h"
 //#include "Engine/UserInterfaceSetting.h"
 #include "RTS_UI.generated.h"
 
@@ -27,21 +29,35 @@ class DAWITANDGOLIATH_API URTS_UI : public UUserWidget
 public:
 	URTS_UI(const FObjectInitializer &objInitializer);
 	void DrawBox(FVector2D start, FVector2D end);
+	void DisplayUnitInform(class ADNG_RTSBaseObject*);
+
 	void SetCommandOnPanel(FCommandInfo cmdInfo);
+	void SetMouseCursor();
 
-	// DPI 스케일 문제로 인해 마우스 커서 위치와
-	// 셀렉트 박스 위치가 일치하지 않는다. 
-	// 이를 잘 조정하여 할 것. 
-	// 부탁이다.
-
-private:
+	// Getter
+	UImage* GetSelectionBoxImage() { return selectionBoxImage; };
+	UGridPanel* GetCommandPanel() { return commandPanel; };
 	
-protected:
+	UFUNCTION(BlueprintCallable)
+		void SendToPawnPanelInfo(FString key);
+private:
 
-public:
+
+protected:
 	UPROPERTY(BlueprintReadWrite, category = "RTS_UI")
 		UImage *selectionBoxImage;
 
 	UPROPERTY(BlueprintReadWrite, category = "RTS_UI")
 		UGridPanel *commandPanel;
+
+	UPROPERTY(BlueprintReadWrite, category = "RTS_UI")
+		UCanvas *entityInformCanvas;
+
+	UPROPERTY(BlueprintReadWrite, category = "RTS_UI")
+		UCanvas *entityCanvas;
+
+	UPROPERTY(BlueprintReadWrite, category = "RTS_UI")
+		UCanvas *productionInformCanvas;
+
+public:
 };

@@ -68,14 +68,12 @@ void AFPSCharacter::BeginPlay()
 			Cam3rd->RelativeLocation = c->RelativeLocation;
 
 	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "FPSCHARACTER");
-
 }
 
 // Called every frame
 void AFPSCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, GetController()->GetName());
 
 	if (IsLeftMousePressed && IsFireable)
 	{

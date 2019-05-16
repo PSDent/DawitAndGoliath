@@ -4,6 +4,9 @@
 #include "Engine.h"
 #include "DrawDebugHelpers.h"
 
+#include "DNG_RTSUnit.h"
+#include "DNG_RTSUnit_Melee.h"
+
 // Sets default values
 ADNG_RTSPawn::ADNG_RTSPawn() : Super()
 {
@@ -31,13 +34,16 @@ ADNG_RTSPawn::ADNG_RTSPawn() : Super()
 	bPressedCtrlKey = false;
 	bIsDoubleClicked = false;
 	bIsCommanding = false;
+	bIsTargeted = false;
+	bIsClickedPanel = false;
 
+	bIsInitialized = false;
 	baseUnit = nullptr;
 
 	selectedUnits.Empty();
 	EKeys::GetAllKeys(keys);
-	commandArray.Init(CommandDelegate(), keys.Num());
-
+	
+	targetActor = nullptr;
 }
 
 // Called when the game starts or when spawned
@@ -56,6 +62,8 @@ void ADNG_RTSPawn::BeginPlay()
 // Called every frame
 void ADNG_RTSPawn::Tick(float DeltaTime)
 {
+	if (!bIsInitialized) return;
+
 	Super::Tick(DeltaTime);
 
 	viewPort = GEngine->GameViewport;
@@ -68,10 +76,10 @@ void ADNG_RTSPawn::Tick(float DeltaTime)
 		
 		MoveCam(DeltaTime);
 
-		if (bPressedLeftMouse)
+		if (bPressedLeftMouse && !bIsClickedPanel)
 			DrawSelectBox();
 	}
-
+	CheckKeysAndExecute();
 	FindMostUnit();
 }
 
@@ -84,6 +92,7 @@ void ADNG_RTSPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAction("LMousePress", IE_Released, this, &ADNG_RTSPawn::LMouseRelease);
 
 	PlayerInputComponent->BindAction("RMousePress", IE_Pressed, this, &ADNG_RTSPawn::RMousePress);
+	PlayerInputComponent->BindAction("RMousePress", IE_Released, this, &ADNG_RTSPawn::RMouseRelease);
 
 	PlayerInputComponent->BindAction("Shift", IE_Pressed, this, &ADNG_RTSPawn::PressShiftKey);
 	PlayerInputComponent->BindAction("Shift", IE_Released, this, &ADNG_RTSPawn::ReleasedShiftKey);
@@ -100,11 +109,13 @@ void ADNG_RTSPawn::Init()
 	playerController = Cast<APlayerController>(Controller);
 
 	playerController->bShowMouseCursor = true;
+	bIsInitialized = true;
+	//playerController->CurrentMouseCursor = EMouseCursor::Crosshairs;
 	
 	userUI = CreateWidget<URTS_UI>(GetWorld(), UI_Class);
 
 	viewPort = GEngine->GameViewport;
-
+	 
 	if (userUI)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "UI Created");
@@ -158,13 +169,16 @@ void ADNG_RTSPawn::MoveUpCam(float direction)
 
 void ADNG_RTSPawn::LMousePress()
 {
+	FHitResult outHit;
+
+	playerController->GetHitResultUnderCursor(ECC_Visibility, false, outHit);
+
+	targetPos = outHit.Location;
 	bPressedLeftMouse = true;
 
 	mouseStartPos.X = mousePos.X;
 	mouseStartPos.Y = mousePos.Y;
 
-	FHitResult outHit;
-	playerController->GetHitResultUnderCursor(ECC_Visibility, false, outHit);
 	selectionStartPos = outHit.Location;
 	baseUnit = Cast<ADNG_RTSBaseObject>(outHit.GetActor());
 
@@ -173,6 +187,10 @@ void ADNG_RTSPawn::LMousePress()
 		SelectAllSameType();
 		baseUnit = nullptr;
 	}
+	else
+	{
+
+	}
 	// 이후 해당 유닛의 정보를 UI 화면 중앙 밑에 띄우게 할 것.
 	// 또한 유닛들을 2개 이상 선택했을 때, 정보창에 그 개체수들을 띄우도록 할 것.
 }
@@ -180,7 +198,7 @@ void ADNG_RTSPawn::LMousePress()
 void ADNG_RTSPawn::LMouseRelease()
 {
 	bPressedLeftMouse = false;
-	userUI->selectionBoxImage->SetVisibility(ESlateVisibility::Collapsed);
+	userUI->GetSelectionBoxImage()->SetVisibility(ESlateVisibility::Collapsed);
 	
 	if (bIsDoubleClicked)
 	{
@@ -191,6 +209,9 @@ void ADNG_RTSPawn::LMouseRelease()
 	{
 		return;
 	}
+
+	if (bIsClickedPanel)
+		bIsClickedPanel = false;
 
 	FHitResult outHit;
 	playerController->GetHitResultUnderCursor(ECC_Visibility, false, outHit);
@@ -230,8 +251,14 @@ void ADNG_RTSPawn::SelectAllSameType()
 		if (baseUnitName == unit->GetUnitName())
 		{
 			unit->SetSelectedStatus(true);
+			unit->SetPawn(this);
 			selectedUnits.Add(unit);
 		}
+	}
+
+	for (int i = 0; i < selectedUnits.Num(); ++i)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, selectedUnits[i]->GetName());
 	}
 
 	bIsDoubleClicked = true;
@@ -285,6 +312,7 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 				selectedUnits.Empty();
 			}
 
+			unit->SetPawn(this);
 			unit->SetSelectedStatus(true);
 			selectedUnits.Add(unit);
 		}
@@ -317,57 +345,78 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 
 void ADNG_RTSPawn::RMousePress()
 {
+	bPressedRightMouse = true;
+
 	FHitResult outHit;
 	Cast<APlayerController>(Controller)->GetHitResultUnderCursor(ECC_Visibility, false, outHit);
 	FVector dest = outHit.Location;
-	
+	targetPos = outHit.Location;
+
+	AActor *actor = outHit.GetActor();
 	// 적 클릭 시 공격
+
+	// 아군 클릭 시 아군 따라가기
 
 	// 땅 바닥 클릭 시 이동
 	MoveUnits(dest);
+}
 
-
+void ADNG_RTSPawn::RMouseRelease()
+{
+	bPressedRightMouse = false;
 }
 
 void ADNG_RTSPawn::MoveUnits(FVector dest)
 {
-	int size = selectedUnits.Num();
-	float root = sqrt(size);
-	float side = (int)root;
-
-	if (size == 0) return;
-
-	if (root != side)
+	
+	for (int i = 0; i < selectedUnits.Num(); ++i)
 	{
-		side += 1;
-	}
-
-	int offsetX = (size / side + (size % (int)side == 0 ? 0 : 1)) - 1;
-	int offsetY = side - 1;
-
-	// X -> 위 아래, Y -> 왼 오른
-
-	float startPointX = unitsPlacementOffset * (offsetX * 0.5f);
-	float startPointY = unitsPlacementOffset * (-offsetY * 0.5f);
-
-	float x = dest.X + startPointX, y = dest.Y + startPointY;
-
-	// GEngine->AddOnScreenDebugMessage(-1, 4.0f, FColor::Yellow, FString::Printf(TEXT("%d"), side));
-	for (int i = 0; i < (int)side; ++i)
-	{
-		float nX = x - (unitsPlacementOffset * i);
-		for (int j = 0; ((j < (int)side) && (i * (int)side + j < size)); ++j)
+		ADNG_RTSUnit *unit = Cast<ADNG_RTSUnit>(selectedUnits[i]);
+		if (unit)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 4.0f, FColor::Yellow, "LOOPING");
-
-			float nY = y + (unitsPlacementOffset * j);
-
-			FVector pos(nX, nY, dest.Z);
-			int idx = i * (int)side + j;
-			DrawDebugSphere(GetWorld(), pos, 32.0f, 16, FColor::Yellow, 5.0f);
-			selectedUnits[idx]->Move(pos);
-		} 
+			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Magenta, "Casted");
+			unit->Move();
+		}
+			//unit->Move();
 	}
+
+	return;
+
+	//int size = selectedUnits.Num();
+	//float root = sqrt(size);
+	//float side = (int)root;
+
+	//if (size == 0) return;
+
+	//if (root != side)
+	//{
+	//	side += 1;
+	//}
+
+	//int offsetX = (size / side + (size % (int)side == 0 ? 0 : 1)) - 1;
+	//int offsetY = side - 1;
+
+	//// X -> 위 아래, Y -> 왼 오른
+
+	//float startPointX = unitsPlacementOffset * (offsetX * 0.5f);
+	//float startPointY = unitsPlacementOffset * (-offsetY * 0.5f);
+
+	//float x = dest.X + startPointX, y = dest.Y + startPointY;
+
+	//for (int i = 0; i < (int)side; ++i)
+	//{
+	//	float nX = x - (unitsPlacementOffset * i);
+	//	for (int j = 0; ((j < (int)side) && (i * (int)side + j < size)); ++j)
+	//	{
+
+	//		float nY = y + (unitsPlacementOffset * j);
+
+	//		FVector pos(nX, nY, dest.Z);
+	//		int idx = i * (int)side + j;
+	//		DrawDebugSphere(GetWorld(), pos, 32.0f, 16, FColor::Yellow, 5.0f);
+	//		//selectedUnits[idx]->Move(pos);
+	//	} 
+	//}
 }
 
 void ADNG_RTSPawn::DrawSelectBox()
@@ -403,6 +452,9 @@ void ADNG_RTSPawn::FindMostUnit()
 		}
 		else
 		{
+			// 유닛의 종류가 달라졌을 때 
+			// mostUnit 또한 달라지는 데,
+			// 이때 CommandMap의 상태를 초기화 하고 잘 바꿔야한다.
 			FString mostUnitName = mostUnit->GetUnitName();
 			if (unitCount[name] > unitCount[mostUnitName])
 			{
@@ -415,22 +467,51 @@ void ADNG_RTSPawn::FindMostUnit()
 
 void ADNG_RTSPawn::MappingCmdPanel()
 {
-	TArray<FCommandInfo>& cmdInfo = mostUnit->GetCmdInfoArray();
+	TMap<FKey, FCommandInfo> &cmdInfo = mostUnit->GetCmdInfoMap();
 
-	for (int i = 0; i < cmdInfo.Num(); ++i)
+	for (auto cmd = cmdInfo.CreateConstIterator(); cmd; ++cmd)
 	{
-		userUI->SetCommandOnPanel(cmdInfo[i]);
+		userUI->SetCommandOnPanel(cmd.Value());
+		commandMap.Add(cmd.Key(), cmd.Value());
 	}
-
 }
 
-void ADNG_RTSPawn::CheckKeys()
+void ADNG_RTSPawn::CheckKeysAndExecute()
 {
 	for (int i = 0; i < keys.Num(); ++i)
 	{
 		if (playerController->IsInputKeyDown(keys[i]))
 		{
-			commandArray[i].ExecuteIfBound();
+			if (commandMap.Contains(keys[i]))
+			{
+				ExecuteCommand(keys[i]);
+			}
+		
 		}
+	}
+}
+
+void ADNG_RTSPawn::ExecuteCommand(FKey key)
+{
+	for (int j = 0; j < selectedUnits.Num(); ++j)
+	{
+		if (selectedUnits[j]->GetCmdInfoMap().Contains(key))
+		{
+			FString unitCmdName = selectedUnits[j]->GetCmdInfoMap().Find(key)->name;
+			FString mostUnitCmdName = mostUnit->GetCmdInfoMap().Find(key)->name;
+			if (unitCmdName == mostUnitCmdName)
+			{
+				selectedUnits[j]->GetCmdInfoMap().Find(key)->commandDele.ExecuteIfBound();
+			}
+		}
+	}
+}
+
+void ADNG_RTSPawn::ReceiveCmdPanel(FKey key)
+{
+	bIsClickedPanel = true;
+	if (commandMap.Contains(key))
+	{
+		ExecuteCommand(key);
 	}
 }

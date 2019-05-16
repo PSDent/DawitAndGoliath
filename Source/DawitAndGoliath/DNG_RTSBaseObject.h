@@ -19,9 +19,10 @@ public:
 	// Sets default values for this character's properties
 	ADNG_RTSBaseObject();
 
+	void SetPawn(class ADNG_RTSPawn *pawn) { this->pawn = pawn; };
 	void SetSelectedStatus(bool status);
 	bool GetSelectedStatus() { return bIsSelected; };
-	TArray<FCommandInfo>& GetCmdInfoArray() { return commandInfoArray; };
+	TMap<FKey, FCommandInfo>& GetCmdInfoMap() { return commandInfoMap; };
 	FString GetUnitName() { return unitName; };
 
 protected:
@@ -35,30 +36,23 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	// Basic RTS Object Command
-	void Move(FVector dest);
-	void Stop();
-	void Hold();
-	void Patrol();
-
 public:
 	class UDNGProperty *objProperty;
 
 private:
-	TArray<FCommandInfo> commandInfoArray;
-
 	UDecalComponent *ringDecal;
+
+protected:
+	class ADNG_RTSPawn *pawn;
+	TMap<FKey, FCommandInfo> commandInfoMap;
+
+	FTimerDelegate commandCheckDele;
+	FTimerHandle commandCheckHandle;
 	ADNG_RTSUnitAIController *aiController;
 
 	FString unitName;
 
-	bool bIsHold;
 	bool bIsSelected;
 
-protected:
-
 public:
-
-
-
 };

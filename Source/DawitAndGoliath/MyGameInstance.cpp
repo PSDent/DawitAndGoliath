@@ -364,8 +364,8 @@ void UMyGameInstance::InitPlayersPawn()
 
 		for (int i = 0; i < playerCtrlArr.Num(); ++i)
 		{
-			if (sessionRoleInfo.Find(serverName))
-			{
+			//if (sessionRoleInfo.Find(serverName))
+			//{
 				APawn *pawn = nullptr;
 				FActorSpawnParameters spawnInfo;
 				spawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -381,7 +381,7 @@ void UMyGameInstance::InitPlayersPawn()
 
 				ABaseController* playerController = Cast<ABaseController>(playerCtrlArr[i]);
 				playerController->Possess(pawn);
-			}
+			//}
 		}
 	}
 }
