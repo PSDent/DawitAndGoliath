@@ -146,7 +146,8 @@ protected:
 
 	bool IsReloading;
 
-	bool IsBoosting;
+	UPROPERTY(BlueprintReadOnly, category = "FPS_State", Replicated)
+		bool IsBoosting;
 	
 public:	
 	// Called every frame

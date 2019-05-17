@@ -312,6 +312,7 @@ void AFPSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLi
 
 	DOREPLIFETIME(AFPSCharacter, Cam3rd);
 	DOREPLIFETIME(AFPSCharacter, CurrentWeapon);
+	DOREPLIFETIME(AFPSCharacter, IsBoosting);
 	//DOREPLIFETIME(AFPSCharacter, Weapons);
 
 }
@@ -445,7 +446,6 @@ void AFPSCharacter::SetBoost()
 {
 	IsBoosting = !IsBoosting;
 
-	PlayAnimMontage(BoostMontage);
 	ServerSetBoost(IsBoosting);
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::FromInt(MovementComponent->MaxWalkSpeed));
 }
