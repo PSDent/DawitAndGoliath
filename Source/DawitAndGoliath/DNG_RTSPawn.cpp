@@ -174,6 +174,7 @@ void ADNG_RTSPawn::LMousePress()
 	playerController->GetHitResultUnderCursor(ECC_Visibility, false, outHit);
 
 	targetPos = outHit.Location;
+	targetActor = outHit.GetActor();
 	bPressedLeftMouse = true;
 
 	mouseStartPos.X = mousePos.X;

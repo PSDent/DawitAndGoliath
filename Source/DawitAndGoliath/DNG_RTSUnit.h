@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "DNG_RTSBaseObject.h"
+
+#include "BehaviorTree/BlackboardComponent.h"
+
 #include "DNG_RTSUnit.generated.h"
 
 /**
@@ -22,30 +25,54 @@ public:
 
 public:
 	// Command
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, category = "RTSMelee")
 		void Move();
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, category = "RTSMelee")
 		void Stop();
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, category = "RTSMelee")
 		void Hold();
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, category = "RTSMelee")
 		void Patrol();
+	UFUNCTION()
+		virtual void Attack();
+	UFUNCTION(BlueprintCallable, category = "RTSMelee")
+		virtual void Deal(AActor *targetActor);
+	UFUNCTION(BlueprintCallable, category = "RTSUnit")
+		virtual void Check();
 
 private:
-
+	void CompareDistance();
 
 protected:
-	AActor *target;
+	
 
 
 public:
 
+
+
 private:
+	FTimerDelegate attackDelayDele;
+	FTimerHandle attackDelayTimerHandle;
 
 protected:
+	TArray<class AFPSCharacter*> enemyPlayers;
+	AActor *target;
 
+	UPROPERTY(BlueprintReadWrite, category = "RTSUnit")
+		UBlackboardComponent *blackBoard;
+
+	float fireRange;
+	float fireRate;
 	float damage;
 
+	UPROPERTY(BlueprintReadOnly, category = "RTSUnit")
+		bool bIsWalk;
+
 	bool bIsHold;
+
+	// BlackBoard Key
+	FName bIsCanDeal = "IsCanDeal";
+
 
 };

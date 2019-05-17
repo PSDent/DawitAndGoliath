@@ -4,6 +4,7 @@
 #include "Engine.h"
 #include "DNGProperty.h"
 #include "DNG_RTSPawn.h"
+#include "FPSCharacter.h"
 
 ADNG_RTSUnit_Melee::ADNG_RTSUnit_Melee() : Super()
 {
@@ -15,6 +16,9 @@ ADNG_RTSUnit_Melee::ADNG_RTSUnit_Melee() : Super()
 	objProperty->SetMaxHp(50.0f);
 	objProperty->SetHp(50.0f);
 	unitName = "MeleeUnit";
+
+	damage = 50.0f;
+
 }
 
 void ADNG_RTSUnit_Melee::BeginPlay()
@@ -25,41 +29,14 @@ void ADNG_RTSUnit_Melee::BeginPlay()
 void ADNG_RTSUnit_Melee::Tick(float DeltaTime) 
 {
 	Super::Tick(DeltaTime);
+
+	if (objProperty->GetHp() <= 0.0f)
+		GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "DIEEEEEEEEEEE");
+
+		//OnDied();
 }
 
-void ADNG_RTSUnit_Melee::Attack()
-{
-	if (/*!pawn->GetLeftMouseStatus() && */!pawn->GetRightMouseStatus())
-	{
-		pawn->GetPlayerController()->CurrentMouseCursor = EMouseCursor::Crosshairs;
-	}
-
-	commandCheckDele.BindLambda(
-		[&] {
-		if (pawn->GetLeftMouseStatus() || pawn->GetRightMouseStatus())
-		{
-			// BT에서 공격 플래그를 체크한 후
-			// 해당 위치로 이동하며 계속 공격 대상을 찾는다.
-			// 적을 지목하였다면 계속해서 적을 쫒아가며 공격해간다.
-
-			// 계속해서 목표 위치를 갱신하는 함수를 작성하여
-			// 루프를 돌릴 것.
-			if (pawn->targetActor)
-			{
-				target = pawn->targetActor;
-			}
-			else
-			{
-
-			}
-			
-			aiController->MoveToLocation(pawn->targetPos);
-
-			pawn->GetPlayerController()->CurrentMouseCursor = EMouseCursor::Default;
-
-			GetWorld()->GetTimerManager().ClearTimer(commandCheckHandle);
-		}
-	}
-	);
-	GetWorld()->GetTimerManager().SetTimer(commandCheckHandle, commandCheckDele, 0.001f, true, 0.0f);
-}
+//void ADNG_RTSUnit_Melee::OnDied()
+//{
+//	GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "DIEEEEEEEEEEE");
+//}
