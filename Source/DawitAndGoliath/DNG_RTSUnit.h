@@ -72,7 +72,7 @@ protected:
 	bool bIsHold;
 
 	// BlackBoard Key
-	FName bIsCanDeal = "IsCanDeal";
+	FName key_IsCanDeal = "IsCanDeal";
 
 
 };

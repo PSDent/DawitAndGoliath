@@ -2,3 +2,20 @@
 
 #include "DNG_RTSConstruction.h"
 
+ADNG_RTSConstruction::ADNG_RTSConstruction() : Super()
+{
+
+	bIsMovable = false;
+}
+
+void ADNG_RTSConstruction::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+}
+
+void ADNG_RTSConstruction::BeginPlay()
+{
+	Super::BeginPlay();
+
+}

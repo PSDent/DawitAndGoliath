@@ -32,6 +32,9 @@ public:
 	void PressCtrlKey() { bPressedCtrlKey = true; }
 	void ReleasedCtrlKey() { bPressedCtrlKey = false; }
 
+	// setter
+	void SetCommandingFlag(bool flag) { bIsCommanding = flag; }
+
 	// getter
 	bool GetLeftMouseStatus() { return bPressedLeftMouse; }
 	bool GetRightMouseStatus() { return bPressedRightMouse; }
@@ -105,7 +108,8 @@ private:
 	bool bIsCommanding;
 	bool bIsTargeted;
 	bool bIsClickedPanel;
-	
+	bool bIsCommading;
+
 	bool bIsInitialized;
 
 	// Key

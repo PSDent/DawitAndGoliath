@@ -3,6 +3,7 @@
 #include "DNG_RTSUnit.h"
 #include "DNG_RTSPawn.h"
 #include "FPSCharacter.h"
+#include "DNGProperty.h"
 #include "Engine.h"
 
 ADNG_RTSUnit::ADNG_RTSUnit() : Super()
@@ -29,11 +30,11 @@ void ADNG_RTSUnit::BeginPlay()
 {
 	Super::BeginPlay();
 
-	blackBoard->SetValueAsBool(bIsCanDeal, true);
+	blackBoard->SetValueAsBool(key_IsCanDeal, true);
 
 	TArray<AActor*> actors;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), TSubclassOf<AFPSCharacter>(), actors);
-	
+
 	for (auto actor : actors)
 	{
 		AFPSCharacter *enemy = Cast<AFPSCharacter>(actor);
@@ -57,6 +58,7 @@ void ADNG_RTSUnit::Move()
 
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "Move!");
 
+	pawn->SetCommandingFlag(true);
 	if (/*!pawn->GetLeftMouseStatus() && */!pawn->GetRightMouseStatus())
 	{
 		pawn->GetPlayerController()->CurrentMouseCursor = EMouseCursor::Crosshairs;
@@ -97,7 +99,8 @@ void ADNG_RTSUnit::Patrol()
 
 void ADNG_RTSUnit::Attack()
 {
-
+	pawn->SetCommandingFlag(true);
+	
 	pawn->GetPlayerController()->CurrentMouseCursor = EMouseCursor::Crosshairs;
 
 	commandCheckDele.BindLambda(
@@ -113,10 +116,12 @@ void ADNG_RTSUnit::Attack()
 			if (pawn->targetActor)
 			{
 				target = pawn->targetActor;
+				GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Attack Target");
+				Deal(target);
 			}
 			else
 			{
-
+				GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Attack Ground");
 			}
 
 			aiController->MoveToLocation(pawn->targetPos);
@@ -132,36 +137,41 @@ void ADNG_RTSUnit::Attack()
 
 void ADNG_RTSUnit::Deal(AActor *targetActor)
 {
-	blackBoard->SetValueAsBool(bIsCanDeal, false);
-	GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Attack");
+	bool isInRange = GetDistanceTo(targetActor) <= fireRange ? true : false;
+	bool isCoolTime = blackBoard->GetValueAsBool(key_IsCanDeal);
+	if (!isInRange || !isCoolTime) return;
 
+	blackBoard->SetValueAsBool(key_IsCanDeal, false);
+	GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Attack");
+	GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, targetActor->GetName());
 
 	if (targetActor->IsA(AFPSCharacter::StaticClass()))
 	{
+		// FPS 캐릭터 HP 감소 로직
 		//Cast<AFPSCharacter>(target)
 	}
-	else if (targetActor->IsA(ADNG_RTSBaseObject::StaticClass()))
+	else if (Cast<ADNG_RTSBaseObject>(targetActor))
 	{
+		GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Hit!");
 		Cast<ADNG_RTSBaseObject>(targetActor)->objProperty->DealDamage(damage);
 	}
 
 	attackDelayDele.BindLambda(
 		[&]()
 	{
-		blackBoard->SetValueAsBool(bIsCanDeal, true);
+		blackBoard->SetValueAsBool(key_IsCanDeal, true);
 	}
 	);
-	GetWorld()->GetTimerManager().SetTimer(attackDelayTimerHandle, attackDelayDele, 0.0f, false, fireRate);
+	GetWorld()->GetTimerManager().SetTimer(attackDelayTimerHandle, attackDelayDele, 0.01f, false, fireRate);
 }
 
 void ADNG_RTSUnit::Check()
 {
-	CompareDistance();
+	//CompareDistance();
 }
 
 void ADNG_RTSUnit::CompareDistance()
 {
-	// 우선, 공격을 정확히 지정한 적의 거리를 잰다
 	// 공격한다.
 	if (target)
 	{
@@ -182,5 +192,7 @@ void ADNG_RTSUnit::CompareDistance()
 				shortestDistEnemy = enemy;
 		}
 	}
-	Deal(shortestDistEnemy);
+
+	if(shortestDist <= fireRange)
+		Deal(shortestDistEnemy);
 }

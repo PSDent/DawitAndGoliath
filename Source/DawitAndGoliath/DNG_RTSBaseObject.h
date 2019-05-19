@@ -19,8 +19,12 @@ public:
 	// Sets default values for this character's properties
 	ADNG_RTSBaseObject();
 
+	// Setter
 	void SetPawn(class ADNG_RTSPawn *pawn) { this->pawn = pawn; };
 	void SetSelectedStatus(bool status);
+
+	// Getter
+	bool GetIsMovable() { return bIsMovable; };
 	bool GetSelectedStatus() { return bIsSelected; };
 	TMap<FKey, FCommandInfo>& GetCmdInfoMap() { return commandInfoMap; };
 	FString GetUnitName() { return unitName; };
@@ -54,6 +58,7 @@ protected:
 	FString unitName;
 
 	bool bIsSelected;
+	bool bIsMovable;
 
 public:
 };

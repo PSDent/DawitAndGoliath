@@ -36,6 +36,7 @@ ADNG_RTSPawn::ADNG_RTSPawn() : Super()
 	bIsCommanding = false;
 	bIsTargeted = false;
 	bIsClickedPanel = false;
+	bIsCommanding = false;
 
 	bIsInitialized = false;
 	baseUnit = nullptr;
@@ -171,10 +172,11 @@ void ADNG_RTSPawn::LMousePress()
 {
 	FHitResult outHit;
 
-	playerController->GetHitResultUnderCursor(ECC_Visibility, false, outHit);
+	playerController->GetHitResultUnderCursor(ECC_Visibility, true, outHit);
 
 	targetPos = outHit.Location;
 	targetActor = outHit.GetActor();
+	DrawDebugSphere(GetWorld(), targetPos, 32.0f, 16, FColor::Orange, false, 5.0f);
 	bPressedLeftMouse = true;
 
 	mouseStartPos.X = mousePos.X;
@@ -218,13 +220,15 @@ void ADNG_RTSPawn::LMouseRelease()
 	playerController->GetHitResultUnderCursor(ECC_Visibility, false, outHit);
 	selectionEndPos = outHit.Location;
 
-	SelectionUnitsInBox();
+	if(!bIsCommanding)
+		SelectionUnitsInBox();
+	bIsCommanding = false;
 }
 
 // 더블클릭 or Ctrl + 좌클릭
 void ADNG_RTSPawn::SelectAllSameType()
 {
-	if (!baseUnit) return;
+	if (!baseUnit || bIsCommanding) return;
 
 	// Shift키를 눌렀다면 선택 유닛 리스트에 추가한다
 

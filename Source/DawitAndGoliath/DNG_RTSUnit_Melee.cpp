@@ -18,7 +18,8 @@ ADNG_RTSUnit_Melee::ADNG_RTSUnit_Melee() : Super()
 	unitName = "MeleeUnit";
 
 	damage = 50.0f;
-
+	fireRate = 1.0f;
+	fireRange = 100.0f;
 }
 
 void ADNG_RTSUnit_Melee::BeginPlay()
@@ -30,8 +31,8 @@ void ADNG_RTSUnit_Melee::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (objProperty->GetHp() <= 0.0f)
-		GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "DIEEEEEEEEEEE");
+	//if (objProperty->GetHp() <= 0.0f)
+	//	GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "DIEEEEEEEEEEE");
 
 		//OnDied();
 }
