@@ -162,6 +162,7 @@ void AFPSCharacter::BeginPlay()
 		}
 	});
 
+	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "FPSCHARACTER");
 }
 
 // Called every frame
@@ -221,7 +222,7 @@ void AFPSCharacter::MulticastFire_Implementation(FFireParam params)
 
 	if (params.IsGun)
 	{
-		//CurrentWeapon ÁÙ¿¡¼­ °è¼Ó Å©·¡½Ã (¹«±â ¹Ù²Ù¸é¼­ ÃÑ ½î´Ùº¸¸é °¡²û Å©·¡½Ã)
+		//CurrentWeapon ï¿½Ù¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ Å©ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½Ù²Ù¸é¼­ ï¿½ï¿½ ï¿½ï¿½Ùºï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Å©ï¿½ï¿½ï¿½ï¿½)
 		FHitResult hit = CurrentWeapon->GetTarget(params.Location, params.SocketLocation, params.Rotation, GetWorld(), this, params.Range);
 		AActor* target = hit.GetActor();
 		if (target)
