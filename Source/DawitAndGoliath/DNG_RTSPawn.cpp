@@ -45,6 +45,9 @@ ADNG_RTSPawn::ADNG_RTSPawn() : Super()
 	EKeys::GetAllKeys(keys);
 	
 	targetActor = nullptr;
+
+	currentSupply = 0;
+	maxSupply = 100;
 }
 
 // Called when the game starts or when spawned

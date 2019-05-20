@@ -137,4 +137,8 @@ private:
 	bool bPressedLeftMouse;
 	bool bPressedShiftKey;
 	bool bPressedCtrlKey;
+
+	// Unit
+	int currentSupply;
+	int maxSupply;
 };

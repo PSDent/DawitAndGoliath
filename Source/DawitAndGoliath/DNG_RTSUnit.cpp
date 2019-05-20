@@ -32,14 +32,14 @@ void ADNG_RTSUnit::BeginPlay()
 
 	blackBoard->SetValueAsBool(key_IsCanDeal, true);
 
-	TArray<AActor*> actors;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), TSubclassOf<AFPSCharacter>(), actors);
+	//TArray<AActor*> actors;
+	//UGameplayStatics::GetAllActorsOfClass(GetWorld(), TSubclassOf<AFPSCharacter>(), actors);
 
-	for (auto actor : actors)
-	{
-		AFPSCharacter *enemy = Cast<AFPSCharacter>(actor);
-		enemyPlayers.Add(enemy);
-	}
+	//for (auto actor : actors)
+	//{
+	//	AFPSCharacter *enemy = Cast<AFPSCharacter>(actor);
+	//	enemyPlayers.Add(enemy);
+	//}
 }
 
 void ADNG_RTSUnit::Tick(float DeltaTime)
