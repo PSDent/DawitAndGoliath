@@ -420,7 +420,7 @@ void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 {
 	check(PlayerInputComponent);
 
-	PlayerInputComponent->BindAxis("MoveForward", this, &AFPSCharacter::MoveForward);
+	PlayerInputComponent->BindAxis("MoveForward", this, &AFPSCharacter::MoveForward);	
 	PlayerInputComponent->BindAxis("MoveRight", this, &AFPSCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("Turn", this, &AFPSCharacter::RotateYaw);
 	PlayerInputComponent->BindAxis("LookUp", this, &AFPSCharacter::RotatePitch);
