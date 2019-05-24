@@ -5,6 +5,7 @@
 #include "TestEnemyPawn.h"
 #include "UnrealNetwork.h"
 #include "FireParam.h"
+#include "DNG_RTSBarrack.h"
 #include "CollisionQueryParams.h"
 
 // Sets default values
@@ -29,6 +30,7 @@ AFPSCharacter::AFPSCharacter()
 	Cam3rd = CreateDefaultSubobject<UCameraComponent>(FName(TEXT("Camera3rd")));
 	Cam3rd->SetupAttachment(SpringArm3rd, USpringArmComponent::SocketName);
 	Cam3rd->SetIsReplicated(true);
+
 	SpringArm3rd->SetNetAddressable();
 	SpringArm3rd->SetIsReplicated(true);
 
@@ -102,7 +104,7 @@ void AFPSCharacter::BeginPlay()
 	Weapons.Add(gun);
 	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::FromInt(Weapons.Num()));
 	gun = NewObject<UGun>();
-	gun->GunInit(TEXT("MachineGun"), 10, 0.06f, 10000, 3.0f, 6.f, 80, GunFireSound);
+	gun->GunInit(TEXT("MachineGun"), 10, 0.06f, 10000, 6.0f, 6.f, 80, GunFireSound);
 	gun->SetParticle(FireParticle, MuzzleFlame);
 	Weapons.Add(gun);
 	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::FromInt(Weapons.Num()));
@@ -222,12 +224,12 @@ void AFPSCharacter::MulticastFire_Implementation(FFireParam params)
 
 	if (params.IsGun)
 	{
-		//CurrentWeapon �ٿ��� ��� ũ���� (���� �ٲٸ鼭 �� ��ٺ��� ���� ũ����)
+		//CurrentWeapon �ٿ��� ���?ũ���� (���� �ٲٸ鼭 �� ��ٺ���?���� ũ����)
 		FHitResult hit = CurrentWeapon->GetTarget(params.Location, params.SocketLocation, params.Rotation, GetWorld(), this, params.Range);
 		AActor* target = hit.GetActor();
 		if (target)
 		{
-			if (target->IsA(ATestEnemyPawn::StaticClass()))
+			if (target->IsA(ADNG_RTSBaseObject::StaticClass()))
 			{
 				TArray<UActorComponent*> arr;
 				target->GetComponents(arr);
@@ -299,7 +301,7 @@ void AFPSCharacter::MulticastGiveDamage_Implementation(AActor* target, float dmg
 				prop->DealDamage(dmg);
 			}
 		}
-	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), FireParticle, target->GetActorLocation(), FRotator::ZeroRotator);
+	//UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), FireParticle, target->GetActorLocation(), FRotator::ZeroRotator);
 }
 
 bool AFPSCharacter::MulticastGiveDamage_Validate(AActor* target, float dmg, FVector loc, FRotator rot)
@@ -337,7 +339,7 @@ bool AFPSCharacter::CheckFlameHit(FVector socLoc, AActor* target)
 	);
 
 	AActor* actor = hit.GetActor();
-	return (actor->IsA(ATestEnemyPawn::StaticClass()));
+	return (!actor || actor->IsA(ADNG_RTSBaseObject::StaticClass()));
 }
 
 void AFPSCharacter::Heal()

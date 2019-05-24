@@ -21,8 +21,10 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-	float Hp;
-	float MaxHp;
+	UPROPERTY(VisibleAnyWhere, Category = "Stat")
+		float Hp;
+	UPROPERTY(VisibleAnyWhere, Category = "Stat")
+		float MaxHp;
 
 public:	
 	// Called every frame

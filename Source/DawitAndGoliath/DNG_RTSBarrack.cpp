@@ -30,7 +30,11 @@ void ADNG_RTSBarrack::BeginPlay()
 {
 	Super::BeginPlay();
 
-
+	if (objProperty)
+	{
+		objProperty->SetMaxHp(3000);
+		objProperty->SetHp(3000);
+	}
 }
 
 void ADNG_RTSBarrack::Tick(float DeltaTime)

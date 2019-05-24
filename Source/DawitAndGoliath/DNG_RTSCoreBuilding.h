@@ -13,5 +13,6 @@ UCLASS()
 class DAWITANDGOLIATH_API ADNG_RTSCoreBuilding : public ADNG_RTSConstruction
 {
 	GENERATED_BODY()
-	
+protected:
+	virtual void BeginPlay() override;
 };

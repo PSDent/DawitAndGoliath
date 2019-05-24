@@ -7,6 +7,7 @@
 #include "Components/DecalComponent.h"
 #include "Materials/Material.h"
 #include "DNG_RTSUnitAIController.h"
+#include "DNGProperty.h"
 #include "DNGStruct.h"
 #include "DNG_RTSBaseObject.generated.h"
 
@@ -42,7 +43,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 public:
-	class UDNGProperty *objProperty;
+	UDNGProperty *objProperty;
 
 private:
 	UDecalComponent *ringDecal;

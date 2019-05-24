@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "AreaWeapon.h"
+#include "DNG_RTSBaseObject.h"
 
 void UAreaWeapon::OnOverlapBegin(
 	UPrimitiveComponent* OverlappedComp,
@@ -10,7 +11,7 @@ void UAreaWeapon::OnOverlapBegin(
 	bool bFromSweep,
 	const FHitResult& SweepResult)
 {
-	if (OtherActor != nullptr && OtherActor->IsA(ATestEnemyPawn::StaticClass()))
+	if (OtherActor != nullptr && OtherActor->IsA(ADNG_RTSBaseObject::StaticClass()))
 	{
 		Targets.Add(OtherActor);
 	}
@@ -22,7 +23,7 @@ void UAreaWeapon::OnOverlapEnd(
 	UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex)
 {
-	if (OtherActor != nullptr && OtherActor->IsA(ATestEnemyPawn::StaticClass()))
+	if (OtherActor != nullptr && OtherActor->IsA(ADNG_RTSBaseObject::StaticClass()))
 	{
 		Targets.Remove(OtherActor);
 	}
