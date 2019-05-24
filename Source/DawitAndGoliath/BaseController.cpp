@@ -10,6 +10,12 @@ ABaseController::ABaseController() : Super()
 
 }
 
+void ABaseController::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+}
+
 void ABaseController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -18,6 +24,7 @@ void ABaseController::BeginPlay()
 void ABaseController::Possess(APawn *pawn)
 {
 	Super::Possess(pawn);
+
 	if (pawn->IsA(AFPSCharacter::StaticClass()))
 	{
 		Cast<AFPSCharacter>(pawn);

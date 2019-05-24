@@ -22,6 +22,8 @@ public:
 	// Sets default values for this pawn's properties
 	ADNG_RTSPawn();
 
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const;
+
 	void Init();
 	void ReceiveCmdPanel(FKey key);
 
@@ -41,11 +43,26 @@ public:
 	APlayerController* GetPlayerController() { return playerController; }
 	URTS_UI* GetUI() { return userUI; };
 
+	UFUNCTION(Reliable, Client, WithValidation)
+		virtual void Client_Init();
+	void Client_Init_Implementation();
+	bool Client_Init_Validate();
+
+	void SetObjectOwner(class ADNG_RTSBaseObject *obj, AController *ownController);
+	UFUNCTION(Reliable, Server, WithValidation)
+		virtual void Server_SetObjectOwner(class ADNG_RTSBaseObject *obj, AController *ownController);
+	void Server_SetObjectOwner_Implementation(class ADNG_RTSBaseObject *obj, AController *ownController);
+	bool Server_SetObjectOwner_Validate(class ADNG_RTSBaseObject *obj, AController *ownController) { return true; }
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 private:
+
+	// Initialize
+	void BasicInit();
+
 	// Cam
 	void MoveCam(float DeltaTime);
 	void MoveRightCam(float direction);
@@ -83,14 +100,15 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
 		TSubclassOf<class URTS_UI> UI_Class;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(Replicated, BlueprintReadOnly)
 		UCameraComponent *rtsCamera;
 
 	FVector targetPos;
 	AActor *targetActor;
 
 private:
-	APlayerController *playerController;
+	UPROPERTY(Replicated)
+		APlayerController *playerController;
 	TArray<ADNG_RTSBaseObject*> selectedUnits;
 
 	// UI 

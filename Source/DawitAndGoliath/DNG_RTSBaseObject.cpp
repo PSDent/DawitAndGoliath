@@ -6,6 +6,7 @@
 #include "DNG_RTSPawn.h"
 #include "RTS_UI.h"
 
+#include "Net/UnrealNetwork.h"
 #include "Engine.h"
 
 // Sets default values
@@ -13,6 +14,7 @@ ADNG_RTSBaseObject::ADNG_RTSBaseObject() : Super()
 {
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	bReplicates = true;
 
 	GetCharacterMovement()->MaxWalkSpeed = 600.0f;
 
@@ -29,7 +31,6 @@ ADNG_RTSBaseObject::ADNG_RTSBaseObject() : Super()
 		ringDecal->SetVisibility(false);
 	}
 
-
 	objProperty = CreateDefaultSubobject<UDNGProperty>(TEXT("DNGProperty"));
 
 	Tags.Add("Object");
@@ -37,7 +38,16 @@ ADNG_RTSBaseObject::ADNG_RTSBaseObject() : Super()
 	unitName = "Object";
 
 	bIsSelected = false;
+
 	
+}
+
+void ADNG_RTSBaseObject::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ADNG_RTSBaseObject, aiController);
+	DOREPLIFETIME(ADNG_RTSBaseObject, pawn);
 }
 
 // Called when the game starts or when spawned

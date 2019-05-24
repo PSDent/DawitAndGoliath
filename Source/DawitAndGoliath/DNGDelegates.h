@@ -8,4 +8,3 @@
 
 DECLARE_DELEGATE(FCommandDelegate);
 //DECLARE_DYNAMIC_DELEGATE(FCommandDelegate);
-//DECLARE_DYNAMIC_DELEGATE_OneParam(FCommandDelegate, int, test);

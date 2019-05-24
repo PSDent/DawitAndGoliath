@@ -4,6 +4,7 @@
 
 ADNG_RTSConstruction::ADNG_RTSConstruction() : Super()
 {
+	bReplicates = true;
 
 	bIsMovable = false;
 }

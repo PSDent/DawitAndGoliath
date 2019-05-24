@@ -61,5 +61,6 @@ public:
 		int column;
 
 	//UPROPERTY(BlueprintAssignable)
-	FCommandDelegate commandDele;
+	//UPROPERTY()
+		FCommandDelegate commandDele;
 };

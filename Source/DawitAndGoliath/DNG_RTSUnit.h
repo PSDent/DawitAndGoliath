@@ -6,6 +6,7 @@
 #include "DNG_RTSBaseObject.h"
 
 #include "BehaviorTree/BlackboardComponent.h"
+#include "BehaviorTree/BehaviorTree.h"
 
 #include "DNG_RTSUnit.generated.h"
 
@@ -27,6 +28,12 @@ public:
 	// Command
 	UFUNCTION(BlueprintCallable, category = "RTSMelee")
 		void Move();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		virtual void Server_Move();
+	void Server_Move_Implementation();
+	bool Server_Move_Validate() { return true; }
+
 	UFUNCTION(BlueprintCallable, category = "RTSMelee")
 		void Stop();
 	UFUNCTION(BlueprintCallable, category = "RTSMelee")
@@ -61,6 +68,20 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, category = "RTSUnit")
 		UBlackboardComponent *blackBoard;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AI")
+		UBlackboardData * useBB;
+		//TSubclassOf<UBlackboardData> useBlackBoard;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AI")
+		UBehaviorTree *useBT;
+		//TSubclassOf<UBehaviorTree> behaviorTree;
+
+	//UPROPERTY(BlueprintReadOnly, category = "RTSUnit")
+	//	TSubclassOf<UBlackboardData> blackBoardAsset;
+
+	//UPROPERTY(BlueprintReadOnly, category = "RTSUnit")
+	//	TSubclassOf<UBehaviorTree> behaviorTreeAsset;
 
 	float fireRange;
 	float fireRate;

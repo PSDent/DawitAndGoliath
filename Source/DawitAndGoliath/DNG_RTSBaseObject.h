@@ -26,7 +26,7 @@ public:
 	// Getter
 	bool GetIsMovable() { return bIsMovable; };
 	bool GetSelectedStatus() { return bIsSelected; };
-	TMap<FKey, FCommandInfo>& GetCmdInfoMap() { return commandInfoMap; };
+	TMap<FKey, const FCommandInfo>& GetCmdInfoMap() { return commandInfoMap; };
 	FString GetUnitName() { return unitName; };
 
 protected:
@@ -41,6 +41,8 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const;
+
 public:
 	class UDNGProperty *objProperty;
 
@@ -48,12 +50,16 @@ private:
 	UDecalComponent *ringDecal;
 
 protected:
-	class ADNG_RTSPawn *pawn;
-	TMap<FKey, FCommandInfo> commandInfoMap;
+	UPROPERTY(Replicated)
+		class ADNG_RTSPawn *pawn;
+
+	TMap<FKey, const FCommandInfo> commandInfoMap;
 
 	FTimerDelegate commandCheckDele;
 	FTimerHandle commandCheckHandle;
-	ADNG_RTSUnitAIController *aiController;
+
+	UPROPERTY(Replicated)
+		ADNG_RTSUnitAIController *aiController;
 
 	FString unitName;
 

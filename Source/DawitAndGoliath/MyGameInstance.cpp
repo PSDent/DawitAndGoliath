@@ -5,6 +5,7 @@
 #include "BaseController.h"
 
 #include "MyPlayerState.h"
+#include "DNG_RTSBarrack.h"
 
 UMyGameInstance::UMyGameInstance(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -308,6 +309,11 @@ void UMyGameInstance::JoinOnClicked_Implementation(FBlueprintSessionResult sessi
 	JoinSession(Player->GetPreferredUniqueNetId().GetUniqueNetId(), GameSessionName, sessionResult.OnlineResult);
 }
 
+// 클났다
+// 호스트가 FPS 선택하고
+// 이외 참가자가 RTS 선택하면
+// RTS가 뻑이 가버림
+
 void UMyGameInstance::TravelToGameLevel(FName sessionHostName)
 {
 	AMyGameStateBase *gameState = Cast<AMyGameStateBase>(GetWorld()->GetGameState());
@@ -366,22 +372,21 @@ void UMyGameInstance::InitPlayersPawn()
 		{
 			//if (sessionRoleInfo.Find(serverName))
 			//{
-				APawn *pawn = nullptr;
-				FActorSpawnParameters spawnInfo;
-				spawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			APawn *pawn = nullptr;
+			FActorSpawnParameters spawnInfo;
+			spawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-				FString roleName = Cast<AMyPlayerState>(Cast<APlayerController>(playerCtrlArr[i])->PlayerState)->playRoleName;
-				
-				FVector pos(startingPoint[0]->GetActorLocation());
-				FRotator rot(0,0,0);
-				if (roleName == "Shooter")
-					pawn = GetWorld()->SpawnActor<AFPSCharacter>(fpsClass, pos, rot, spawnInfo);
-				else if (roleName == "RTS")
-					pawn = GetWorld()->SpawnActor<ADNG_RTSPawn>(rtsClass, pos, rot, spawnInfo);
+			FString roleName = Cast<AMyPlayerState>(Cast<APlayerController>(playerCtrlArr[i])->PlayerState)->playRoleName;
 
-				ABaseController* playerController = Cast<ABaseController>(playerCtrlArr[i]);
-				playerController->Possess(pawn);
-			//}
+			FVector pos(startingPoint[0]->GetActorLocation());
+			FRotator rot(0, 0, 0);
+			if (roleName == "Shooter")
+				pawn = GetWorld()->SpawnActor<AFPSCharacter>(fpsClass, pos, rot, spawnInfo);
+			else if (roleName == "RTS")
+				pawn = GetWorld()->SpawnActor<ADNG_RTSPawn>(rtsClass, pos, rot, spawnInfo);
+
+			ABaseController* playerController = Cast<ABaseController>(playerCtrlArr[i]);
+			playerController->Possess(pawn);
 		}
 	}
 }

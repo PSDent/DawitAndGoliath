@@ -3,7 +3,9 @@
 #include "DNG_RTSPawn.h"
 #include "Engine.h"
 #include "DrawDebugHelpers.h"
+#include "Net/UnrealNetwork.h"
 
+#include "DNG_RTSBarrack.h"
 #include "DNG_RTSUnit.h"
 #include "DNG_RTSUnit_Melee.h"
 
@@ -11,6 +13,8 @@
 ADNG_RTSPawn::ADNG_RTSPawn() : Super()
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	bReplicates = true;
+	
 	PrimaryActorTick.bCanEverTick = true;
 	
 	rtsCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("RTS_Cam"));
@@ -48,6 +52,14 @@ ADNG_RTSPawn::ADNG_RTSPawn() : Super()
 
 	currentSupply = 0;
 	maxSupply = 100;
+}
+
+void ADNG_RTSPawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ADNG_RTSPawn, rtsCamera);
+	DOREPLIFETIME(ADNG_RTSPawn, playerController);
 }
 
 // Called when the game starts or when spawned
@@ -110,22 +122,43 @@ void ADNG_RTSPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 void ADNG_RTSPawn::Init()
 {
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Purple, "Init");
+
+	Client_Init();
+} 
+
+void ADNG_RTSPawn::BasicInit()
+{
 	playerController = Cast<APlayerController>(Controller);
+
 
 	playerController->bShowMouseCursor = true;
 	bIsInitialized = true;
 	//playerController->CurrentMouseCursor = EMouseCursor::Crosshairs;
-	
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Purple, playerController->GetName());
+
 	userUI = CreateWidget<URTS_UI>(GetWorld(), UI_Class);
 
 	viewPort = GEngine->GameViewport;
-	 
+
 	if (userUI)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "UI Created");
 		userUI->AddToViewport();
-
 	}
+	
+	rtsCamera->SetRelativeRotation(FRotator(-60.0f, 0.0f, 0.0f));
+
+}
+
+void ADNG_RTSPawn::Client_Init_Implementation()
+{
+	BasicInit();
+}
+
+bool ADNG_RTSPawn::Client_Init_Validate()
+{
+	return true;
 }
 
 void ADNG_RTSPawn::MoveCam(float DeltaTime)
@@ -179,7 +212,6 @@ void ADNG_RTSPawn::LMousePress()
 
 	targetPos = outHit.Location;
 	targetActor = outHit.GetActor();
-	DrawDebugSphere(GetWorld(), targetPos, 32.0f, 16, FColor::Orange, false, 5.0f);
 	bPressedLeftMouse = true;
 
 	mouseStartPos.X = mousePos.X;
@@ -304,22 +336,20 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 
 	if (!bPressedShiftKey)
 	{
+		for (int i = 0; i < selectedUnits.Num(); ++i)
+		{
+			selectedUnits[i]->SetSelectedStatus(false);
+			selectedUnits[i]->SetPawn(nullptr);
+		}
+
+		selectedUnits.Empty();
+
 		for (auto actor : selectedActors)
 		{
 			ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(actor);
 
-			if (!bIsEmpty)
-			{
-				bIsEmpty = true;
-
-				for (int i = 0; i < selectedUnits.Num(); ++i)
-				{
-					selectedUnits[i]->SetSelectedStatus(false);
-				}
-
-				selectedUnits.Empty();
-			}
-
+			// Controller 인수로 전달하여 
+			SetObjectOwner(unit, Controller);
 			unit->SetPawn(this);
 			unit->SetSelectedStatus(true);
 			selectedUnits.Add(unit);
@@ -349,6 +379,27 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 			}
 		}
 	}
+}
+
+void ADNG_RTSPawn::SetObjectOwner(ADNG_RTSBaseObject *obj, AController *ownController)
+{
+	if (Role == ROLE_Authority)
+	{
+		// 액터 자체에만 하는게 아니라
+		// 액터에 있는 Controller에도 오너를 설정하여야 함.
+		obj->SetOwner(ownController);
+		obj->GetController()->SetOwner(ownController);
+		obj->SetPawn(this);
+	}
+	else
+	{
+		Server_SetObjectOwner(obj, ownController);
+	}
+}
+
+void ADNG_RTSPawn::Server_SetObjectOwner_Implementation(ADNG_RTSBaseObject *obj, AController *ownController)
+{
+	SetObjectOwner(obj, ownController);
 }
 
 void ADNG_RTSPawn::RMousePress()
@@ -475,7 +526,7 @@ void ADNG_RTSPawn::FindMostUnit()
 
 void ADNG_RTSPawn::MappingCmdPanel()
 {
-	TMap<FKey, FCommandInfo> &cmdInfo = mostUnit->GetCmdInfoMap();
+	TMap<FKey, const FCommandInfo> &cmdInfo = mostUnit->GetCmdInfoMap();
 
 	for (auto cmd = cmdInfo.CreateConstIterator(); cmd; ++cmd)
 	{
@@ -501,12 +552,15 @@ void ADNG_RTSPawn::CheckKeysAndExecute()
 
 void ADNG_RTSPawn::ExecuteCommand(FKey key)
 {
+	// 키를 꾹 누르고 있을 때 처음 키를 누르고 있는 시간에 일정 시간을 둔 후,
+	// 일정 시간이 지나면 프레임마다 명령을 수행하도록 구현할 것.
 	for (int j = 0; j < selectedUnits.Num(); ++j)
 	{
 		if (selectedUnits[j]->GetCmdInfoMap().Contains(key))
 		{
 			FString unitCmdName = selectedUnits[j]->GetCmdInfoMap().Find(key)->name;
 			FString mostUnitCmdName = mostUnit->GetCmdInfoMap().Find(key)->name;
+			
 			if (unitCmdName == mostUnitCmdName)
 			{
 				selectedUnits[j]->GetCmdInfoMap().Find(key)->commandDele.ExecuteIfBound();
@@ -523,3 +577,4 @@ void ADNG_RTSPawn::ReceiveCmdPanel(FKey key)
 		ExecuteCommand(key);
 	}
 }
+

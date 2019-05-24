@@ -9,6 +9,7 @@
 ADNG_RTSUnit::ADNG_RTSUnit() : Super()
 {
 	FCommandDelegate dele;
+	bReplicates = true;
 
 	dele.BindUFunction(this, FName("Move"));
 	commandInfoMap.Add(EKeys::M, FCommandInfo("Move", "Move Unit to Clicked Location", EKeys::M, 0, 0, dele));
@@ -24,22 +25,32 @@ ADNG_RTSUnit::ADNG_RTSUnit() : Super()
 
 	bIsHold = false;
 	bIsWalk = false;
+
 }
 
 void ADNG_RTSUnit::BeginPlay()
 {
 	Super::BeginPlay();
 
-	blackBoard->SetValueAsBool(key_IsCanDeal, true);
+	if (!aiController)
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "No AI Controller");
+	else
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Purple, "Ai Controller Exist");
 
-	//TArray<AActor*> actors;
-	//UGameplayStatics::GetAllActorsOfClass(GetWorld(), TSubclassOf<AFPSCharacter>(), actors);
+	// 여기에 뭔가 문제가 있는 모양임.
+	//aiController->UseBlackboard(useBB, blackBoard);
+	//aiController->RunBehaviorTree(useBT);
 
-	//for (auto actor : actors)
-	//{
-	//	AFPSCharacter *enemy = Cast<AFPSCharacter>(actor);
-	//	enemyPlayers.Add(enemy);
-	//}
+	//blackBoard->SetValueAsBool(key_IsCanDeal, true);
+
+	TArray<AActor*> actors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), TSubclassOf<AFPSCharacter>(), actors);
+
+	for (auto actor : actors)
+	{
+		AFPSCharacter *enemy = Cast<AFPSCharacter>(actor);
+		enemyPlayers.Add(enemy);
+	}
 }
 
 void ADNG_RTSUnit::Tick(float DeltaTime)
@@ -54,30 +65,50 @@ void ADNG_RTSUnit::Tick(float DeltaTime)
 
 void ADNG_RTSUnit::Move()
 {
-	FVector dest;
-
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "Move!");
-
-	pawn->SetCommandingFlag(true);
-	if (/*!pawn->GetLeftMouseStatus() && */!pawn->GetRightMouseStatus())
+	if (Role == ROLE_Authority)
 	{
-		pawn->GetPlayerController()->CurrentMouseCursor = EMouseCursor::Crosshairs;
-	}
+		FVector dest;
 
-	commandCheckDele.BindLambda(
-		[&] {
-		if (pawn->GetLeftMouseStatus() || pawn->GetRightMouseStatus())
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "Move!");
+
+		// return;
+		// 이 이상으로 코드가 넘어가면 팅김
+		// 폰이 없거나 플레이어 컨트롤러가 이상한가 봄;
+
+		pawn->SetCommandingFlag(true);
+		if (/*!pawn->GetLeftMouseStatus() && */!pawn->GetRightMouseStatus())
 		{
-			aiController->MoveToLocation(pawn->targetPos);
-
-			pawn->GetPlayerController()->CurrentMouseCursor = EMouseCursor::Default;
-
-			GetWorld()->GetTimerManager().ClearTimer(commandCheckHandle);
+			pawn->GetPlayerController()->CurrentMouseCursor = EMouseCursor::Crosshairs;
 		}
+
+		commandCheckDele.BindLambda(
+			[&] {
+			if (pawn->GetLeftMouseStatus() || pawn->GetRightMouseStatus())
+			{
+				if (aiController)
+					aiController->MoveToLocation(pawn->targetPos);
+				else
+					GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "No AI Controller");
+
+				pawn->GetPlayerController()->CurrentMouseCursor = EMouseCursor::Default;
+
+				GetWorld()->GetTimerManager().ClearTimer(commandCheckHandle);
+			}
+		}
+		);
+		GetWorld()->GetTimerManager().SetTimer(commandCheckHandle, commandCheckDele, 0.001f, true, 0.0f);
 	}
-	);
-	GetWorld()->GetTimerManager().SetTimer(commandCheckHandle, commandCheckDele, 0.001f, true, 0.0f);
+	else
+	{
+		Server_Move();
+	}
 }
+
+void ADNG_RTSUnit::Server_Move_Implementation()
+{
+	Move();
+}
+
 
 void ADNG_RTSUnit::Stop()
 {
