@@ -11,7 +11,7 @@ ADNG_RTSUnit_Melee::ADNG_RTSUnit_Melee() : Super()
 	FCommandDelegate dele;
 
 	dele.BindUFunction(this, FName("Attack"));
-	commandInfoMap.Add(EKeys::A, FCommandInfo("Attack", "Attack Enemy to Click Somewhere", EKeys::A, 1, 0, dele));
+	commandInfoMap.Add(EKeys::A, FCommandInfo("Attack", "Click Somewhere to Attack Enemy", EKeys::A, 1, 0, dele));
 	
 	objProperty->SetMaxHp(50.0f);
 	objProperty->SetHp(50.0f);

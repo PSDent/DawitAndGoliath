@@ -78,9 +78,9 @@ void ADNG_RTSPawn::BeginPlay()
 // Called every frame
 void ADNG_RTSPawn::Tick(float DeltaTime)
 {
-	if (!bIsInitialized) return;
-
 	Super::Tick(DeltaTime);
+
+	if (!bIsInitialized) return;
 
 	viewPort = GEngine->GameViewport;
 	check(viewPort);
@@ -292,6 +292,7 @@ void ADNG_RTSPawn::SelectAllSameType()
 		{
 			unit->SetSelectedStatus(true);
 			unit->SetPawn(this);
+			SetObjectOwner(unit, Controller);
 			selectedUnits.Add(unit);
 		}
 	}
@@ -324,8 +325,6 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 	selectionBox->SetBoxExtent(extent);
 	selectionBox->GetOverlappingActors(selectedActors, TSubclassOf<ADNG_RTSBaseObject>());
 
-	bool bIsEmpty = false;
-
 	for (auto actor : selectedActors)
 	{
 		ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(actor);
@@ -336,6 +335,9 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 
 	if (!bPressedShiftKey)
 	{
+		// 배럭 -> 유닛 클릭 시 튕긴다
+		// 아마 이쪽이 문제가 아닐까 싶다
+		// 잘 살펴보자.
 		for (int i = 0; i < selectedUnits.Num(); ++i)
 		{
 			selectedUnits[i]->SetSelectedStatus(false);
@@ -343,18 +345,24 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 		}
 
 		selectedUnits.Empty();
-
+		
 		for (auto actor : selectedActors)
 		{
 			ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(actor);
 
 			// Controller 인수로 전달하여 
-			SetObjectOwner(unit, Controller);
-			unit->SetPawn(this);
-			unit->SetSelectedStatus(true);
-			selectedUnits.Add(unit);
+			if (unit)
+			{
+				SetObjectOwner(unit, Controller);
+				unit->SetSelectedStatus(true);
+				selectedUnits.Add(unit);
+			}
 		}
 	}
+	// 서로 다른 종류의 유닛을
+	// Shift + Left MB 후
+	// 명령 내릴 시 팅김.
+
 	else if (bPressedShiftKey)
 	{
 		if (selectedActors.Num() == 1)
@@ -363,8 +371,11 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 
 			bool status = !unit->GetSelectedStatus();
 			unit->SetSelectedStatus(status);
-			if(status)
+			if (status)
+			{
+				SetObjectOwner(unit, Controller);
 				selectedUnits.Add(unit);
+			}
 			else
 				selectedUnits.Remove(unit);
 
@@ -375,6 +386,7 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 			{
 				ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(actor);
 				unit->SetSelectedStatus(true);
+				SetObjectOwner(unit, Controller);
 				selectedUnits.Add(unit);
 			}
 		}
@@ -485,12 +497,14 @@ void ADNG_RTSPawn::DrawSelectBox()
 
 void ADNG_RTSPawn::FindMostUnit()
 {
+	mostUnit = nullptr;
+	userUI->ResetCommandOnPanel();
+
 	int len = selectedUnits.Num();
 
 	if (len == 0)
 	{
-		// 이 곳에 명령 패널을 초기화하는 로직을 넣어둘 것.
-		mostUnit = nullptr;
+		userUI->ResetCommandOnPanel();
 		return;
 	}
 
@@ -500,8 +514,10 @@ void ADNG_RTSPawn::FindMostUnit()
 	{
 		FString name = unit->GetUnitName();
 		
-		if(!unitCount.Find(name))
+		if (!unitCount.Contains(name))
+		{
 			unitCount.Add(name, 1);
+		}
 		else
 			++unitCount[name];
 
@@ -511,11 +527,17 @@ void ADNG_RTSPawn::FindMostUnit()
 		}
 		else
 		{
+			FString mostUnitName = mostUnit->GetUnitName();
+
+			if (!mostUnit || !unitCount.Contains(mostUnitName))
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, mostUnitName);
+				return;
+			}
 			// 유닛의 종류가 달라졌을 때 
 			// mostUnit 또한 달라지는 데,
 			// 이때 CommandMap의 상태를 초기화 하고 잘 바꿔야한다.
-			FString mostUnitName = mostUnit->GetUnitName();
-			if (unitCount[name] > unitCount[mostUnitName])
+			if (/*unitCount.Contains(name) && */unitCount[name] > unitCount[mostUnitName])
 			{
 				mostUnit = unit;
 			}

@@ -41,6 +41,22 @@ void URTS_UI::SetCommandOnPanel(FCommandInfo cmdInfo)
 	button->SetToolTipText(FText::FromString(cmdInfo.description));
 }
 
+void URTS_UI::ResetCommandOnPanel()
+{
+	for (int i = 0; i < 16; ++i)
+	{
+		UUserWidget *cmdBtn = Cast<UUserWidget>(commandPanel->GetChildAt(i));
+
+		UTextBlock *shortCutText = Cast<UTextBlock>(cmdBtn->WidgetTree->FindWidget("ShortCut"));
+		UTextBlock *cmdNameText = Cast<UTextBlock>(cmdBtn->WidgetTree->FindWidget("Name"));
+		UButton *button = Cast<UButton>(cmdBtn->WidgetTree->FindWidget("Button_0"));
+
+		shortCutText->SetText(FText::FromString(""));
+		cmdNameText->SetText(FText::FromString(""));
+		button->SetToolTipText(FText::FromString(""));
+	}
+}
+
 void URTS_UI::SendToPawnPanelInfo(FString key)
 {
 	if (key == "")

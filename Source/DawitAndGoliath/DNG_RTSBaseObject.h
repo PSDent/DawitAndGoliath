@@ -47,9 +47,10 @@ public:
 	class UDNGProperty *objProperty;
 
 private:
-	UDecalComponent *ringDecal;
 
 protected:
+	UDecalComponent *ringDecal;
+
 	UPROPERTY(Replicated)
 		class ADNG_RTSPawn *pawn;
 

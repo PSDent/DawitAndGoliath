@@ -32,6 +32,7 @@ public:
 	void DisplayUnitInform(class ADNG_RTSBaseObject*);
 
 	void SetCommandOnPanel(FCommandInfo cmdInfo);
+	void ResetCommandOnPanel();
 	void SetMouseCursor();
 
 	// Getter

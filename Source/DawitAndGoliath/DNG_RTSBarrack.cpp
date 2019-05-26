@@ -25,6 +25,8 @@ ADNG_RTSBarrack::ADNG_RTSBarrack() : Super()
 	dele.BindUFunction(this, FName("SetRallyPoint"));
 	commandInfoMap.Add(EKeys::Y, FCommandInfo("SetRallyPoint", "Set Units go to the Clicked Point", EKeys::Y, 1, 3, dele));
 
+	unitName = "Barrack";
+
 	rallyPoint.Set(-390.0f, -470.0f, 380.0f);
 }
 
@@ -69,7 +71,7 @@ void ADNG_RTSBarrack::SpawnUnit(const FString &unitName)
 
 		for (int i = 0; i < spawnableUnits.Num(); ++i)
 		{
-			if (spawnableUnits[i].Get()->GetName().Find(unitName))
+			if (spawnableUnits[i].Get()->GetName().Contains(unitName))
 			{
 				unit = spawnableUnits[i];
 				break;

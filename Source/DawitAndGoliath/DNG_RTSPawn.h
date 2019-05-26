@@ -152,7 +152,10 @@ private:
 	float height;
 
 	bool bPressedRightMouse;
+
+
 	bool bPressedLeftMouse;
+	
 	bool bPressedShiftKey;
 	bool bPressedCtrlKey;
 

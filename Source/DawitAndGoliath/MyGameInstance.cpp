@@ -348,7 +348,7 @@ void UMyGameInstance::TravelToGameLevel(FName sessionHostName)
 	GetWorld()->GetAuthGameMode()->bUseSeamlessTravel = true;
 	GetWorld()->ServerTravel("/Game/Blueprints/ThirdPersonExampleMap");
 	//InitPlayersPawn();
-	GetWorld()->GetTimerManager().SetTimer(ha, this, &UMyGameInstance::InitPlayersPawn, 0.1f, false, 1.0f);
+	GetWorld()->GetTimerManager().SetTimer(ha, this, &UMyGameInstance::InitPlayersPawn, 0.1f, false, 2.0f);
 
 	//InitPlayersPawn();
 }

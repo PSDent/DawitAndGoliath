@@ -13,5 +13,20 @@ UCLASS()
 class DAWITANDGOLIATH_API ADNG_RTSUnit_Tanker : public ADNG_RTSUnit
 {
 	GENERATED_BODY()
-	
+public:
+	ADNG_RTSUnit_Tanker();
+	void BeginPlay() override;
+	void Tick(float DeltaTime) override;
+
+private:
+
+protected:
+
+public:
+
+private:
+
+protected:
+
+
 };
