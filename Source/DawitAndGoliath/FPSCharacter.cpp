@@ -176,34 +176,28 @@ void AFPSCharacter::Tick(float DeltaTime)
 
 void AFPSCharacter::Fire(FFireParam params)
 {
+	params.WeaponType = CurrentWeaponType;
 
-	if (Role == ROLE_Authority)
-	{
-		MulticastFire(params);
-	}
-	else
-	{
-		params.WeaponType = CurrentWeaponType;
+	params.Location = Cam3rd->GetComponentLocation();
+	params.Rotation = Cam3rd->GetComponentRotation();
+	params.World = GetWorld();
+	params.Damage = CurrentWeapon->GetDamage();
+	params.AttackRate = CurrentWeapon->GetAttackRate();
+	params.Range = CurrentWeapon->GetRange();
+	params.SocketLocation = GetMesh()->GetSocketLocation(TEXT("gun_barrel"));
+	params.IsGun = CurrentWeapon->IsA(UGun::StaticClass());
 
-		params.Location = Cam3rd->GetComponentLocation();
-		params.Rotation = Cam3rd->GetComponentRotation();
-		params.World = GetWorld();
-		params.Damage = CurrentWeapon->GetDamage();
-		params.AttackRate = CurrentWeapon->GetAttackRate();
-		params.Range = CurrentWeapon->GetRange();
-		params.SocketLocation = GetMesh()->GetSocketLocation(TEXT("gun_barrel"));
-		params.IsGun = CurrentWeapon->IsA(UGun::StaticClass());
-
-		FRotator& rot = params.Rotation;
-		rot.Yaw = FMath::RandRange(rot.Yaw - SplitRange, rot.Yaw + SplitRange);
-		rot.Pitch = FMath::RandRange(rot.Pitch - SplitRange, rot.Pitch + SplitRange);
-		ServerFire(params);
-	}
+	FRotator& rot = params.Rotation;
+	rot.Yaw = FMath::RandRange(rot.Yaw - SplitRange, rot.Yaw + SplitRange);
+	rot.Pitch = FMath::RandRange(rot.Pitch - SplitRange, rot.Pitch + SplitRange);
+	ServerFire(params);
 }
 
 void AFPSCharacter::ServerFire_Implementation(FFireParam params)
 {
-	Fire(params);
+	MulticastFire(params);
+
+	// Fire(params);
 }
 
 void AFPSCharacter::MulticastFire_Implementation(FFireParam params)
