@@ -107,7 +107,6 @@ void AFPSCharacter::BeginPlay()
 	gun->GunInit(TEXT("MachineGun"), 10, 0.06f, 10000, 6.0f, 6.f, 80, GunFireSound);
 	gun->SetParticle(FireParticle, MuzzleFlame);
 	Weapons.Add(gun);
-	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::FromInt(Weapons.Num()));
 
 	//CurrentWeapon = Weapons[0];
 	UAreaWeapon* flame = NewObject<UAreaWeapon>();
@@ -364,7 +363,9 @@ bool AFPSCharacter::MulticastFire_Validate(FFireParam params)
 
 void AFPSCharacter::ChangeWeapon(EWeaponType type)
 {
+	IsFireable = false;
 	GetWorldTimerManager().ClearTimer(ReloadTimerHandle);
+	GetWorldTimerManager().SetTimer(ReloadTimerHandle, this, &AFPSCharacter::EnableFire, 1.f, false);
 	switch (type)
 	{
 	case EWeaponType::Rifle:
@@ -397,17 +398,13 @@ void AFPSCharacter::ChangeWeapon(EWeaponType type)
 			wep->GetTargets().Empty();
 	}
 
-	if (IsLeftMousePressed)
-	{
-
-		GetWorldTimerManager().ClearTimer(GunFireTimerHandle);
-		GetWorldTimerManager().SetTimer(GunFireTimerHandle, FireDele, CurrentWeapon->GetAttackRate(), true, 0.0f);
-	}
+	GetWorldTimerManager().ClearTimer(GunFireTimerHandle);
 }
 
 template <EWeaponType T>
 void AFPSCharacter::ChangeWeapon()
 {
+	if (GetWorldTimerManager().IsTimerActive(GunFireTimerHandle)) return;
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Change weapon"));
 	ChangeWeapon(T);
 }
@@ -448,7 +445,6 @@ void AFPSCharacter::Boost()
 void AFPSCharacter::SetBoost()
 {
 	IsBoosting = !IsBoosting;
-
 	ServerSetBoost(IsBoosting);
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::FromInt(MovementComponent->MaxWalkSpeed));
 }
@@ -460,6 +456,7 @@ void AFPSCharacter::ServerSetBoost_Implementation(bool value)
 	else
 		MovementComponent->MaxWalkSpeed = 600;
 
+	IsBoosting = value;
 	ClientSetBoost(value);
 }
 
@@ -474,6 +471,8 @@ void AFPSCharacter::ClientSetBoost_Implementation(bool value)
 		MovementComponent->MaxWalkSpeed = 1200;
 	else
 		MovementComponent->MaxWalkSpeed = 600;
+
+	IsBoosting = value;
 }
 
 bool AFPSCharacter::ClientSetBoost_Validate(bool valye)
@@ -483,9 +482,10 @@ bool AFPSCharacter::ClientSetBoost_Validate(bool valye)
 
 void AFPSCharacter::OnMousePressed()
 {
+	if (!IsFireable) return;
 	IsLeftMousePressed = true;
-
-	//SplitRange = Cast<UGun>(CurrentWeapon)->GetSplitRange();
+	
+	//SplitRange = Cast<UGun>(CurrentWeapon)->GetSplitRange();	
 	GetWorldTimerManager().SetTimer(GunFireTimerHandle, FireDele, CurrentWeapon->GetAttackRate(), true, 0.0f);
 }
 
@@ -546,5 +546,7 @@ float AFPSCharacter::GetAmmoPer()
 
 float AFPSCharacter::GetReloadTimePer()
 {
+	if (!IsFireable)
+		return GetWorldTimerManager().GetTimerRemaining(ReloadTimerHandle) / 1;
 	return GetWorldTimerManager().GetTimerRemaining(ReloadTimerHandle) / CurrentWeapon->GetReloadTime();
 }

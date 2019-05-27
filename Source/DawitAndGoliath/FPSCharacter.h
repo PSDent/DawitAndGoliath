@@ -100,6 +100,8 @@ protected:
 	virtual void ClientSetBoost_Implementation(bool value);
 
 	virtual bool ClientSetBoost_Validate(bool value);
+
+	virtual void EnableFire() { IsFireable = true; }
 	
 	USpringArmComponent* SpringArm3rd;
 
@@ -148,6 +150,8 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, category = "FPS_State", Replicated)
 		bool IsBoosting;
+
+	bool IsFireable = true;
 	
 public:	
 	// Called every frame
