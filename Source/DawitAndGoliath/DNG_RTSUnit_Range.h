@@ -26,6 +26,8 @@ protected:
 public:
 
 private:
+	const USkeletalMeshSocket *muzzle;
+
 
 protected:
 

@@ -16,7 +16,7 @@ ADNG_RTSUnit_Range::ADNG_RTSUnit_Range() : Super()
 
 	damage = 50.0f;
 	fireRate = 1.0f;
-	fireRange = 100.0f;
+	fireRange = 600.0f;
 
 	GetCharacterMovement()->MaxWalkSpeed = 300.0f;
 }
@@ -24,14 +24,13 @@ ADNG_RTSUnit_Range::ADNG_RTSUnit_Range() : Super()
 void ADNG_RTSUnit_Range::BeginPlay()
 {
 	Super::BeginPlay();
+
+	muzzle = GetMesh()->GetSocketByName("Muzzle_Front");
 }
 
 void ADNG_RTSUnit_Range::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//if (objProperty->GetHp() <= 0.0f)
-	//	GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "DIEEEEEEEEEEE");
-
-		//OnDied();
+	fireEffectPos = GetMesh()->GetSocketLocation("Muzzle_Front");
 }

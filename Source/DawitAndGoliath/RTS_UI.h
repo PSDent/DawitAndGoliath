@@ -29,7 +29,9 @@ class DAWITANDGOLIATH_API URTS_UI : public UUserWidget
 public:
 	URTS_UI(const FObjectInitializer &objInitializer);
 	void DrawBox(FVector2D start, FVector2D end);
+	
 	void DisplayUnitInform(class ADNG_RTSBaseObject*);
+	void ResetUnitInform();
 
 	void SetCommandOnPanel(FCommandInfo cmdInfo);
 	void ResetCommandOnPanel();
@@ -52,13 +54,13 @@ protected:
 		UGridPanel *commandPanel;
 
 	UPROPERTY(BlueprintReadWrite, category = "RTS_UI")
-		UCanvas *entityInformCanvas;
+		UCanvasPanel *entityInformCanvas;
 
 	UPROPERTY(BlueprintReadWrite, category = "RTS_UI")
-		UCanvas *entityCanvas;
+		UGridPanel *entityCanvas;
 
 	UPROPERTY(BlueprintReadWrite, category = "RTS_UI")
-		UCanvas *productionInformCanvas;
+		UCanvasPanel *productionInformCanvas;
 
 public:
 };

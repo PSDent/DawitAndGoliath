@@ -378,6 +378,7 @@ void UMyGameInstance::InitPlayersPawn()
 
 			FString roleName = Cast<AMyPlayerState>(Cast<APlayerController>(playerCtrlArr[i])->PlayerState)->playRoleName;
 
+			/// #여기 starting Point 가 아예 없는 경우도 발생한다
 			FVector pos(startingPoint[0]->GetActorLocation());
 			FRotator rot(0, 0, 0);
 			if (roleName == "Shooter")

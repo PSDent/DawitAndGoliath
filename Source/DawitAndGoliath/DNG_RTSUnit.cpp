@@ -24,6 +24,10 @@ ADNG_RTSUnit::ADNG_RTSUnit() : Super()
 	dele.BindUFunction(this, FName("Patrol"));
 	commandInfoMap.Add(EKeys::P, FCommandInfo("Patrol", "Patrol Unit point to point", EKeys::P, 0, 3, dele));
 
+	fireAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("fireAudioComponent"));
+	fireAudioComponent->AttachTo(RootComponent);
+	fireAudioComponent->SetRelativeLocation(FVector(100.0f, 0.0f, 0.0f));
+
 	bIsHold = false;
 	bIsWalk = false;
 	deadDelay = 1.0f;
@@ -53,6 +57,13 @@ void ADNG_RTSUnit::BeginPlay()
 		AFPSCharacter *enemy = Cast<AFPSCharacter>(actor);
 		enemyPlayers.Add(enemy);
 	}
+
+	if (fireAudioComponent->IsValidLowLevelFast())
+	{
+		if(fireSound)
+			fireAudioComponent->SetSound(fireSound);
+	}
+
 }
 
 void ADNG_RTSUnit::Server_BeginPlay_Implementation()
@@ -66,6 +77,8 @@ void ADNG_RTSUnit::Server_BeginPlay_Implementation()
 void ADNG_RTSUnit::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	fireEffectPos = GetActorLocation();
 
 	if (GetCharacterMovement()->Velocity.Size2D() > 0.0f)
 		bIsWalk = true;
@@ -97,16 +110,6 @@ void ADNG_RTSUnit::Move()
 {
 	FVector dest;
 
-	if (!pawn)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "No Pawn");
-
-		return;
-	}
-
-	// 여기서 자꾸 Pawn이 Null이라고 뜬다.
-	// 뭔가 문제가 있는 것 같다.
-	// 잘 해결 해보자.
 	pawn->SetCommandingFlag(true);
 	if (/*!pawn->GetLeftMouseStatus() && */!pawn->GetRightMouseStatus())
 	{
@@ -197,10 +200,9 @@ void ADNG_RTSUnit::Attack()
 			}
 			else
 			{
+				Server_Move(pawn->targetPos);
 				GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Attack Ground");
 			}
-
-			aiController->MoveToLocation(pawn->targetPos);
 
 			pawn->GetPlayerController()->CurrentMouseCursor = EMouseCursor::Default;
 
@@ -227,7 +229,15 @@ void ADNG_RTSUnit::Server_Deal_Implementation(AActor *targetActor)
 {
 	bool isInRange = GetDistanceTo(targetActor) <= fireRange ? true : false;
 	bool isCoolTime = blackBoard->GetValueAsBool(key_IsCanDeal);
+
+	if (!isInRange)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Can't Reach");
+	}
+
 	if (!isInRange || !isCoolTime) return;
+
+	Multicast_FireEffect();
 
 	blackBoard->SetValueAsBool(key_IsCanDeal, false);
 	GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Attack");
@@ -251,6 +261,37 @@ void ADNG_RTSUnit::Server_Deal_Implementation(AActor *targetActor)
 	}
 	);
 	GetWorld()->GetTimerManager().SetTimer(attackDelayTimerHandle, attackDelayDele, 0.01f, false, fireRate);
+}
+
+void ADNG_RTSUnit::Multicast_FireEffect_Implementation()
+{
+	if (fireParticle)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), fireParticle, fireEffectPos, FRotator(0,0,0));
+	}
+
+	if (fireSound)
+	{
+		fireAudioComponent->Play();
+	}
+
+	if (fireAnim)
+	{
+		PlayAnimMontage(fireAnim);
+	}
+
+	if (hitParticle)
+	{
+		FHitResult outHit;
+		FVector start = fireEffectPos;
+		FVector end = target->GetActorLocation();
+		GetWorld()->LineTraceSingleByChannel(outHit, start, end, ECC_GameTraceChannel1);
+		DrawDebugLine(GetWorld(), start, end, FColor::Red, false, 3.0f);
+		FVector hitPos = outHit.Location;
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), hitParticle, hitPos, FRotator(0, 0, 0));
+		DrawDebugSphere(GetWorld(), hitPos, 64.0f, 16, FColor::Red, false, 5.0f);
+
+	}
 }
 
 void ADNG_RTSUnit::Check()

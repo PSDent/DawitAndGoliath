@@ -5,13 +5,13 @@
 #include "DNG_RTSPawn.h"
 #include "Engine.h"
 #include "DNG_RTSBaseObject.h"
+#include "DNGProperty.h"
 
 URTS_UI::URTS_UI(const FObjectInitializer &objInitializer) : Super(objInitializer)
 {
 	//selectionBoxImage = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass());
 	//selectionBoxImage->SetColorAndOpacity(FLinearColor(0.15076f, 0.489583f, 0.09085f, 0.5f));
 }
-
 
 void URTS_UI::DrawBox(FVector2D start, FVector2D end)
 {
@@ -76,5 +76,23 @@ void URTS_UI::SendToPawnPanelInfo(FString key)
 
 void URTS_UI::DisplayUnitInform(ADNG_RTSBaseObject *unit)
 {
+	entityInformCanvas->SetVisibility(ESlateVisibility::Visible);
+	UTextBlock *unitName = Cast<UTextBlock>(entityInformCanvas->GetChildAt(0));
+	unitName->SetText(FText::FromString(unit->GetUnitName()));
 
+	UTextBlock *currentHp = Cast<UTextBlock>(Cast<UHorizontalBox>(entityInformCanvas->GetChildAt(1))->GetChildAt(0));
+	UTextBlock *maxHp = Cast<UTextBlock>(Cast<UHorizontalBox>(entityInformCanvas->GetChildAt(1))->GetChildAt(2));
+
+	int val = unit->objProperty->GetHp();
+	FText hpText = FText::FromString(FString::Printf(TEXT("%d"), val));
+	currentHp->SetText(hpText);
+
+	val = unit->objProperty->GetMaxHp();
+	FText maxHpText = FText::FromString(FString::Printf(TEXT("%d"), val));
+	maxHp->SetText(maxHpText);
+}
+
+void URTS_UI::ResetUnitInform()
+{
+	entityInformCanvas->SetVisibility(ESlateVisibility::Collapsed);
 }

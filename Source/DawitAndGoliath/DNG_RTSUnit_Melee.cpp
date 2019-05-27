@@ -31,13 +31,5 @@ void ADNG_RTSUnit_Melee::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//if (objProperty->GetHp() <= 0.0f)
-	//	GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "DIEEEEEEEEEEE");
-
-		//OnDied();
+	fireEffectPos = GetMesh()->GetSocketLocation("Muzzle_Front");
 }
-
-//void ADNG_RTSUnit_Melee::OnDied()
-//{
-//	GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "DIEEEEEEEEEEE");
-//}

@@ -82,6 +82,15 @@ void ADNG_RTSPawn::Tick(float DeltaTime)
 
 	if (!bIsInitialized) return;
 
+	if (selectedUnits.Num() == 1)
+	{
+		userUI->DisplayUnitInform(selectedUnits[0]);
+	}
+	else
+	{
+		userUI->ResetUnitInform();
+	}
+
 	viewPort = GEngine->GameViewport;
 	check(viewPort);
 	viewPort->GetViewportSize(viewportSize);
@@ -211,7 +220,12 @@ void ADNG_RTSPawn::LMousePress()
 	playerController->GetHitResultUnderCursor(ECC_Visibility, true, outHit);
 
 	targetPos = outHit.Location;
-	targetActor = outHit.GetActor();
+	
+	if (Cast<ADNG_RTSBaseObject>(outHit.GetActor()))
+		targetActor = outHit.GetActor();
+	else
+		targetActor = nullptr;
+
 	bPressedLeftMouse = true;
 
 	mouseStartPos.X = mousePos.X;
@@ -263,6 +277,7 @@ void ADNG_RTSPawn::LMouseRelease()
 // 더블클릭 or Ctrl + 좌클릭
 void ADNG_RTSPawn::SelectAllSameType()
 {
+	// 더블클릭 시 뭔가 좀 멈추는 듯
 	if (!baseUnit || bIsCommanding) return;
 
 	// Shift키를 눌렀다면 선택 유닛 리스트에 추가한다
@@ -335,9 +350,6 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 
 	if (!bPressedShiftKey)
 	{
-		// 배럭 -> 유닛 클릭 시 튕긴다
-		// 아마 이쪽이 문제가 아닐까 싶다
-		// 잘 살펴보자.
 		for (int i = 0; i < selectedUnits.Num(); ++i)
 		{
 			selectedUnits[i]->SetSelectedStatus(false);
@@ -356,6 +368,8 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 				SetObjectOwner(unit, Controller);
 				unit->SetSelectedStatus(true);
 				selectedUnits.Add(unit);
+				unit->SetPawn(this);
+
 			}
 		}
 	}
@@ -375,10 +389,10 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 			{
 				SetObjectOwner(unit, Controller);
 				selectedUnits.Add(unit);
+				unit->SetPawn(this);
 			}
 			else
 				selectedUnits.Remove(unit);
-
 		}
 		else if (selectedActors.Num() > 1)
 		{
@@ -386,6 +400,7 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 			{
 				ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(actor);
 				unit->SetSelectedStatus(true);
+				unit->SetPawn(this);
 				SetObjectOwner(unit, Controller);
 				selectedUnits.Add(unit);
 			}

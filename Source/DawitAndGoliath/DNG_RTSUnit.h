@@ -7,6 +7,8 @@
 
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
+#include "Particles/ParticleSystemComponent.h"
+#include "Sound/SoundCue.h"
 
 #include "DNG_RTSUnit.generated.h"
 
@@ -69,13 +71,17 @@ public:
 	void Server_Attack_Implementation();
 	bool Server_Attack_Validate() { return true; }
 
-
 	UFUNCTION(BlueprintCallable, category = "RTSMelee")
 		void Deal(AActor *targetActor);
 	UFUNCTION(Server, Reliable, WithValidation)
 		virtual void Server_Deal(AActor *targetActor);
 	void Server_Deal_Implementation(AActor *targetActor);
 	bool Server_Deal_Validate(AActor *targetActor) { return true; }
+
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+		virtual void Multicast_FireEffect();
+	void Multicast_FireEffect_Implementation();
+	bool Multicast_FireEffect_Validate() { return true; };
 
 
 	UFUNCTION(BlueprintCallable, category = "RTSUnit")
@@ -114,18 +120,31 @@ protected:
 		UBlackboardComponent *blackBoard;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AI")
-		UBlackboardData * useBB;
+		UBlackboardData *useBB;
 		//TSubclassOf<UBlackboardData> useBlackBoard;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AI")
 		UBehaviorTree *useBT;
-		//TSubclassOf<UBehaviorTree> behaviorTree;
 
-	//UPROPERTY(BlueprintReadOnly, category = "RTSUnit")
-	//	TSubclassOf<UBlackboardData> blackBoardAsset;
+	// Effect
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "RTS Unit")
+		UParticleSystem *fireParticle;
 
-	//UPROPERTY(BlueprintReadOnly, category = "RTSUnit")
-	//	TSubclassOf<UBehaviorTree> behaviorTreeAsset;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "RTS Unit")
+		UParticleSystem *hitParticle;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "RTS Unit")
+		USoundCue *fireSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "RTS Unit")
+		UAnimMontage *fireAnim;
+
+	UAudioComponent *fireAudioComponent;
+
+	FVector fireEffectPos;
+		//TSubclassOf<UParticleSystem> fireParticle;
+
+	
 
 	float deadDelay;
 	float fireRange;
