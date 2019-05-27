@@ -13,19 +13,13 @@ ATestEnemyPawn::ATestEnemyPawn()
 	bReplicates = true;
 	bAlwaysRelevant = true;
 
+	Prop = CreateDefaultSubobject<UDNGProperty>(TEXT("Fuck you"));
 }
 
 // Called when the game starts or when spawned
 void ATestEnemyPawn::BeginPlay()
 {
 	Super::BeginPlay();
-
-	TArray<UActorComponent*> arr;
-	GetComponents(arr);
-
-	for (UActorComponent* c : arr)
-		if (c->IsA(UDNGProperty::StaticClass()))
-			Prop = Cast<UDNGProperty>(c);
 
 	if (Prop)
 	{

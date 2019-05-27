@@ -44,21 +44,17 @@ void UDNGProperty::DealDamage(float dmg)
 	if (Hp - dmg > MaxHp)
 	{
 		Hp = MaxHp;
-		if (GetOwner()->Role == ROLE_Authority)
-			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Stop! It's already a corpse..."));
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("overheal"));
 	}
-	else if (Hp <= dmg)	
+	else if (Hp <= dmg)
 	{
 		Hp = 0;
 		//»ç¸Á Ã³¸®
-		if (GetOwner()->Role == ROLE_Authority)
-			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Dead"));
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Dead"));
 	}
 	else
 	{
 		Hp -= dmg;
-		if (GetOwner()->Role == ROLE_Authority)
-			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("Dealt %.0f, Left : %.0f"), dmg, Hp));
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("Dealt %.0f, Left : %.0f"), dmg, Hp));
 	}
 }
-
