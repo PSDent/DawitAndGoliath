@@ -91,6 +91,14 @@ void ADNG_RTSPawn::Tick(float DeltaTime)
 		userUI->ResetUnitInform();
 	}
 
+	for (int i = 0; i < selectedUnits.Num(); ++i)
+	{
+		if (!selectedUnits[i]->bIsAlive)
+		{
+			selectedUnits.RemoveAt(i);
+		}
+	}
+
 	viewPort = GEngine->GameViewport;
 	check(viewPort);
 	viewPort->GetViewportSize(viewportSize);
@@ -301,7 +309,7 @@ void ADNG_RTSPawn::SelectAllSameType()
 	{
 		ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(actor);
 
-		if (!unit) continue;
+		if (!unit || !unit->bIsAlive) continue;
 
 		if (baseUnitName == unit->GetUnitName())
 		{
@@ -344,7 +352,7 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 	{
 		ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(actor);
 
-		if (!unit)
+		if (!unit || !unit->bIsAlive)
 			selectedActors.Remove(actor);
 	}
 

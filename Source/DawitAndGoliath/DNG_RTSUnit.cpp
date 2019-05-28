@@ -94,7 +94,7 @@ void ADNG_RTSUnit::Tick(float DeltaTime)
 void ADNG_RTSUnit::Server_Die_Implementation()
 {
 	bIsDie = true;
-
+	bIsAlive = false;
 }
 
 void ADNG_RTSUnit::Server_AfterDie_Implementation()
@@ -286,10 +286,10 @@ void ADNG_RTSUnit::Multicast_FireEffect_Implementation()
 		FVector start = fireEffectPos;
 		FVector end = target->GetActorLocation();
 		GetWorld()->LineTraceSingleByChannel(outHit, start, end, ECC_GameTraceChannel1);
-		DrawDebugLine(GetWorld(), start, end, FColor::Red, false, 3.0f);
+		//DrawDebugLine(GetWorld(), start, end, FColor::Red, false, 3.0f);
 		FVector hitPos = outHit.Location;
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), hitParticle, hitPos, FRotator(0, 0, 0));
-		DrawDebugSphere(GetWorld(), hitPos, 64.0f, 16, FColor::Red, false, 5.0f);
+		//DrawDebugSphere(GetWorld(), hitPos, 64.0f, 16, FColor::Red, false, 5.0f);
 
 	}
 }

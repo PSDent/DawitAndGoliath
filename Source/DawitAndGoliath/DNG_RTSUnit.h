@@ -102,7 +102,7 @@ protected:
 	bool Server_AfterDie_Validate() { return true; }
 
 public:
-
+	int spawnTime = 0;
 
 
 private:

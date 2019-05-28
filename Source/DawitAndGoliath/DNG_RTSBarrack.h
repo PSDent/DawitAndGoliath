@@ -31,12 +31,33 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "RTS")
 		void SetRallyPoint();
 
+	UFUNCTION(BlueprintCallable, Category = "RTS")
+		void CancleCurrentSpawn();
+
 private:
-	void SpawnUnit(const FString &unitName);
+	void SpawnUnit(TSubclassOf<class ADNG_RTSUnit> unitType);
 	UFUNCTION(Reliable, Server, WithValidation)
-		virtual void Server_SpawnUnit(const FString &unitName);
-	void Server_SpawnUnit_Implementation(const FString &unitName);
-	bool Server_SpawnUnit_Validate(const FString &unitName);
+		virtual void Server_SpawnUnit(TSubclassOf<class ADNG_RTSUnit> unitType);
+	void Server_SpawnUnit_Implementation(TSubclassOf<class ADNG_RTSUnit> unitType);
+	bool Server_SpawnUnit_Validate(TSubclassOf<class ADNG_RTSUnit> unitType);
+
+	UFUNCTION(Reliable, Server, WithValidation)
+		virtual void Server_SetRallyPoint(FVector dest);
+	void Server_SetRallyPoint_Implementation(FVector dest);
+	bool Server_SetRallyPoint_Validate(FVector dest) { return true; }
+
+	void Spawning(float time);
+	UFUNCTION(Reliable, Server, WithValidation)
+		virtual void Server_Spawning(float time);
+	void Server_Spawning_Implementation(float time);
+	bool Server_Spawning_Validate(float time) { return true; };
+
+	void AddSpawnQueue(const FString &unitName);
+	UFUNCTION(Reliable, Server, WithValidation)
+		virtual void Server_AddSpawnQueue(const FString &unitName);
+	void Server_AddSpawnQueue_Implementation(const FString &unitName);
+	bool Server_AddSpawnQueue_Validate(const FString &unitName) { return true; }
+
 public:
 
 
@@ -45,8 +66,22 @@ protected:
 public:
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 		TArray<TSubclassOf<class ADNG_RTSUnit>> spawnableUnits;
-private:
+	
+	UPROPERTY(BlueprintReadOnly)
+		float spawnTime = 0;
+
+private: 
+	// Spawn Queue
+	TQueue<TSubclassOf<ADNG_RTSUnit>> spawnQueue;
+
+	FTimerDelegate spawningDele;
+	FTimerHandle spawningTimer;
+
+	// Rally Point
+	FTimerDelegate rallyDele;
+	FTimerHandle rallyTimer;
 	FVector rallyPoint;
+	FVector spawnPoint;
 
 protected:
 

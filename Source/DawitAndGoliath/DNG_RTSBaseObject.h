@@ -47,6 +47,9 @@ public:
 public:
 	UDNGProperty *objProperty;
 
+	UPROPERTY(Replicated)
+		bool bIsAlive;
+
 private:
 
 protected:

@@ -6,6 +6,7 @@
 #include "DNG_RTSUnit_Melee.h"
 #include "DNG_RTSUnit_Tanker.h"
 #include "DNG_RTSUnit_Range.h"
+#include "DNG_RTSPawn.h"
 #include "FPSCharacter.h"
 
 ADNG_RTSBarrack::ADNG_RTSBarrack() : Super()
@@ -27,6 +28,7 @@ ADNG_RTSBarrack::ADNG_RTSBarrack() : Super()
 
 	unitName = "Barrack";
 
+
 	rallyPoint.Set(-390.0f, -470.0f, 380.0f);
 }
 
@@ -39,51 +41,69 @@ void ADNG_RTSBarrack::BeginPlay()
 		objProperty->SetMaxHp(3000);
 		objProperty->SetHp(3000);
 	}
+
+	spawnPoint = RootComponent->GetChildComponent(3)->GetComponentLocation();
 }
 
 void ADNG_RTSBarrack::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	Spawning(DeltaTime);
+	
 }
 
 void ADNG_RTSBarrack::SpawnMeleeUnit()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Emerald, "Spawn Melee Unit");
-	SpawnUnit("Melee");
+	AddSpawnQueue("Melee");
 }
 
 void ADNG_RTSBarrack::SpawnRangeUnit()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Emerald, "Spawn Range Unit");
-	SpawnUnit("Range");
+	AddSpawnQueue("Range");
 }
 
 void ADNG_RTSBarrack::SpawnTankerUnit()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Emerald, "Spawn Tanker Unit");
-	SpawnUnit("Tanker");
+	AddSpawnQueue("Tanker");
 }
 
 void ADNG_RTSBarrack::SetRallyPoint()
 {
+	pawn->SetCommandingFlag(true);
 
+	pawn->GetPlayerController()->CurrentMouseCursor = EMouseCursor::Crosshairs;
+
+	rallyDele.BindLambda(
+		[&] {
+		if (pawn->GetLeftMouseStatus() || pawn->GetRightMouseStatus())
+		{
+			Server_SetRallyPoint(pawn->targetPos);
+
+			pawn->GetPlayerController()->CurrentMouseCursor = EMouseCursor::Default;
+
+			GetWorld()->GetTimerManager().ClearTimer(rallyTimer);
+		}
+	}
+	);
+	GetWorld()->GetTimerManager().SetTimer(rallyTimer, rallyDele, 0.001f, true, 0.0f);
 }
 
-void ADNG_RTSBarrack::SpawnUnit(const FString &unitName)
+void ADNG_RTSBarrack::Server_SetRallyPoint_Implementation(FVector dest)
+{
+	rallyPoint = dest;
+	DrawDebugSphere(GetWorld(), dest, 64.0f, 16, FColor::Orange, false, 3.0f);
+	DrawDebugSphere(GetWorld(), spawnPoint, 64.0f, 16, FColor::Green, false, 3.0f);
+	DrawDebugLine(GetWorld(), rallyPoint, spawnPoint, FColor::Magenta, false, 4.0f);
+}
+
+
+void ADNG_RTSBarrack::SpawnUnit(TSubclassOf<ADNG_RTSUnit> unitType)
 {
 	if (Role == ROLE_Authority) 
 	{
-		TSubclassOf<ADNG_RTSUnit> unit;
-
-		for (int i = 0; i < spawnableUnits.Num(); ++i)
-		{
-			if (spawnableUnits[i].Get()->GetName().Contains(unitName))
-			{
-				unit = spawnableUnits[i];
-				break;
-			}
-		}
-
 		FActorSpawnParameters spawnInfo = FActorSpawnParameters();
 		spawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		spawnInfo.bNoFail = true;
@@ -92,23 +112,89 @@ void ADNG_RTSBarrack::SpawnUnit(const FString &unitName)
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Emerald, rallyPoint.ToString());
 		// SpawnActor로 스폰하는 경우 Controller가 자동으로 탑재 되있지 않는다
 		// 이를 막기 위해 BP에서 Auto Posses AI 란을 Placed in World or Spawn으로 바꿔준다.
-		rallyPoint.Set(-390.0f, -470.0f, 380.0f);
 
-		GetWorld()->SpawnActor<ADNG_RTSUnit>(unit, rallyPoint, FRotator::ZeroRotator, spawnInfo);
+		ADNG_RTSUnit *spawnedUnit = GetWorld()->SpawnActor<ADNG_RTSUnit>(unitType, spawnPoint, FRotator::ZeroRotator, spawnInfo);
 		DrawDebugSphere(GetWorld(), rallyPoint, 64.0f, 16, FColor::Red, false, 3.0f);
+		spawnedUnit->Server_Move(rallyPoint);
 	}
 	else
 	{
-		Server_SpawnUnit(unitName);
+		Server_SpawnUnit(unitType);
 	}
 }
 
-void ADNG_RTSBarrack::Server_SpawnUnit_Implementation(const FString &unitName)
+void ADNG_RTSBarrack::Server_SpawnUnit_Implementation(TSubclassOf<ADNG_RTSUnit> unitType)
 {
-	SpawnUnit(unitName);
+	SpawnUnit(unitType);
 }
 
-bool ADNG_RTSBarrack::Server_SpawnUnit_Validate(const FString &unitName)
+bool ADNG_RTSBarrack::Server_SpawnUnit_Validate(TSubclassOf<ADNG_RTSUnit> unitType)
 {
 	return true;
+}
+
+void ADNG_RTSBarrack::Spawning(float time)
+{
+	if (Role == ROLE_Authority)
+	{
+		if (spawnQueue.IsEmpty()) return;
+
+		spawnTime -= time;
+		if (spawnTime <= 0)
+		{
+			TSubclassOf<ADNG_RTSUnit> unitType;
+			spawnQueue.Dequeue(unitType);
+			SpawnUnit(unitType);
+
+			if (!spawnQueue.IsEmpty())
+			{
+				TSubclassOf<ADNG_RTSUnit> unitType;
+				spawnQueue.Peek(unitType);
+				spawnTime = unitType.GetDefaultObject()->spawnTime;
+			}
+		}
+	}
+	else
+	{
+		Server_Spawning(time);
+	}
+}
+
+void ADNG_RTSBarrack::Server_Spawning_Implementation(float time)
+{
+	Spawning(time);
+}
+void ADNG_RTSBarrack::AddSpawnQueue(const FString &unitName)
+{
+	if (Role == ROLE_Authority)
+	{
+		for (int i = 0; i < spawnableUnits.Num(); ++i)
+		{
+			if (spawnableUnits[i].Get()->GetName().Contains(unitName))
+			{
+				if (spawnQueue.IsEmpty())
+				{
+					spawnTime = spawnableUnits[i].GetDefaultObject()->spawnTime;//Cast<ADNG_RTSUnit>(spawnableUnits[i].Get())->spawnTime;
+				}
+
+				spawnQueue.Enqueue(spawnableUnits[i]);
+				break;
+			}
+		}
+	}
+	else
+	{
+		Server_AddSpawnQueue(unitName);
+	}
+}
+
+void ADNG_RTSBarrack::Server_AddSpawnQueue_Implementation(const FString &unitName)
+{
+	AddSpawnQueue(unitName);
+}
+
+
+void ADNG_RTSBarrack::CancleCurrentSpawn()
+{
+
 }

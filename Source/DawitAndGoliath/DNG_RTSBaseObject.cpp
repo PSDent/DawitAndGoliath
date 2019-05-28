@@ -38,8 +38,7 @@ ADNG_RTSBaseObject::ADNG_RTSBaseObject() : Super()
 	unitName = "Object";
 
 	bIsSelected = false;
-
-	
+	bIsAlive = true;
 }
 
 void ADNG_RTSBaseObject::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
@@ -48,6 +47,7 @@ void ADNG_RTSBaseObject::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &O
 
 	DOREPLIFETIME(ADNG_RTSBaseObject, aiController);
 	DOREPLIFETIME(ADNG_RTSBaseObject, pawn);
+	DOREPLIFETIME(ADNG_RTSBaseObject, bAlive);
 }
 
 // Called when the game starts or when spawned

@@ -28,6 +28,7 @@ void ABaseController::Possess(APawn *pawn)
 	if (pawn->IsA(AFPSCharacter::StaticClass()))
 	{
 		Cast<AFPSCharacter>(pawn);
+
 	}
 	else if (pawn->IsA(ADNG_RTSPawn::StaticClass()))
 	{

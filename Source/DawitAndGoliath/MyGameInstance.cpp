@@ -367,7 +367,18 @@ void UMyGameInstance::InitPlayersPawn()
 
 		TArray<AActor*> startingPoint;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), startingPoint);
+	
+		FVector fpsStartPos;
+		FVector rtsStartPos;
 
+		for (int i = 0; i < startingPoint.Num(); ++i)
+		{
+			if (startingPoint[i]->GetName().Contains("RTS"))
+				rtsStartPos = startingPoint[i]->GetActorLocation();
+			else
+				fpsStartPos = startingPoint[i]->GetActorLocation();
+		}
+		
 		for (int i = 0; i < playerCtrlArr.Num(); ++i)
 		{
 			//if (sessionRoleInfo.Find(serverName))
@@ -379,12 +390,11 @@ void UMyGameInstance::InitPlayersPawn()
 			FString roleName = Cast<AMyPlayerState>(Cast<APlayerController>(playerCtrlArr[i])->PlayerState)->playRoleName;
 
 			/// #여기 starting Point 가 아예 없는 경우도 발생한다
-			FVector pos(startingPoint[0]->GetActorLocation());
 			FRotator rot(0, 0, 0);
 			if (roleName == "Shooter")
-				pawn = GetWorld()->SpawnActor<AFPSCharacter>(fpsClass, pos, rot, spawnInfo);
+				pawn = GetWorld()->SpawnActor<AFPSCharacter>(fpsClass, fpsStartPos, rot, spawnInfo);
 			else if (roleName == "RTS")
-				pawn = GetWorld()->SpawnActor<ADNG_RTSPawn>(rtsClass, pos, rot, spawnInfo);
+				pawn = GetWorld()->SpawnActor<ADNG_RTSPawn>(rtsClass, rtsStartPos, rot, spawnInfo);
 
 			ABaseController* playerController = Cast<ABaseController>(playerCtrlArr[i]);
 			playerController->Possess(pawn);

@@ -20,6 +20,7 @@ ADNG_RTSUnit_Melee::ADNG_RTSUnit_Melee() : Super()
 	damage = 50.0f;
 	fireRate = 1.0f;
 	fireRange = 100.0f;
+	spawnTime = 3;
 }
 
 void ADNG_RTSUnit_Melee::BeginPlay()
