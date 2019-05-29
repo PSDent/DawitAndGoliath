@@ -47,7 +47,7 @@ void ADNG_RTSBaseObject::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &O
 
 	DOREPLIFETIME(ADNG_RTSBaseObject, aiController);
 	DOREPLIFETIME(ADNG_RTSBaseObject, pawn);
-	DOREPLIFETIME(ADNG_RTSBaseObject, bAlive);
+	DOREPLIFETIME(ADNG_RTSBaseObject, bIsAlive);
 }
 
 // Called when the game starts or when spawned

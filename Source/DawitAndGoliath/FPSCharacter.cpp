@@ -126,7 +126,6 @@ void AFPSCharacter::BeginPlay()
 
 	//GetWorld()->GetGameViewport()->SetMouseLockMode(EMouseLockMode::LockAlways);
 
-
 	ChangeWeapon<EWeaponType::Rifle>();
 	FireDele.BindLambda([&] {
 		if (CurrentWeapon->UseBullet() < 0)
@@ -138,26 +137,27 @@ void AFPSCharacter::BeginPlay()
 		}
 		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::FromInt(CurrentWeapon->GetBulletCount()));
 
-		FVector socLoc = GetMesh()->GetSocketLocation(TEXT("gun_barrel"));
-
 		if (CurrentWeapon->IsA(UGun::StaticClass()))
 			Fire(FFireParam());
 		else
 		{
 			if (CurrentWeapon != nullptr)
 			{
+				FVector socLoc = GetMesh()->GetSocketLocation(TEXT("gun_barrel"));
 				UAreaWeapon* wep = Cast<UAreaWeapon>(CurrentWeapon);
 				if (wep)
 				{
 					TArray<AActor*> targets = wep->GetTargets();
+					FRotator rot = GetActorRotation();	
 
-					if (targets.Num() == 0) GiveDamage(nullptr, 0, socLoc, GetActorRotation() + FRotator(-90.0f, 0, -90.0f));
+					if (targets.Num() == 0) GiveDamage(nullptr, 0, socLoc);
 					else
 						for (AActor* target : targets)
 						{
-							GiveDamage(target, CurrentWeapon->GetDamage(), socLoc, GetActorRotation() + FRotator(-90.0f, 0, -90.0f));
+							GiveDamage(target, CurrentWeapon->GetDamage(), socLoc);
 
 						}
+					EmitFlame(socLoc, rot + FRotator(-90.0f, 0, -90.0f));
 				}
 			}
 		}
@@ -250,34 +250,31 @@ void AFPSCharacter::MulticastFire_Implementation(FFireParam params)
 	}
 }
 
-void AFPSCharacter::GiveDamage(AActor* target, float dmg, FVector loc, FRotator rot)
+void AFPSCharacter::GiveDamage(AActor* target, float dmg, FVector loc)
 {
 	if (Role == ROLE_Authority)
 	{
-		MulticastGiveDamage(target, dmg, loc, rot);
+		MulticastGiveDamage(target, dmg, loc);
 	}
 	else
 	{
-		ServerGiveDamage(target, dmg, loc, rot);
+		ServerGiveDamage(target, dmg, loc);
 	}
 }
 
-void AFPSCharacter::ServerGiveDamage_Implementation(AActor* target, float dmg, FVector loc, FRotator rot)
+void AFPSCharacter::ServerGiveDamage_Implementation(AActor* target, float dmg, FVector loc)
 {
-	GiveDamage(target, dmg, loc, rot);
+	GiveDamage(target, dmg, loc);
 }
 
-bool AFPSCharacter::ServerGiveDamage_Validate(AActor* target, float dmg, FVector loc, FRotator rot)
+bool AFPSCharacter::ServerGiveDamage_Validate(AActor* target, float dmg, FVector loc)
 {
 	return true;
 }
 
-void AFPSCharacter::MulticastGiveDamage_Implementation(AActor* target, float dmg, FVector loc, FRotator rot)
+void AFPSCharacter::MulticastGiveDamage_Implementation(AActor* target, float dmg, FVector loc)
 {
 	PlayAnimMontage(FireMontage, 1.f);
-	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),
-		FlameParticle,
-		loc, rot)->SetWorldScale3D(FVector(2, 3.5f, 2));
 
 	if (!target || !CheckFlameHit(loc, target)) return;
 
@@ -297,7 +294,7 @@ void AFPSCharacter::MulticastGiveDamage_Implementation(AActor* target, float dmg
 	//UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), FireParticle, target->GetActorLocation(), FRotator::ZeroRotator);
 }
 
-bool AFPSCharacter::MulticastGiveDamage_Validate(AActor* target, float dmg, FVector loc, FRotator rot)
+bool AFPSCharacter::MulticastGiveDamage_Validate(AActor* target, float dmg, FVector loc)
 {
 	return true;
 }
@@ -470,6 +467,34 @@ void AFPSCharacter::ClientSetBoost_Implementation(bool value)
 }
 
 bool AFPSCharacter::ClientSetBoost_Validate(bool valye)
+{
+	return true;
+}
+
+
+void AFPSCharacter::EmitFlame(FVector loc, FRotator rot)
+{
+	ServerEmitFlame(loc, rot);
+}
+
+void AFPSCharacter::ServerEmitFlame_Implementation(FVector loc, FRotator rot)
+{
+	MulticastEmitFlame(loc, rot);
+}
+
+void AFPSCharacter::MulticastEmitFlame_Implementation(FVector loc, FRotator rot)
+{
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),
+		FlameParticle,
+		loc, rot)->SetWorldScale3D(FVector(2, 3.5f, 2));
+}
+
+bool AFPSCharacter::ServerEmitFlame_Validate(FVector loc, FRotator rot)
+{
+	return true;
+}
+
+bool AFPSCharacter::MulticastEmitFlame_Validate(FVector loc, FRotator rot)
 {
 	return true;
 }
