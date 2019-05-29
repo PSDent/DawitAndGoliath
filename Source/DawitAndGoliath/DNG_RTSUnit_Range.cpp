@@ -19,6 +19,7 @@ ADNG_RTSUnit_Range::ADNG_RTSUnit_Range() : Super()
 	fireRange = 600.0f;
 
 	GetCharacterMovement()->MaxWalkSpeed = 300.0f;
+	spawnTime = 5;
 }
 
 void ADNG_RTSUnit_Range::BeginPlay()

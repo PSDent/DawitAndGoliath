@@ -73,6 +73,7 @@ public:
 private: 
 	// Spawn Queue
 	TQueue<TSubclassOf<ADNG_RTSUnit>> spawnQueue;
+	int queueNum = 0;
 
 	FTimerDelegate spawningDele;
 	FTimerHandle spawningTimer;

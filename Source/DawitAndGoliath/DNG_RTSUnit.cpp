@@ -1,3 +1,4 @@
+
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "DNG_RTSUnit.h"
@@ -6,6 +7,7 @@
 #include "DNGProperty.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine.h"
+#include "Kismet/KismetMathLibrary.h"
 
 ADNG_RTSUnit::ADNG_RTSUnit() : Super()
 {
@@ -40,7 +42,7 @@ void ADNG_RTSUnit::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLife
 
 	DOREPLIFETIME(ADNG_RTSUnit, bIsDie);
 	DOREPLIFETIME(ADNG_RTSUnit, bIsWalk);
-
+	DOREPLIFETIME(ADNG_RTSUnit, target);
 }
 
 void ADNG_RTSUnit::BeginPlay()
@@ -89,6 +91,41 @@ void ADNG_RTSUnit::Tick(float DeltaTime)
 	{
 		Server_Die();
 	}
+
+	if (target && !bIsWalk)
+	{
+		TurnToTarget();
+	}
+
+}
+
+void ADNG_RTSUnit::TurnToTarget()
+{
+	if (Role == ROLE_Authority)
+	{
+		if (target)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Magenta, "Has Target");
+
+			FRotator deltaRot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), target->GetActorLocation());
+			deltaRot.Pitch = 0.0f;
+			SetActorRotation(deltaRot);
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Magenta, "No Target");
+
+		}
+	}
+	else
+	{
+		Server_TurnToTarget();
+	}
+}
+
+void ADNG_RTSUnit::Server_TurnToTarget_Implementation()
+{
+	TurnToTarget();
 }
 
 void ADNG_RTSUnit::Server_Die_Implementation()
@@ -192,11 +229,13 @@ void ADNG_RTSUnit::Attack()
 
 			// 계속해서 목표 위치를 갱신하는 함수를 작성하여
 			// 루프를 돌릴 것.
+			//Server_Attack();
 			if (pawn->targetActor)
 			{
-				target = pawn->targetActor;
-				GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Attack Target");
-				Deal(target);
+				Server_Attack(pawn->targetActor);
+				//target = pawn->targetActor;
+				//GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Attack Target");
+				//Deal(target);
 			}
 			else
 			{
@@ -213,8 +252,11 @@ void ADNG_RTSUnit::Attack()
 	GetWorld()->GetTimerManager().SetTimer(commandCheckHandle, commandCheckDele, 0.001f, true, 0.0f);
 }
 
-void ADNG_RTSUnit::Server_Attack_Implementation()
+void ADNG_RTSUnit::Server_Attack_Implementation(AActor *targetActor)
 {
+	target = targetActor;
+	GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Attack Target");
+	Deal(target);
 	// 공격 서버 구현할 것 
 	// BB를 연동하여 BT를 만들 것.
 }
@@ -229,15 +271,32 @@ void ADNG_RTSUnit::Server_Deal_Implementation(AActor *targetActor)
 {
 	bool isInRange = GetDistanceTo(targetActor) <= fireRange ? true : false;
 	bool isCoolTime = blackBoard->GetValueAsBool(key_IsCanDeal);
+	bool isMe = targetActor == Cast<AActor>(this);
 
 	if (!isInRange)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Can't Reach");
 	}
 
-	if (!isInRange || !isCoolTime) return;
+	if (!isInRange || !isCoolTime || isMe) return;
 
-	Multicast_FireEffect();
+	if (bIsWalk)
+	{
+		Server_Stop();
+	}
+
+	if (target)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "TARGET O");
+
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "TARGET X");
+
+	}
+
+	Multicast_FireEffect(targetActor->GetActorLocation());
+	TurnToTarget();
 
 	blackBoard->SetValueAsBool(key_IsCanDeal, false);
 	GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Attack");
@@ -245,6 +304,7 @@ void ADNG_RTSUnit::Server_Deal_Implementation(AActor *targetActor)
 
 	if (targetActor->IsA(AFPSCharacter::StaticClass()))
 	{
+		Cast<AFPSCharacter>(targetActor)->Prop->DealDamage(damage);
 		// FPS 캐릭터 HP 감소 로직
 		//Cast<AFPSCharacter>(target)
 	}
@@ -263,7 +323,7 @@ void ADNG_RTSUnit::Server_Deal_Implementation(AActor *targetActor)
 	GetWorld()->GetTimerManager().SetTimer(attackDelayTimerHandle, attackDelayDele, 0.01f, false, fireRate);
 }
 
-void ADNG_RTSUnit::Multicast_FireEffect_Implementation()
+void ADNG_RTSUnit::Multicast_FireEffect_Implementation(FVector pos)
 {
 	if (fireParticle)
 	{
@@ -282,15 +342,7 @@ void ADNG_RTSUnit::Multicast_FireEffect_Implementation()
 
 	if (hitParticle)
 	{
-		FHitResult outHit;
-		FVector start = fireEffectPos;
-		FVector end = target->GetActorLocation();
-		GetWorld()->LineTraceSingleByChannel(outHit, start, end, ECC_GameTraceChannel1);
-		//DrawDebugLine(GetWorld(), start, end, FColor::Red, false, 3.0f);
-		FVector hitPos = outHit.Location;
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), hitParticle, hitPos, FRotator(0, 0, 0));
-		//DrawDebugSphere(GetWorld(), hitPos, 64.0f, 16, FColor::Red, false, 5.0f);
-
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), hitParticle, pos, FRotator(0, 0, 0));
 	}
 }
 

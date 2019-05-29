@@ -21,6 +21,7 @@ ADNG_RTSUnit_Tanker::ADNG_RTSUnit_Tanker() : Super()
 	ringDecal->DecalSize = FVector(32.f, 64.f, 64.f);
 	
 	GetCharacterMovement()->MaxWalkSpeed = 400.0f;
+	spawnTime = 15;
 }
 
 void ADNG_RTSUnit_Tanker::BeginPlay()

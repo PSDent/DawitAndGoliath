@@ -17,9 +17,9 @@ ADNG_RTSUnit_Melee::ADNG_RTSUnit_Melee() : Super()
 	objProperty->SetHp(50.0f);
 	unitName = "MeleeUnit";
 
-	damage = 50.0f;
+	damage = 10.0f;
 	fireRate = 1.0f;
-	fireRange = 100.0f;
+	fireRange = 200.0f;
 	spawnTime = 3;
 }
 

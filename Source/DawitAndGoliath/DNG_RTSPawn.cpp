@@ -8,6 +8,7 @@
 #include "DNG_RTSBarrack.h"
 #include "DNG_RTSUnit.h"
 #include "DNG_RTSUnit_Melee.h"
+#include "FPSCharacter.h"
 
 // Sets default values
 ADNG_RTSPawn::ADNG_RTSPawn() : Super()
@@ -148,7 +149,6 @@ void ADNG_RTSPawn::BasicInit()
 {
 	playerController = Cast<APlayerController>(Controller);
 
-
 	playerController->bShowMouseCursor = true;
 	bIsInitialized = true;
 	//playerController->CurrentMouseCursor = EMouseCursor::Crosshairs;
@@ -225,11 +225,11 @@ void ADNG_RTSPawn::LMousePress()
 {
 	FHitResult outHit;
 
-	playerController->GetHitResultUnderCursor(ECC_Visibility, true, outHit);
+	playerController->GetHitResultUnderCursor(ECC_GameTraceChannel1, true, outHit);
 
 	targetPos = outHit.Location;
 	
-	if (Cast<ADNG_RTSBaseObject>(outHit.GetActor()))
+	if (Cast<ADNG_RTSBaseObject>(outHit.GetActor()) || Cast<AFPSCharacter>(outHit.GetActor()))
 		targetActor = outHit.GetActor();
 	else
 		targetActor = nullptr;
@@ -424,7 +424,7 @@ void ADNG_RTSPawn::SetObjectOwner(ADNG_RTSBaseObject *obj, AController *ownContr
 		// 액터에 있는 Controller에도 오너를 설정하여야 함.
 		obj->SetOwner(ownController);
 		obj->GetController()->SetOwner(ownController);
-		obj->SetPawn(this);
+		obj->SetPawn(Cast<ADNG_RTSPawn>(ownController->GetPawn())/*this*/);
 	}
 	else
 	{
@@ -582,17 +582,24 @@ void ADNG_RTSPawn::MappingCmdPanel()
 
 void ADNG_RTSPawn::CheckKeysAndExecute()
 {
-	for (int i = 0; i < keys.Num(); ++i)
+	for (auto cmd : commandMap)
 	{
-		if (playerController->IsInputKeyDown(keys[i]))
+		if (playerController->IsInputKeyDown(cmd.Key))
 		{
-			if (commandMap.Contains(keys[i]))
-			{
-				ExecuteCommand(keys[i]);
-			}
-		
+			ExecuteCommand(cmd.Key);
 		}
 	}
+
+	//for (int i = 0; i < keys.Num(); ++i)
+	//{
+	//	if (playerController->IsInputKeyDown(keys[i]))
+	//	{
+	//		if (commandMap.Contains(keys[i]))
+	//		{
+	//			ExecuteCommand(keys[i]);
+	//		}
+	//	}
+	//}
 }
 
 void ADNG_RTSPawn::ExecuteCommand(FKey key)

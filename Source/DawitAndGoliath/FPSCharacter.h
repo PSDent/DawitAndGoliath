@@ -22,6 +22,7 @@ class DAWITANDGOLIATH_API AFPSCharacter : public ACharacter
 public:
 	// Sets default values for this character's properties
 	AFPSCharacter();
+	UDNGProperty* Prop;
 
 protected:
 	// Called when the game starts or when spawned
@@ -130,7 +131,6 @@ protected:
 
 	UParticleSystem* BoosterParticle;
 
-	UDNGProperty* Prop;
 
 	FTimerDelegate FireDele;
 

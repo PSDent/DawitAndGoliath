@@ -25,7 +25,6 @@ ADNG_RTSBarrack::ADNG_RTSBarrack() : Super()
 
 	dele.BindUFunction(this, FName("SetRallyPoint"));
 	commandInfoMap.Add(EKeys::Y, FCommandInfo("SetRallyPoint", "Set Units go to the Clicked Point", EKeys::Y, 1, 3, dele));
-
 	unitName = "Barrack";
 
 
@@ -54,19 +53,16 @@ void ADNG_RTSBarrack::Tick(float DeltaTime)
 
 void ADNG_RTSBarrack::SpawnMeleeUnit()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Emerald, "Spawn Melee Unit");
 	AddSpawnQueue("Melee");
 }
 
 void ADNG_RTSBarrack::SpawnRangeUnit()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Emerald, "Spawn Range Unit");
 	AddSpawnQueue("Range");
 }
 
 void ADNG_RTSBarrack::SpawnTankerUnit()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Emerald, "Spawn Tanker Unit");
 	AddSpawnQueue("Tanker");
 }
 
@@ -94,9 +90,6 @@ void ADNG_RTSBarrack::SetRallyPoint()
 void ADNG_RTSBarrack::Server_SetRallyPoint_Implementation(FVector dest)
 {
 	rallyPoint = dest;
-	DrawDebugSphere(GetWorld(), dest, 64.0f, 16, FColor::Orange, false, 3.0f);
-	DrawDebugSphere(GetWorld(), spawnPoint, 64.0f, 16, FColor::Green, false, 3.0f);
-	DrawDebugLine(GetWorld(), rallyPoint, spawnPoint, FColor::Magenta, false, 4.0f);
 }
 
 
@@ -108,13 +101,10 @@ void ADNG_RTSBarrack::SpawnUnit(TSubclassOf<ADNG_RTSUnit> unitType)
 		spawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		spawnInfo.bNoFail = true;
 		spawnInfo.Instigator = Instigator;
-
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Emerald, rallyPoint.ToString());
 		// SpawnActor로 스폰하는 경우 Controller가 자동으로 탑재 되있지 않는다
 		// 이를 막기 위해 BP에서 Auto Posses AI 란을 Placed in World or Spawn으로 바꿔준다.
 
 		ADNG_RTSUnit *spawnedUnit = GetWorld()->SpawnActor<ADNG_RTSUnit>(unitType, spawnPoint, FRotator::ZeroRotator, spawnInfo);
-		DrawDebugSphere(GetWorld(), rallyPoint, 64.0f, 16, FColor::Red, false, 3.0f);
 		spawnedUnit->Server_Move(rallyPoint);
 	}
 	else
@@ -145,6 +135,7 @@ void ADNG_RTSBarrack::Spawning(float time)
 			TSubclassOf<ADNG_RTSUnit> unitType;
 			spawnQueue.Dequeue(unitType);
 			SpawnUnit(unitType);
+			--queueNum;
 
 			if (!spawnQueue.IsEmpty())
 			{
@@ -168,15 +159,17 @@ void ADNG_RTSBarrack::AddSpawnQueue(const FString &unitName)
 {
 	if (Role == ROLE_Authority)
 	{
+		if (queueNum == 5) return;
+
 		for (int i = 0; i < spawnableUnits.Num(); ++i)
 		{
 			if (spawnableUnits[i].Get()->GetName().Contains(unitName))
 			{
 				if (spawnQueue.IsEmpty())
 				{
-					spawnTime = spawnableUnits[i].GetDefaultObject()->spawnTime;//Cast<ADNG_RTSUnit>(spawnableUnits[i].Get())->spawnTime;
+					spawnTime = spawnableUnits[i].GetDefaultObject()->spawnTime;
 				}
-
+				++queueNum;
 				spawnQueue.Enqueue(spawnableUnits[i]);
 				break;
 			}

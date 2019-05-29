@@ -67,9 +67,9 @@ public:
 	UFUNCTION()
 		void Attack();
 	UFUNCTION(Server, Reliable, WithValidation)
-		virtual void Server_Attack();
-	void Server_Attack_Implementation();
-	bool Server_Attack_Validate() { return true; }
+		virtual void Server_Attack(AActor *targetActor);
+	void Server_Attack_Implementation(AActor *targetActor);
+	bool Server_Attack_Validate(AActor *targetActor) { return true; }
 
 	UFUNCTION(BlueprintCallable, category = "RTSMelee")
 		void Deal(AActor *targetActor);
@@ -79,9 +79,9 @@ public:
 	bool Server_Deal_Validate(AActor *targetActor) { return true; }
 
 	UFUNCTION(NetMulticast, Reliable, WithValidation)
-		virtual void Multicast_FireEffect();
-	void Multicast_FireEffect_Implementation();
-	bool Multicast_FireEffect_Validate() { return true; };
+		virtual void Multicast_FireEffect(FVector pos);
+	void Multicast_FireEffect_Implementation(FVector pos);
+	bool Multicast_FireEffect_Validate(FVector pos) { return true; };
 
 
 	UFUNCTION(BlueprintCallable, category = "RTSUnit")
@@ -89,6 +89,12 @@ public:
 
 private:
 	void CompareDistance();
+
+	void TurnToTarget();
+	UFUNCTION(Server, Reliable, WithValidation)
+		virtual void Server_TurnToTarget();
+	void Server_TurnToTarget_Implementation();
+	bool Server_TurnToTarget_Validate() { return true; }
 
 protected:
 	UFUNCTION(Server, Reliable, WithValidation)
@@ -114,6 +120,8 @@ private:
 
 protected:
 	TArray<class AFPSCharacter*> enemyPlayers;
+
+	UPROPERTY(Replicated)
 	AActor *target;
 
 	UPROPERTY(BlueprintReadWrite, category = "RTSUnit")

@@ -347,10 +347,7 @@ void UMyGameInstance::TravelToGameLevel(FName sessionHostName)
 
 	GetWorld()->GetAuthGameMode()->bUseSeamlessTravel = true;
 	GetWorld()->ServerTravel("/Game/Blueprints/MainMap");
-	//InitPlayersPawn();
-	GetWorld()->GetTimerManager().SetTimer(ha, this, &UMyGameInstance::InitPlayersPawn, 0.1f, false, 5.0f);
-
-	//InitPlayersPawn();
+	GetWorld()->GetTimerManager().SetTimer(ha, this, &UMyGameInstance::InitPlayersPawn, 0.1f, false, 3.0f);
 }
 
 void UMyGameInstance::InitPlayersPawn()
@@ -391,10 +388,21 @@ void UMyGameInstance::InitPlayersPawn()
 
 			/// #여기 starting Point 가 아예 없는 경우도 발생한다
 			FRotator rot(0, 0, 0);
+
 			if (roleName == "Shooter")
 				pawn = GetWorld()->SpawnActor<AFPSCharacter>(fpsClass, fpsStartPos, rot, spawnInfo);
 			else if (roleName == "RTS")
 				pawn = GetWorld()->SpawnActor<ADNG_RTSPawn>(rtsClass, rtsStartPos, rot, spawnInfo);
+			else
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, "Strange Name " + roleName);
+			}
+
+			if (!pawn)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Purple, "No Pawn : " + roleName);
+				return;
+			}
 
 			ABaseController* playerController = Cast<ABaseController>(playerCtrlArr[i]);
 			playerController->Possess(pawn);
