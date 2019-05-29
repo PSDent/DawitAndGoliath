@@ -68,21 +68,21 @@ protected:
 
 	virtual void EnableHeal();
 
-	virtual void GiveDamage(AActor* target, float dmg, FVector, FRotator);
+	virtual void GiveDamage(AActor* target, float dmg, FVector);
 
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerGiveDamage(AActor* target, float dmg, FVector loc, FRotator rot);
+		void ServerGiveDamage(AActor* target, float dmg, FVector loc);
 
-	virtual void ServerGiveDamage_Implementation(AActor* target, float dmg, FVector, FRotator);
+	virtual void ServerGiveDamage_Implementation(AActor* target, float dmg, FVector);
 
-	virtual bool ServerGiveDamage_Validate(AActor* target, float dmg, FVector, FRotator);
+	virtual bool ServerGiveDamage_Validate(AActor* target, float dmg, FVector);
 
 	UFUNCTION(NetMulticast, Reliable, WithValidation)
-		void MulticastGiveDamage(AActor* target, float dmg, FVector loc, FRotator rot);
+		void MulticastGiveDamage(AActor* target, float dmg, FVector loc);
 
-	virtual void MulticastGiveDamage_Implementation(AActor* target, float dmg, FVector, FRotator);
+	virtual void MulticastGiveDamage_Implementation(AActor* target, float dmg, FVector);
 
-	virtual bool MulticastGiveDamage_Validate(AActor* target, float dmg, FVector, FRotator);
+	virtual bool MulticastGiveDamage_Validate(AActor* target, float dmg, FVector);
 
 	virtual void Boost();
 
@@ -101,6 +101,23 @@ protected:
 	virtual void ClientSetBoost_Implementation(bool value);
 
 	virtual bool ClientSetBoost_Validate(bool value);
+
+	virtual void EmitFlame(FVector loc, FRotator rot);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		virtual void ServerEmitFlame(FVector loc, FRotator rot);
+
+	virtual void ServerEmitFlame_Implementation(FVector loc, FRotator rot);
+
+	virtual bool ServerEmitFlame_Validate(FVector loc, FRotator rot);
+
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+		virtual void MulticastEmitFlame(FVector loc, FRotator rot);
+
+	virtual void MulticastEmitFlame_Implementation(FVector loc, FRotator rot);
+
+	virtual bool MulticastEmitFlame_Validate(FVector loc, FRotator rot);
+
 
 	virtual void EnableFire() { IsFireable = true; }
 	
