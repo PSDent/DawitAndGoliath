@@ -30,6 +30,7 @@ AFPSCharacter::AFPSCharacter()
 	Cam3rd = CreateDefaultSubobject<UCameraComponent>(FName(TEXT("Camera3rd")));
 	Cam3rd->SetupAttachment(SpringArm3rd, USpringArmComponent::SocketName);
 	Cam3rd->SetIsReplicated(true);
+	Cam3rd->RelativeLocation = FVector(140, 40, 70);
 
 	SpringArm3rd->SetNetAddressable();
 	SpringArm3rd->SetIsReplicated(true);
@@ -91,12 +92,12 @@ void AFPSCharacter::BeginPlay()
 	}
 	if (Prop)
 		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("Hp : %f"), Prop->GetHp()));
-
+		
 	TArray<USceneComponent*> comps;
 	SpringArm3rd->GetChildrenComponents(true, comps);
-	for (USceneComponent* c : comps)
-		if (c->GetFName() == FName(TEXT("DefaultStatePos")))
-			Cam3rd->RelativeLocation = c->RelativeLocation;
+	//for (USceneComponent* c : comps)
+	//	if (c->GetFName() == FName(TEXT("DefaultStatePos")))
+	//		Cam3rd->RelativeLocation = c->RelativeLocation;
 	
 	UGun* gun = NewObject<UGun>();
 	gun->GunInit(TEXT("Rifle"), 20, 0.1f, 10000, 1.0f, 2.f, 30, GunFireSound);
@@ -126,7 +127,7 @@ void AFPSCharacter::BeginPlay()
 
 	//GetWorld()->GetGameViewport()->SetMouseLockMode(EMouseLockMode::LockAlways);
 
-	ChangeWeapon<EWeaponType::Rifle>();
+	//ChangeWeapon<EWeaponType::Rifle>();
 	FireDele.BindLambda([&] {
 		if (CurrentWeapon->UseBullet() < 0)
 		{
@@ -352,6 +353,7 @@ bool AFPSCharacter::MulticastFire_Validate(FFireParam params)
 	return true;
 }
 
+
 void AFPSCharacter::ChangeWeapon(EWeaponType type)
 {
 	IsFireable = false;
@@ -419,9 +421,9 @@ void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAction("Heal", IE_Pressed, this, &AFPSCharacter::Heal);
 	PlayerInputComponent->BindAction("LeftFire", IE_Pressed, this, &AFPSCharacter::OnMousePressed);
 	PlayerInputComponent->BindAction("LeftFire", IE_Released, this, &AFPSCharacter::OnMouseReleased);
-	PlayerInputComponent->BindAction("Rifle", IE_Pressed, this, &AFPSCharacter::ChangeWeapon<EWeaponType::Rifle>);
-	PlayerInputComponent->BindAction("MachineGun", IE_Pressed, this, &AFPSCharacter::ChangeWeapon<EWeaponType::MachineGun>);
-	PlayerInputComponent->BindAction("Flame", IE_Pressed, this, &AFPSCharacter::ChangeWeapon<EWeaponType::FlameThrower>);
+	//PlayerInputComponent->BindAction("Rifle", IE_Pressed, this, &AFPSCharacter::ChangeWeapon<EWeaponType::Rifle>);
+	//PlayerInputComponent->BindAction("MachineGun", IE_Pressed, this, &AFPSCharacter::ChangeWeapon<EWeaponType::MachineGun>);
+	//PlayerInputComponent->BindAction("Flame", IE_Pressed, this, &AFPSCharacter::ChangeWeapon<EWeaponType::FlameThrower>);
 	PlayerInputComponent->BindAction("Boost", IE_Pressed, this, &AFPSCharacter::SetBoost);
 	PlayerInputComponent->BindAction("Boost", IE_Released, this, &AFPSCharacter::SetBoost);
 
@@ -501,7 +503,7 @@ bool AFPSCharacter::MulticastEmitFlame_Validate(FVector loc, FRotator rot)
 
 void AFPSCharacter::OnMousePressed()
 {
-	if (!IsFireable) return;
+	if (!IsFireable || !CurrentWeapon) return;
 	IsLeftMousePressed = true;
 	
 	//SplitRange = Cast<UGun>(CurrentWeapon)->GetSplitRange();	

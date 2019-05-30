@@ -182,8 +182,9 @@ public:
 
 	template <EWeaponType T>
 	void ChangeWeapon();
-
-	virtual void ChangeWeapon(EWeaponType type);
+	
+	UFUNCTION(BlueprintCallable)
+		virtual void ChangeWeapon(EWeaponType type);
 
 	UFUNCTION(BlueprintCallable)
 		float GetHp();
