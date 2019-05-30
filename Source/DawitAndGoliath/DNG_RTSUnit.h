@@ -109,6 +109,8 @@ protected:
 
 public:
 	int spawnTime = 0;
+	FString initial;
+	int supply;
 
 
 private:
@@ -152,12 +154,12 @@ protected:
 	FVector fireEffectPos;
 		//TSubclassOf<UParticleSystem> fireParticle;
 
-	
-
 	float deadDelay;
 	float fireRange;
+	float traceRange;
 	float fireRate;
 	float damage;
+
 
 	UPROPERTY(Replicated, BlueprintReadOnly, category = "RTSUnit")
 		bool bIsWalk;

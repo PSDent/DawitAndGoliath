@@ -25,10 +25,18 @@ ADNG_RTSBarrack::ADNG_RTSBarrack() : Super()
 
 	dele.BindUFunction(this, FName("SetRallyPoint"));
 	commandInfoMap.Add(EKeys::Y, FCommandInfo("SetRallyPoint", "Set Units go to the Clicked Point", EKeys::Y, 1, 3, dele));
+	
+	dele.BindUFunction(this, FName("CancleCurrentSpawn"));
+	commandInfoMap.Add(EKeys::Escape, FCommandInfo("Cancle Producing", "Cancle Now Producing Unit", EKeys::Escape, 3, 3, dele));
+
+	
 	unitName = "Barrack";
 
 
 	rallyPoint.Set(-390.0f, -470.0f, 380.0f);
+
+	spawnTime = 0;
+	spawnTotalTime = 0;
 }
 
 void ADNG_RTSBarrack::BeginPlay()
@@ -127,21 +135,31 @@ void ADNG_RTSBarrack::Spawning(float time)
 {
 	if (Role == ROLE_Authority)
 	{
-		if (spawnQueue.IsEmpty()) return;
+		TSubclassOf<ADNG_RTSUnit> unitType;
+		if (spawnQueue.Num())
+		{
+			unitType = spawnQueue.Top();
+			ADNG_RTSPawn *rtsPawn = Cast<ADNG_RTSPawn>(pawn);
+			int nextSupply = rtsPawn->currentSupply + unitType.GetDefaultObject()->supply;
+			int maxSupply = rtsPawn->maxSupply;
+			bool isCanSpawn = nextSupply <= maxSupply ? true : false;
+			if (!isCanSpawn) return;
+		}
+
+		if (!spawnQueue.Num()) return;
 
 		spawnTime -= time;
 		if (spawnTime <= 0)
 		{
-			TSubclassOf<ADNG_RTSUnit> unitType;
-			spawnQueue.Dequeue(unitType);
+			unitType = spawnQueue.Pop();
 			SpawnUnit(unitType);
-			--queueNum;
 
-			if (!spawnQueue.IsEmpty())
+			if (spawnQueue.Num())
 			{
 				TSubclassOf<ADNG_RTSUnit> unitType;
-				spawnQueue.Peek(unitType);
+				unitType = spawnQueue.Top();
 				spawnTime = unitType.GetDefaultObject()->spawnTime;
+				spawnTotalTime = spawnTime;
 			}
 		}
 	}
@@ -159,18 +177,22 @@ void ADNG_RTSBarrack::AddSpawnQueue(const FString &unitName)
 {
 	if (Role == ROLE_Authority)
 	{
-		if (queueNum == 5) return;
+		if (spawnQueue.Num() == 5) return;
 
 		for (int i = 0; i < spawnableUnits.Num(); ++i)
 		{
 			if (spawnableUnits[i].Get()->GetName().Contains(unitName))
 			{
-				if (spawnQueue.IsEmpty())
+				if (!spawnQueue.Num())
 				{
 					spawnTime = spawnableUnits[i].GetDefaultObject()->spawnTime;
+					spawnTotalTime = spawnTime;
 				}
-				++queueNum;
-				spawnQueue.Enqueue(spawnableUnits[i]);
+				spawnQueue.Push(spawnableUnits[i]);
+
+				int deltaSupply = spawnableUnits[i].GetDefaultObject()->supply;
+				Server_AddSupply(deltaSupply);
+
 				break;
 			}
 		}
@@ -189,5 +211,32 @@ void ADNG_RTSBarrack::Server_AddSpawnQueue_Implementation(const FString &unitNam
 
 void ADNG_RTSBarrack::CancleCurrentSpawn()
 {
+	RemoveQueueElement(0);
+	
+}
+
+void ADNG_RTSBarrack::RemoveQueueElement(int index)
+{
+	if (spawnQueue.Num())
+	{
+		if (index == 0)
+		{
+			ADNG_RTSPawn *rtsPawn = Cast<ADNG_RTSPawn>(GetOwner());
+			rtsPawn->currentSupply -= spawnQueue[0].GetDefaultObject()->supply;
+		}
+
+		spawnQueue.RemoveAt(index);
+		if (spawnQueue.Num())
+		{
+			spawnTime = spawnableUnits[0].GetDefaultObject()->spawnTime;
+			spawnTotalTime = spawnTime;
+		}
+	}
+}
+
+void ADNG_RTSBarrack::Server_AddSupply_Implementation(int deltaSupply)
+{
+	ADNG_RTSPawn *rtsPawn = Cast<ADNG_RTSPawn>(pawn);
+	rtsPawn->currentSupply += deltaSupply;
 
 }

@@ -103,6 +103,12 @@ public:
 	UPROPERTY(Replicated, BlueprintReadOnly)
 		UCameraComponent *rtsCamera;
 
+	// Unit
+	UPROPERTY(BlueprintReadOnly)
+		int currentSupply;
+	UPROPERTY(BlueprintReadOnly)
+		int maxSupply;
+
 	FVector targetPos;
 	AActor *targetActor;
 
@@ -159,7 +165,4 @@ private:
 	bool bPressedShiftKey;
 	bool bPressedCtrlKey;
 
-	// Unit
-	int currentSupply;
-	int maxSupply;
 };

@@ -5,6 +5,8 @@
 #include "DNG_RTSPawn.h"
 #include "Engine.h"
 #include "DNG_RTSBaseObject.h"
+#include "DNG_RTSBarrack.h"
+#include "DNG_RTSUnit.h"
 #include "DNGProperty.h"
 
 URTS_UI::URTS_UI(const FObjectInitializer &objInitializer) : Super(objInitializer)
@@ -76,6 +78,8 @@ void URTS_UI::SendToPawnPanelInfo(FString key)
 
 void URTS_UI::DisplayUnitInform(ADNG_RTSBaseObject *unit)
 {
+	ResetProductionInform();
+
 	entityInformCanvas->SetVisibility(ESlateVisibility::Visible);
 	UTextBlock *unitName = Cast<UTextBlock>(entityInformCanvas->GetChildAt(0));
 	unitName->SetText(FText::FromString(unit->GetUnitName()));
@@ -95,4 +99,89 @@ void URTS_UI::DisplayUnitInform(ADNG_RTSBaseObject *unit)
 void URTS_UI::ResetUnitInform()
 {
 	entityInformCanvas->SetVisibility(ESlateVisibility::Collapsed);
+}
+
+void URTS_UI::DisplayProductionInform(ADNG_RTSBaseObject *construction)
+{
+	//ResetUnitInform();
+	DisplayUnitInform(construction);
+
+	ADNG_RTSBarrack *barrack = Cast<ADNG_RTSBarrack>(construction);
+	focusingBarrack = barrack;
+
+	productionInformCanvas->SetVisibility(ESlateVisibility::Visible);
+	productionProgress->SetVisibility(ESlateVisibility::Visible);
+
+	TArray<TSubclassOf<ADNG_RTSUnit>> &spawnQueue = barrack->GetSpawnQueue();
+
+	if (spawnQueue.Num())
+	{
+		currentProgress = barrack->spawnTime;
+		totalProgress = barrack->spawnTotalTime;
+	}
+	else
+	{
+		currentProgress = 0;
+		totalProgress = 0;
+	}
+
+	for (int i = 0; i < MAX_QUEUE_SIZE; ++i)
+	{
+		if (spawnQueue.Num() < i + 1)
+		{
+			queueSlots[i]->SetActiveWidgetIndex(SLOT_NUMBER);
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, FString::FromInt(queueSlots.Num()));
+
+			queueSlots[i]->SetActiveWidgetIndex(PRODUCTION_UNIT);
+			UUserWidget *productionButton = Cast<UUserWidget>(queueSlots[i]->GetChildAt(PRODUCTION_UNIT));
+			UButton *slotButton = Cast<UButton>(productionButton->WidgetTree->FindWidget("SlotButton"));
+			UTextBlock *text = Cast<UTextBlock>(slotButton->GetChildAt(0));
+			ADNG_RTSUnit *queueUnit = spawnQueue[i].GetDefaultObject();
+			text->SetText(FText::FromString(queueUnit->initial));
+		}
+	}
+
+
+	// 생성창 UI 만들어서 붙이기
+
+
+}
+
+void URTS_UI::ResetProductionInform()
+{
+	productionInformCanvas->SetVisibility(ESlateVisibility::Collapsed);
+}
+
+void URTS_UI::Display(ADNG_RTSBaseObject *obj)
+{
+	ADNG_RTSUnit *unit = Cast<ADNG_RTSUnit>(obj);
+
+	if (unit)
+	{
+		focusingBarrack = nullptr;
+		DisplayUnitInform(obj);
+		return;
+	}
+
+	ADNG_RTSBarrack *barrack = Cast<ADNG_RTSBarrack>(obj);
+	if (barrack)
+	{
+		DisplayProductionInform(obj);
+		return;
+	}
+}
+
+void URTS_UI::ResetDisplay()
+{
+	ResetProductionInform();
+	ResetUnitInform();
+}
+
+void URTS_UI::RemoveQueueElement(int index)
+{
+	if(focusingBarrack)
+		focusingBarrack->RemoveQueueElement(index);
 }
