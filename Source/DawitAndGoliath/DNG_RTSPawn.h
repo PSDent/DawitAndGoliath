@@ -104,9 +104,9 @@ public:
 		UCameraComponent *rtsCamera;
 
 	// Unit
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(Replicated, BlueprintReadOnly)
 		int currentSupply;
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(Replicated, BlueprintReadOnly)
 		int maxSupply;
 
 	FVector targetPos;

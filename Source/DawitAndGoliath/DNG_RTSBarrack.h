@@ -19,6 +19,9 @@ public:
 	void BeginPlay() override;
 	void Tick(float DeltaTime) override;
 
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
+
+
 	UFUNCTION(BlueprintCallable, Category = "RTS")
 		void SpawnMeleeUnit();
 
@@ -37,6 +40,10 @@ public:
 	// Getter
 	TArray<TSubclassOf<ADNG_RTSUnit>>& GetSpawnQueue() { return spawnQueue; }
 	void RemoveQueueElement(int index);
+	UFUNCTION(Server, Reliable, WithValidation)
+		virtual void Server_RemoveQueueElement(int index);
+	void Server_RemoveQueueElement_Implementation(int index);
+	bool Server_RemoveQueueElement_Validate(int index) { return true; }
 
 private:
 	void SpawnUnit(TSubclassOf<class ADNG_RTSUnit> unitType);
@@ -67,6 +74,7 @@ private:
 	void Server_AddSupply_Implementation(int deltaSupply);
 	bool Server_AddSupply_Validate(int deltaSupply) { return true; }
 
+
 public:
 
 
@@ -76,15 +84,16 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 		TArray<TSubclassOf<class ADNG_RTSUnit>> spawnableUnits;
 	
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Replicated)
 		float spawnTime;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Replicated)
 		float spawnTotalTime;
 
 private: 
 	// Spawn Queue
-	TArray<TSubclassOf<ADNG_RTSUnit>> spawnQueue;
+	UPROPERTY(Replicated)
+		TArray<TSubclassOf<ADNG_RTSUnit>> spawnQueue;
 
 	FTimerDelegate spawningDele;
 	FTimerHandle spawningTimer;

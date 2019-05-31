@@ -61,6 +61,8 @@ void ADNG_RTSPawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLife
 
 	DOREPLIFETIME(ADNG_RTSPawn, rtsCamera);
 	DOREPLIFETIME(ADNG_RTSPawn, playerController);
+	DOREPLIFETIME(ADNG_RTSPawn, currentSupply);
+	DOREPLIFETIME(ADNG_RTSPawn, maxSupply);
 }
 
 // Called when the game starts or when spawned
