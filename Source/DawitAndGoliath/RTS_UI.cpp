@@ -11,8 +11,8 @@
 
 URTS_UI::URTS_UI(const FObjectInitializer &objInitializer) : Super(objInitializer)
 {
-	//selectionBoxImage = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass());
-	//selectionBoxImage->SetColorAndOpacity(FLinearColor(0.15076f, 0.489583f, 0.09085f, 0.5f));
+	maxRow = 3;
+	maxColumn = 12;
 }
 
 void URTS_UI::DrawBox(FVector2D start, FVector2D end)
@@ -182,10 +182,11 @@ void URTS_UI::RemoveQueueElement(int index)
 		focusingBarrack->RemoveQueueElement(index);
 }
 
-
 void URTS_UI::DisplayUnitEntity(TArray<ADNG_RTSBaseObject*> &objects)
 {
 	entityGrid->SetVisibility(ESlateVisibility::Visible);
+
+
 }
 
 void URTS_UI::ResetUnitEntity()

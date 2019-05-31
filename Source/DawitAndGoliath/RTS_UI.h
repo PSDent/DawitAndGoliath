@@ -67,6 +67,8 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 		float totalProgress;
 
+	int entityPage;
+
 private:
 	enum { SLOT_NUMBER, PRODUCTION_UNIT};
 	const int MAX_QUEUE_SIZE = 5;
@@ -76,6 +78,12 @@ private:
 private:
 
 protected:
+	UPROPERTY(BlueprintReadOnly)
+		int maxRow;
+
+	UPROPERTY(BlueprintReadOnly)
+		int maxColumn;
+
 	UPROPERTY(BlueprintReadWrite, category = "RTS_UI")
 		UImage *selectionBoxImage;
 
