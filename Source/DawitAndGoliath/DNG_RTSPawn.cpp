@@ -83,13 +83,17 @@ void ADNG_RTSPawn::Tick(float DeltaTime)
 
 	if (!bIsInitialized) return;
 
-	if (selectedUnits.Num() == 1)
+	if (selectedUnits.Num() == 0)
+	{
+		userUI->ResetDisplay();
+	}
+	else if (selectedUnits.Num() == 1)
 	{
 		userUI->Display(selectedUnits[0]);
 	}
-	else
+	else if (selectedUnits.Num() > 1)
 	{
-		userUI->ResetDisplay();
+		userUI->DisplayUnitEntity(selectedUnits);
 	}
 
 	for (int i = 0; i < selectedUnits.Num(); ++i)
@@ -361,7 +365,6 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 		for (int i = 0; i < selectedUnits.Num(); ++i)
 		{
 			selectedUnits[i]->SetSelectedStatus(false);
-			selectedUnits[i]->SetPawn(nullptr);
 		}
 
 		selectedUnits.Empty();
@@ -377,7 +380,6 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 				unit->SetSelectedStatus(true);
 				selectedUnits.Add(unit);
 				unit->SetPawn(this);
-
 			}
 		}
 	}

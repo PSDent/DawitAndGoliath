@@ -45,6 +45,9 @@ public:
 	void ResetCommandOnPanel();
 	void SetMouseCursor();
 
+	void DisplayUnitEntity(TArray<class ADNG_RTSBaseObject*>&);
+	void ResetUnitEntity();
+
 	// Getter
 	UImage* GetSelectionBoxImage() { return selectionBoxImage; };
 	UGridPanel* GetCommandPanel() { return commandPanel; };
@@ -83,7 +86,7 @@ protected:
 		UCanvasPanel *entityInformCanvas;
 
 	UPROPERTY(BlueprintReadWrite, category = "RTS_UI")
-		UGridPanel *entityCanvas;
+		UGridPanel *entityGrid;
 
 	UPROPERTY(BlueprintReadWrite, category = "RTS_UI")
 		UCanvasPanel *productionInformCanvas;

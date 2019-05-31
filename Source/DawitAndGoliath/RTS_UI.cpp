@@ -139,15 +139,10 @@ void URTS_UI::DisplayProductionInform(ADNG_RTSBaseObject *construction)
 			UUserWidget *productionButton = Cast<UUserWidget>(queueSlots[i]->GetChildAt(PRODUCTION_UNIT));
 			UButton *slotButton = Cast<UButton>(productionButton->WidgetTree->FindWidget("SlotButton"));
 			UTextBlock *text = Cast<UTextBlock>(slotButton->GetChildAt(0));
-			ADNG_RTSUnit *queueUnit = spawnQueue[i].GetDefaultObject();
+			ADNG_RTSUnit *queueUnit = spawnQueue[i].GetDefaultObject();  
 			text->SetText(FText::FromString(queueUnit->initial));
 		}
 	}
-
-
-	// 생성창 UI 만들어서 붙이기
-
-
 }
 
 void URTS_UI::ResetProductionInform()
@@ -184,4 +179,15 @@ void URTS_UI::RemoveQueueElement(int index)
 {
 	if(focusingBarrack)
 		focusingBarrack->RemoveQueueElement(index);
+}
+
+
+void URTS_UI::DisplayUnitEntity(TArray<ADNG_RTSBaseObject*> &objects)
+{
+
+}
+
+void URTS_UI::ResetUnitEntity()
+{
+
 }
