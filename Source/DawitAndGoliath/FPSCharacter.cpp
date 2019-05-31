@@ -230,6 +230,12 @@ void AFPSCharacter::ServerFire_Implementation(FFireParam params)
 
 void AFPSCharacter::MulticastFire_Implementation(FFireParam params)
 {
+	if (!CurrentWeapon)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "fuck");
+		return;
+	}
+
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),
 		MuzzleFlame,
 		params.SocketLocation, params.Rotation);
