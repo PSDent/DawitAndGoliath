@@ -8,6 +8,7 @@
 #include "DNG_RTSUnit_Range.h"
 #include "DNG_RTSPawn.h"
 #include "FPSCharacter.h"
+#include "Net/UnrealNetwork.h"
 
 ADNG_RTSBarrack::ADNG_RTSBarrack() : Super()
 {
@@ -37,6 +38,15 @@ ADNG_RTSBarrack::ADNG_RTSBarrack() : Super()
 
 	spawnTime = 0;
 	spawnTotalTime = 0;
+}
+
+void ADNG_RTSBarrack::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ADNG_RTSBarrack, spawnQueue);
+	DOREPLIFETIME(ADNG_RTSBarrack, spawnTime);
+	DOREPLIFETIME(ADNG_RTSBarrack, spawnTotalTime);
 }
 
 void ADNG_RTSBarrack::BeginPlay()
@@ -215,11 +225,15 @@ void ADNG_RTSBarrack::Server_AddSpawnQueue_Implementation(const FString &unitNam
 
 void ADNG_RTSBarrack::CancleCurrentSpawn()
 {
-	RemoveQueueElement(0);
-	
+	RemoveQueueElement(0);	
 }
 
 void ADNG_RTSBarrack::RemoveQueueElement(int index)
+{
+	Server_RemoveQueueElement(index);
+}
+
+void ADNG_RTSBarrack::Server_RemoveQueueElement_Implementation(int index)
 {
 	if (spawnQueue.Num())
 	{
@@ -234,6 +248,7 @@ void ADNG_RTSBarrack::RemoveQueueElement(int index)
 		{
 			spawnTime = spawnableUnits[0].GetDefaultObject()->spawnTime;
 			spawnTotalTime = spawnTime;
+			Server_AddSupply(spawnQueue.Top().GetDefaultObject()->supply);
 		}
 	}
 }
