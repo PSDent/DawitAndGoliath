@@ -85,11 +85,11 @@ void ADNG_RTSPawn::Tick(float DeltaTime)
 
 	if (selectedUnits.Num() == 1)
 	{
-		userUI->DisplayUnitInform(selectedUnits[0]);
+		userUI->Display(selectedUnits[0]);
 	}
 	else
 	{
-		userUI->ResetUnitInform();
+		userUI->ResetDisplay();
 	}
 
 	for (int i = 0; i < selectedUnits.Num(); ++i)
@@ -560,7 +560,7 @@ void ADNG_RTSPawn::FindMostUnit()
 			// 유닛의 종류가 달라졌을 때 
 			// mostUnit 또한 달라지는 데,
 			// 이때 CommandMap의 상태를 초기화 하고 잘 바꿔야한다.
-			if (/*unitCount.Contains(name) && */unitCount[name] > unitCount[mostUnitName])
+			if (unitCount[name] > unitCount[mostUnitName])
 			{
 				mostUnit = unit;
 			}

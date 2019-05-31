@@ -34,6 +34,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "RTS")
 		void CancleCurrentSpawn();
 
+	// Getter
+	TArray<TSubclassOf<ADNG_RTSUnit>>& GetSpawnQueue() { return spawnQueue; }
+	void RemoveQueueElement(int index);
+
 private:
 	void SpawnUnit(TSubclassOf<class ADNG_RTSUnit> unitType);
 	UFUNCTION(Reliable, Server, WithValidation)
@@ -58,6 +62,11 @@ private:
 	void Server_AddSpawnQueue_Implementation(const FString &unitName);
 	bool Server_AddSpawnQueue_Validate(const FString &unitName) { return true; }
 
+	UFUNCTION(Reliable, Server, WithValidation)
+		virtual void Server_AddSupply(int deltaSupply);
+	void Server_AddSupply_Implementation(int deltaSupply);
+	bool Server_AddSupply_Validate(int deltaSupply) { return true; }
+
 public:
 
 
@@ -68,12 +77,14 @@ public:
 		TArray<TSubclassOf<class ADNG_RTSUnit>> spawnableUnits;
 	
 	UPROPERTY(BlueprintReadOnly)
-		float spawnTime = 0;
+		float spawnTime;
+
+	UPROPERTY(BlueprintReadOnly)
+		float spawnTotalTime;
 
 private: 
 	// Spawn Queue
-	TQueue<TSubclassOf<ADNG_RTSUnit>> spawnQueue;
-	int queueNum = 0;
+	TArray<TSubclassOf<ADNG_RTSUnit>> spawnQueue;
 
 	FTimerDelegate spawningDele;
 	FTimerHandle spawningTimer;

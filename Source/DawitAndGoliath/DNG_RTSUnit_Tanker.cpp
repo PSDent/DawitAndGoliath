@@ -22,6 +22,9 @@ ADNG_RTSUnit_Tanker::ADNG_RTSUnit_Tanker() : Super()
 	
 	GetCharacterMovement()->MaxWalkSpeed = 400.0f;
 	spawnTime = 15;
+	supply = 6;
+
+	initial = "T";
 }
 
 void ADNG_RTSUnit_Tanker::BeginPlay()

@@ -20,6 +20,9 @@ ADNG_RTSUnit_Range::ADNG_RTSUnit_Range() : Super()
 
 	GetCharacterMovement()->MaxWalkSpeed = 300.0f;
 	spawnTime = 5;
+	supply = 3;
+
+	initial = "R";
 }
 
 void ADNG_RTSUnit_Range::BeginPlay()
