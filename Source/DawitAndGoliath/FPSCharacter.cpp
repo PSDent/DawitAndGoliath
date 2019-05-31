@@ -383,8 +383,6 @@ bool AFPSCharacter::MulticastFire_Validate(FFireParam params)
 void AFPSCharacter::ChangeWeapon(EWeaponType type)
 {
 	IsFireable = false;
-	GetWorldTimerManager().ClearTimer(ReloadTimerHandle);
-	GetWorldTimerManager().SetTimer(ReloadTimerHandle, this, &AFPSCharacter::EnableFire, 1.f, false);
 	switch (type)
 	{
 	case EWeaponType::Rifle:

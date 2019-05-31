@@ -118,8 +118,8 @@ protected:
 
 	virtual bool MulticastEmitFlame_Validate(FVector loc, FRotator rot, UParticleSystem* particle, FVector scale);
 
-
-	virtual void EnableFire() { IsFireable = true; }
+	UFUNCTION(BlueprintCallable)
+		virtual void EnableFire() { IsFireable = true; }
 	
 	USpringArmComponent* SpringArm3rd;
 
@@ -162,13 +162,13 @@ protected:
 	float BoosterEnergy = 3;
 
 	bool IsLeftMousePressed;
-
+	
 	bool IsReloading;
 
 	UPROPERTY(BlueprintReadOnly, category = "FPS_State", Replicated)
 		bool IsBoosting;
 
-	bool IsFireable = true;
+	bool IsFireable = false;
 
 	DECLARE_DELEGATE_OneParam(BoolDelegate, bool);
 	
