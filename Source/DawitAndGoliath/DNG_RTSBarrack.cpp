@@ -45,8 +45,8 @@ void ADNG_RTSBarrack::BeginPlay()
 
 	if (objProperty)
 	{
-		objProperty->SetMaxHp(3000);
-		objProperty->SetHp(3000);
+		objProperty->SetMaxHp(12000);
+		objProperty->SetHp(12000);
 	}
 
 	spawnPoint = RootComponent->GetChildComponent(3)->GetComponentLocation();

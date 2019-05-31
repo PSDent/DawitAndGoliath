@@ -28,7 +28,7 @@ void ABaseController::Possess(APawn *pawn)
 	if (pawn->IsA(AFPSCharacter::StaticClass()))
 	{
 		Cast<AFPSCharacter>(pawn);
-
+		Cast<APlayerController>(pawn->Controller)->bShowMouseCursor = true;
 	}
 	else if (pawn->IsA(ADNG_RTSPawn::StaticClass()))
 	{
