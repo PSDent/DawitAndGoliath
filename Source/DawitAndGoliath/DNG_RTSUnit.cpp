@@ -87,7 +87,7 @@ void ADNG_RTSUnit::Tick(float DeltaTime)
 	else
 		bIsWalk = false;
 
-	if (objProperty->GetHp() <= 0.0f)
+	if (objProperty->GetHp() <= 0.0f && !bIsDie)
 	{
 		Server_Die();
 	}
@@ -132,6 +132,8 @@ void ADNG_RTSUnit::Server_Die_Implementation()
 {
 	bIsDie = true;
 	bIsAlive = false;
+	bIsSelected = false;
+	pawn->currentSupply -= supply;
 }
 
 void ADNG_RTSUnit::Server_AfterDie_Implementation()

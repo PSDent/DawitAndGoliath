@@ -113,6 +113,7 @@ void ADNG_RTSBarrack::SpawnUnit(TSubclassOf<ADNG_RTSUnit> unitType)
 		// 이를 막기 위해 BP에서 Auto Posses AI 란을 Placed in World or Spawn으로 바꿔준다.
 
 		ADNG_RTSUnit *spawnedUnit = GetWorld()->SpawnActor<ADNG_RTSUnit>(unitType, spawnPoint, FRotator::ZeroRotator, spawnInfo);
+		spawnedUnit->SetPawn(pawn);
 		spawnedUnit->Server_Move(rallyPoint);
 	}
 	else
@@ -160,6 +161,9 @@ void ADNG_RTSBarrack::Spawning(float time)
 				unitType = spawnQueue.Top();
 				spawnTime = unitType.GetDefaultObject()->spawnTime;
 				spawnTotalTime = spawnTime;
+
+				int deltaSupply = unitType.GetDefaultObject()->supply;
+				Server_AddSupply(deltaSupply);
 			}
 		}
 	}
@@ -187,11 +191,11 @@ void ADNG_RTSBarrack::AddSpawnQueue(const FString &unitName)
 				{
 					spawnTime = spawnableUnits[i].GetDefaultObject()->spawnTime;
 					spawnTotalTime = spawnTime;
+
+					int deltaSupply = spawnableUnits[i].GetDefaultObject()->supply;
+					Server_AddSupply(deltaSupply);
 				}
 				spawnQueue.Push(spawnableUnits[i]);
-
-				int deltaSupply = spawnableUnits[i].GetDefaultObject()->supply;
-				Server_AddSupply(deltaSupply);
 
 				break;
 			}
@@ -221,12 +225,12 @@ void ADNG_RTSBarrack::RemoveQueueElement(int index)
 	{
 		if (index == 0)
 		{
-			ADNG_RTSPawn *rtsPawn = Cast<ADNG_RTSPawn>(GetOwner());
+			ADNG_RTSPawn *rtsPawn = Cast<ADNG_RTSPawn>(pawn);
 			rtsPawn->currentSupply -= spawnQueue[0].GetDefaultObject()->supply;
 		}
 
 		spawnQueue.RemoveAt(index);
-		if (spawnQueue.Num())
+		if (spawnQueue.Num() && index == 0)
 		{
 			spawnTime = spawnableUnits[0].GetDefaultObject()->spawnTime;
 			spawnTotalTime = spawnTime;
