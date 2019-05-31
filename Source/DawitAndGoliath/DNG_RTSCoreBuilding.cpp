@@ -8,7 +8,7 @@ void ADNG_RTSCoreBuilding::BeginPlay()
 
 	if (objProperty)
 	{
-		objProperty->SetMaxHp(5000);
-		objProperty->SetHp(5000);
+		objProperty->SetMaxHp(30000);
+		objProperty->SetHp(30000);
 	}
 }

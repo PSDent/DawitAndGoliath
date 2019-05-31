@@ -9,7 +9,7 @@
 #include "CollisionQueryParams.h"
 
 // Sets default values
-AFPSCharacter::AFPSCharacter()
+AFPSCharacter::AFPSCharacter() : Super()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -26,14 +26,14 @@ AFPSCharacter::AFPSCharacter()
 	SpringArm3rd->bEnableCameraLag = true;
 	SpringArm3rd->CameraLagSpeed = 100.f;
 	SpringArm3rd->bUsePawnControlRotation = true;
-
-	Cam3rd = CreateDefaultSubobject<UCameraComponent>(FName(TEXT("Camera3rd")));
-	Cam3rd->SetupAttachment(SpringArm3rd, USpringArmComponent::SocketName);
-	Cam3rd->SetIsReplicated(true);
-	Cam3rd->RelativeLocation = FVector(140, 40, 70);
-
 	SpringArm3rd->SetNetAddressable();
 	SpringArm3rd->SetIsReplicated(true);
+
+	Cam3rd = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera3rd"));
+	Cam3rd->SetupAttachment(SpringArm3rd, USpringArmComponent::SocketName);
+
+	Cam3rd->RelativeLocation = FVector(140, 40, 70);
+
 
 	Prop = CreateDefaultSubobject<UDNGProperty>(TEXT("Property"));
 
@@ -79,6 +79,10 @@ void AFPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if(Cam3rd)
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, "CAMCMA");
+
+
 	bUseControllerRotationYaw = true;
 	bUseControllerRotationRoll = true;
 	bUseControllerRotationPitch = false;
@@ -100,12 +104,12 @@ void AFPSCharacter::BeginPlay()
 	//		Cam3rd->RelativeLocation = c->RelativeLocation;
 	
 	UGun* gun = NewObject<UGun>();
-	gun->GunInit(TEXT("Rifle"), 20, 0.1f, 10000, 1.0f, 2.f, 30, GunFireSound);
+	gun->GunInit(TEXT("Rifle"), 20, 0.1f, 30000, 1.0f, 2.f, 30, GunFireSound);
 	gun->SetParticle(FireParticle, MuzzleFlame);
 	Weapons.Add(gun);
 	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::FromInt(Weapons.Num()));
 	gun = NewObject<UGun>();
-	gun->GunInit(TEXT("MachineGun"), 10, 0.06f, 10000, 6.0f, 6.f, 80, GunFireSound);
+	gun->GunInit(TEXT("MachineGun"), 15, 0.06f, 5000, 6.0f, 6.f, 80, GunFireSound);
 	gun->SetParticle(FireParticle, MuzzleFlame);
 	Weapons.Add(gun);
 
@@ -129,6 +133,12 @@ void AFPSCharacter::BeginPlay()
 
 	//ChangeWeapon<EWeaponType::Rifle>();
 	FireDele.BindLambda([&] {
+		if (IsBoosting)
+		{
+			GetWorldTimerManager().ClearTimer(GunFireTimerHandle);
+			return;
+		}
+
 		if (CurrentWeapon->UseBullet() < 0)
 		{
 			if (!GetWorldTimerManager().IsTimerActive(ReloadTimerHandle))
@@ -158,7 +168,7 @@ void AFPSCharacter::BeginPlay()
 							GiveDamage(target, CurrentWeapon->GetDamage(), socLoc);
 
 						}
-					EmitFlame(socLoc, rot + FRotator(-90.0f, 0, -90.0f));
+					EmitFlame(socLoc, rot + FRotator(-90.0f, 0, -90.0f), FlameParticle, FVector(2, 3.5f, 2));
 				}
 			}
 		}
@@ -172,11 +182,24 @@ void AFPSCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	if (IsBoosting)
-		Boost();
+		Boost(DeltaTime);
+	else if(BoosterEnergy < 3)
+	{
+		BoosterEnergy += DeltaTime / 4;
+		if (BoosterEnergy > 3)
+			BoosterEnergy = 3;
+	}
+
 }
 
 void AFPSCharacter::Fire(FFireParam params)
 {
+	if (!Cam3rd)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "Fuck");
+		return;
+	}
+
 	params.WeaponType = CurrentWeaponType;
 
 	params.Location = Cam3rd->GetComponentLocation();
@@ -189,8 +212,12 @@ void AFPSCharacter::Fire(FFireParam params)
 	params.IsGun = CurrentWeapon->IsA(UGun::StaticClass());
 
 	FRotator& rot = params.Rotation;
-	rot.Yaw = FMath::RandRange(rot.Yaw - SplitRange, rot.Yaw + SplitRange);
-	rot.Pitch = FMath::RandRange(rot.Pitch - SplitRange, rot.Pitch + SplitRange);
+
+	float splitRange = SplitRange;
+	if (MovementComponent->Velocity != FVector::ZeroVector) splitRange *= 2;
+
+	rot.Yaw = FMath::RandRange(rot.Yaw - splitRange, rot.Yaw + splitRange);
+	rot.Pitch = FMath::RandRange(rot.Pitch - splitRange, rot.Pitch + splitRange);
 	ServerFire(params);
 }
 
@@ -304,7 +331,6 @@ void AFPSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLi
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AFPSCharacter, Cam3rd);
 	DOREPLIFETIME(AFPSCharacter, CurrentWeapon);
 	DOREPLIFETIME(AFPSCharacter, IsBoosting);
 	//DOREPLIFETIME(AFPSCharacter, Weapons);
@@ -424,20 +450,30 @@ void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	//PlayerInputComponent->BindAction("Rifle", IE_Pressed, this, &AFPSCharacter::ChangeWeapon<EWeaponType::Rifle>);
 	//PlayerInputComponent->BindAction("MachineGun", IE_Pressed, this, &AFPSCharacter::ChangeWeapon<EWeaponType::MachineGun>);
 	//PlayerInputComponent->BindAction("Flame", IE_Pressed, this, &AFPSCharacter::ChangeWeapon<EWeaponType::FlameThrower>);
-	PlayerInputComponent->BindAction("Boost", IE_Pressed, this, &AFPSCharacter::SetBoost);
-	PlayerInputComponent->BindAction("Boost", IE_Released, this, &AFPSCharacter::SetBoost);
+	PlayerInputComponent->BindAction<BoolDelegate>("Boost", IE_Pressed, this, &AFPSCharacter::SetBoost, true);
+	PlayerInputComponent->BindAction<BoolDelegate>("Boost", IE_Released, this, &AFPSCharacter::SetBoost, false);
 
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
-void AFPSCharacter::Boost()
+void AFPSCharacter::Boost(float dt)
 {
-
+	FVector leftPos = GetMesh()->GetSocketLocation("back_piston_l");
+	FVector rightPos = GetMesh()->GetSocketLocation("back_piston_r");
+	EmitFlame(leftPos, GetActorRotation().Add(0, 180.0f, 0), BoosterParticle, FVector(1.5f, 1.5f, 1.5f));
+	EmitFlame(rightPos, GetActorRotation().Add(0, 180.0f, 0), BoosterParticle, FVector(1.5f, 1.5f, 1.5f));
+	BoosterEnergy -= dt;
+	if (BoosterEnergy <= 0)
+	{
+		BoosterEnergy = 0;
+		SetBoost(false);
+	}
 }
 
-void AFPSCharacter::SetBoost()
+void AFPSCharacter::SetBoost(bool value)
 {
-	IsBoosting = !IsBoosting;
+	
+	IsBoosting = value;
 	ServerSetBoost(IsBoosting);
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::FromInt(MovementComponent->MaxWalkSpeed));
 }
@@ -474,36 +510,36 @@ bool AFPSCharacter::ClientSetBoost_Validate(bool valye)
 }
 
 
-void AFPSCharacter::EmitFlame(FVector loc, FRotator rot)
+void AFPSCharacter::EmitFlame(FVector loc, FRotator rot, UParticleSystem* particle, FVector scale)
 {
-	ServerEmitFlame(loc, rot);
+	ServerEmitFlame(loc, rot, particle, scale);
 }
 
-void AFPSCharacter::ServerEmitFlame_Implementation(FVector loc, FRotator rot)
+void AFPSCharacter::ServerEmitFlame_Implementation(FVector loc, FRotator rot, UParticleSystem* particle, FVector scale)
 {
-	MulticastEmitFlame(loc, rot);
+	MulticastEmitFlame(loc, rot, particle, scale);
 }
 
-void AFPSCharacter::MulticastEmitFlame_Implementation(FVector loc, FRotator rot)
+void AFPSCharacter::MulticastEmitFlame_Implementation(FVector loc, FRotator rot, UParticleSystem* particle, FVector scale)
 {
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),
-		FlameParticle,
-		loc, rot)->SetWorldScale3D(FVector(2, 3.5f, 2));
+		particle,
+		loc, rot)->SetWorldScale3D(scale);
 }
 
-bool AFPSCharacter::ServerEmitFlame_Validate(FVector loc, FRotator rot)
+bool AFPSCharacter::ServerEmitFlame_Validate(FVector loc, FRotator rot, UParticleSystem* particle, FVector scale)
 {
 	return true;
 }
 
-bool AFPSCharacter::MulticastEmitFlame_Validate(FVector loc, FRotator rot)
+bool AFPSCharacter::MulticastEmitFlame_Validate(FVector loc, FRotator rot, UParticleSystem* particle, FVector scale)
 {
 	return true;
 }
 
 void AFPSCharacter::OnMousePressed()
 {
-	if (!IsFireable || !CurrentWeapon) return;
+	if (!IsFireable || !CurrentWeapon || IsBoosting) return;
 	IsLeftMousePressed = true;
 	
 	//SplitRange = Cast<UGun>(CurrentWeapon)->GetSplitRange();	
@@ -552,6 +588,7 @@ void AFPSCharacter::RotatePitch(float amount)
 
 void AFPSCharacter::Jump()
 {
+	if (IsBoosting) return;
 	Super::Jump();
 }
 
@@ -564,6 +601,12 @@ float AFPSCharacter::GetAmmoPer()
 {
 	return (float)CurrentWeapon->GetBulletCount() / CurrentWeapon->GetMaxBulletCount();
 }
+
+float AFPSCharacter::GetBoosterEnergyPer()
+{
+	return BoosterEnergy / 3;
+}
+
 
 float AFPSCharacter::GetReloadTimePer()
 {

@@ -84,9 +84,9 @@ protected:
 
 	virtual bool MulticastGiveDamage_Validate(AActor* target, float dmg, FVector);
 
-	virtual void Boost();
+	virtual void Boost(float dt);
 
-	virtual void SetBoost();
+	virtual void SetBoost(bool value);
 
 	UFUNCTION(Server, Reliable, WithValidation)
 		virtual void ServerSetBoost(bool value);
@@ -102,28 +102,27 @@ protected:
 
 	virtual bool ClientSetBoost_Validate(bool value);
 
-	virtual void EmitFlame(FVector loc, FRotator rot);
+	virtual void EmitFlame(FVector loc, FRotator rot, UParticleSystem* particle, FVector scale);
 
 	UFUNCTION(Server, Reliable, WithValidation)
-		virtual void ServerEmitFlame(FVector loc, FRotator rot);
+		virtual void ServerEmitFlame(FVector loc, FRotator rot, UParticleSystem* particle, FVector scale);
 
-	virtual void ServerEmitFlame_Implementation(FVector loc, FRotator rot);
+	virtual void ServerEmitFlame_Implementation(FVector loc, FRotator rot, UParticleSystem* particle, FVector scale);
 
-	virtual bool ServerEmitFlame_Validate(FVector loc, FRotator rot);
+	virtual bool ServerEmitFlame_Validate(FVector loc, FRotator rot, UParticleSystem* particle, FVector scale);
 
 	UFUNCTION(NetMulticast, Reliable, WithValidation)
-		virtual void MulticastEmitFlame(FVector loc, FRotator rot);
+		virtual void MulticastEmitFlame(FVector loc, FRotator rot, UParticleSystem* particle, FVector scale);
 
-	virtual void MulticastEmitFlame_Implementation(FVector loc, FRotator rot);
+	virtual void MulticastEmitFlame_Implementation(FVector loc, FRotator rot, UParticleSystem* particle, FVector scale);
 
-	virtual bool MulticastEmitFlame_Validate(FVector loc, FRotator rot);
+	virtual bool MulticastEmitFlame_Validate(FVector loc, FRotator rot, UParticleSystem* particle, FVector scale);
 
 
 	virtual void EnableFire() { IsFireable = true; }
 	
 	USpringArmComponent* SpringArm3rd;
 
-	UPROPERTY(Replicated)
 	UCameraComponent* Cam3rd;
 
 	UCharacterMovementComponent* MovementComponent;
@@ -148,18 +147,19 @@ protected:
 
 	UParticleSystem* BoosterParticle;
 
-
 	FTimerDelegate FireDele;
 
 	//UPROPERTY(Transient, Replicated)
 	TArray<UWeapon*> Weapons;
 
-	UPROPERTY(Transient, Replicated)
+	UPROPERTY(Transient, Replicated, BlueprintReadOnly)
 	UWeapon* CurrentWeapon;
 
 	EWeaponType CurrentWeaponType;
 
 	float SplitRange;
+
+	float BoosterEnergy = 3;
 
 	bool IsLeftMousePressed;
 
@@ -169,6 +169,8 @@ protected:
 		bool IsBoosting;
 
 	bool IsFireable = true;
+
+	DECLARE_DELEGATE_OneParam(BoolDelegate, bool);
 	
 public:	
 	// Called every frame
@@ -194,6 +196,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		float GetReloadTimePer();
+
+	UFUNCTION(BlueprintCallable)
+		float GetBoosterEnergyPer();
 
 	//UFUNCTION(Server, Reliable, WithValidation)
 	//virtual void ServerSetWeapon(EWeaponType type);
