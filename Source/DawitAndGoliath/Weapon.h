@@ -58,6 +58,5 @@ public:
 	}
 	USoundBase* GetFireSound() { return FireSound; }
 	FString GetName() { return Name; }
-	virtual FHitResult GetTarget(FVector loc, FVector socLoc, FRotator rot, UWorld* world, AActor* ignore, float range);
 	virtual void SetParticle(UParticleSystem* fireParticle, UParticleSystem* muzzleFlame);
 };

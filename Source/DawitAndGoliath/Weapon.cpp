@@ -21,11 +21,6 @@ void UWeapon::WeaponInit(FString name, float damage, float attackRate, float rel
 	FireSound = fireSound;
 }
 
-FHitResult UWeapon::GetTarget(FVector loc, FVector socLoc, FRotator rot, UWorld* world, AActor* ignore, float range)
-{
-	return FHitResult(ForceInit);
-}
-
 //void FWeapon::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 //{
 //	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

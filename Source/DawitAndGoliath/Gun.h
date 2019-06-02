@@ -19,7 +19,7 @@ protected:
 	float SplitRange;
 
 public:
-	virtual FHitResult GetTarget(FVector loc, FVector socLoc, FRotator rot, UWorld* world, AActor* ignore, float range) override;
+	static FHitResult GetTarget(FVector loc, FVector socLoc, FRotator rot, UWorld* world, AActor* ignore, float range);
 
 	void GunInit(FString name, float damage, float attackRate, float range, float splitRange, float reloadTime, int maxBulletCount, USoundBase* fireSound);
 	virtual float GetSplitRange() { return SplitRange; }

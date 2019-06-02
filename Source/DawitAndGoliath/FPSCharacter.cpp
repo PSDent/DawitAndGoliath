@@ -230,11 +230,6 @@ void AFPSCharacter::ServerFire_Implementation(FFireParam params)
 
 void AFPSCharacter::MulticastFire_Implementation(FFireParam params)
 {
-	if (!CurrentWeapon)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "fuck");
-		return;
-	}
 
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),
 		MuzzleFlame,
@@ -252,7 +247,7 @@ void AFPSCharacter::MulticastFire_Implementation(FFireParam params)
 	if (params.IsGun)
 	{
 		//CurrentWeapon �ٿ��� ���?ũ���� (���� �ٲٸ鼭 �� ��ٺ���?���� ũ����)
-		FHitResult hit = CurrentWeapon->GetTarget(params.Location, params.SocketLocation, params.Rotation, GetWorld(), this, params.Range);
+		FHitResult hit = UGun::GetTarget(params.Location, params.SocketLocation, params.Rotation, GetWorld(), this, params.Range);
 		AActor* target = hit.GetActor();
 		if (target)
 		{
@@ -286,19 +281,12 @@ void AFPSCharacter::MulticastFire_Implementation(FFireParam params)
 
 void AFPSCharacter::GiveDamage(AActor* target, float dmg, FVector loc)
 {
-	if (Role == ROLE_Authority)
-	{
-		MulticastGiveDamage(target, dmg, loc);
-	}
-	else
-	{
-		ServerGiveDamage(target, dmg, loc);
-	}
+	ServerGiveDamage(target, dmg, loc);
 }
 
 void AFPSCharacter::ServerGiveDamage_Implementation(AActor* target, float dmg, FVector loc)
 {
-	GiveDamage(target, dmg, loc);
+	MulticastGiveDamage(target, dmg, loc);
 }
 
 bool AFPSCharacter::ServerGiveDamage_Validate(AActor* target, float dmg, FVector loc)

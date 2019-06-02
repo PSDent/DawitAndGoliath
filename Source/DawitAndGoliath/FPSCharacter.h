@@ -152,8 +152,8 @@ protected:
 	//UPROPERTY(Transient, Replicated)
 	TArray<UWeapon*> Weapons;
 
-	UPROPERTY(Transient, Replicated, BlueprintReadOnly)
-	UWeapon* CurrentWeapon;
+	UPROPERTY(Replicated, BlueprintReadOnly)
+		UWeapon* CurrentWeapon;
 
 	EWeaponType CurrentWeaponType;
 
