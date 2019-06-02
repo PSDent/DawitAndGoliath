@@ -85,18 +85,7 @@ void ADNG_RTSPawn::Tick(float DeltaTime)
 
 	if (!bIsInitialized) return;
 
-	if (selectedUnits.Num() == 0)
-	{
-		userUI->ResetDisplay();
-	}
-	else if (selectedUnits.Num() == 1)
-	{
-		userUI->Display(selectedUnits[0]);
-	}
-	else if (selectedUnits.Num() > 1)
-	{
-		userUI->DisplayUnitEntity(selectedUnits);
-	}
+	userUI->Display(selectedUnits);
 
 	for (int i = 0; i < selectedUnits.Num(); ++i)
 	{
@@ -161,6 +150,7 @@ void ADNG_RTSPawn::BasicInit()
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Purple, playerController->GetName());
 
 	userUI = CreateWidget<URTS_UI>(GetWorld(), UI_Class);
+	userUI->SetObjectsArray(&selectedUnits);
 
 	viewPort = GEngine->GameViewport;
 
@@ -257,8 +247,6 @@ void ADNG_RTSPawn::LMousePress()
 	{
 
 	}
-	// 이후 해당 유닛의 정보를 UI 화면 중앙 밑에 띄우게 할 것.
-	// 또한 유닛들을 2개 이상 선택했을 때, 정보창에 그 개체수들을 띄우도록 할 것.
 }
 
 void ADNG_RTSPawn::LMouseRelease()
@@ -593,17 +581,6 @@ void ADNG_RTSPawn::CheckKeysAndExecute()
 			ExecuteCommand(cmd.Key);
 		}
 	}
-
-	//for (int i = 0; i < keys.Num(); ++i)
-	//{
-	//	if (playerController->IsInputKeyDown(keys[i]))
-	//	{
-	//		if (commandMap.Contains(keys[i]))
-	//		{
-	//			ExecuteCommand(keys[i]);
-	//		}
-	//	}
-	//}
 }
 
 void ADNG_RTSPawn::ExecuteCommand(FKey key)

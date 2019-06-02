@@ -32,7 +32,7 @@ ADNG_RTSBarrack::ADNG_RTSBarrack() : Super()
 
 	
 	unitName = "Barrack";
-
+	initial = "B";
 
 	rallyPoint.Set(-390.0f, -470.0f, 380.0f);
 
@@ -66,7 +66,6 @@ void ADNG_RTSBarrack::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	Spawning(DeltaTime);
-	
 }
 
 void ADNG_RTSBarrack::SpawnMeleeUnit()
@@ -109,7 +108,6 @@ void ADNG_RTSBarrack::Server_SetRallyPoint_Implementation(FVector dest)
 {
 	rallyPoint = dest;
 }
-
 
 void ADNG_RTSBarrack::SpawnUnit(TSubclassOf<ADNG_RTSUnit> unitType)
 {
@@ -187,6 +185,7 @@ void ADNG_RTSBarrack::Server_Spawning_Implementation(float time)
 {
 	Spawning(time);
 }
+
 void ADNG_RTSBarrack::AddSpawnQueue(const FString &unitName)
 {
 	if (Role == ROLE_Authority)
@@ -221,7 +220,6 @@ void ADNG_RTSBarrack::Server_AddSpawnQueue_Implementation(const FString &unitNam
 {
 	AddSpawnQueue(unitName);
 }
-
 
 void ADNG_RTSBarrack::CancleCurrentSpawn()
 {
