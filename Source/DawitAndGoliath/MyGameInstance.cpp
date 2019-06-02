@@ -384,6 +384,7 @@ void UMyGameInstance::InitPlayersPawn()
 			FActorSpawnParameters spawnInfo;
 			spawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
+			/// 여기서 Access Violation 발생
 			FString roleName = Cast<AMyPlayerState>(Cast<APlayerController>(playerCtrlArr[i])->PlayerState)->playRoleName;
 
 			/// #여기 starting Point 가 아예 없는 경우도 발생한다

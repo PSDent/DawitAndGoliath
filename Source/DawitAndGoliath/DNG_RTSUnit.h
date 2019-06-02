@@ -23,8 +23,6 @@ class DAWITANDGOLIATH_API ADNG_RTSUnit : public ADNG_RTSBaseObject
 public:
 	ADNG_RTSUnit();
 
-
-
 	virtual void BeginPlay() override;
 	UFUNCTION(Server, Reliable, WithValidation)
 		virtual void Server_BeginPlay();
@@ -60,9 +58,14 @@ public:
 	UFUNCTION(BlueprintCallable, category = "RTSMelee")
 		void Patrol();
 	UFUNCTION(Server, Reliable, WithValidation)
-		virtual void Server_Patrol();
-	void Server_Patrol_Implementation();
-	bool Server_Patrol_Validate() { return true; }
+		virtual void Server_Patrol(const FVector &posOne, const FVector &posTwo);
+	void Server_Patrol_Implementation(const FVector &posOne, const FVector &posTwo);
+	bool Server_Patrol_Validate(const FVector &posOne, const FVector &posTwo) { return true; }
+
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
+		virtual void Server_CheckPatrol();
+	void Server_CheckPatrol_Implementation();
+	bool Server_CheckPatrol_Validate() { return true; }
 
 	UFUNCTION()
 		void Attack();
@@ -72,11 +75,11 @@ public:
 	bool Server_Attack_Validate(AActor *targetActor) { return true; }
 
 	UFUNCTION(BlueprintCallable, category = "RTSMelee")
-		void Deal(AActor *targetActor);
+		void Deal();
 	UFUNCTION(Server, Reliable, WithValidation)
-		virtual void Server_Deal(AActor *targetActor);
-	void Server_Deal_Implementation(AActor *targetActor);
-	bool Server_Deal_Validate(AActor *targetActor) { return true; }
+		virtual void Server_Deal();
+	void Server_Deal_Implementation();
+	bool Server_Deal_Validate() { return true; }
 
 	UFUNCTION(NetMulticast, Reliable, WithValidation)
 		virtual void Multicast_FireEffect(FVector pos);
@@ -89,12 +92,23 @@ public:
 
 private:
 	void CompareDistance();
+	UFUNCTION(Server, Reliable, WithValidation)
+		virtual void Server_CompareDistance();
+	void Server_CompareDistance_Implementation();
+	bool Server_CompareDistance_Validate() { return true; }
 
 	void TurnToTarget();
 	UFUNCTION(Server, Reliable, WithValidation)
 		virtual void Server_TurnToTarget();
 	void Server_TurnToTarget_Implementation();
 	bool Server_TurnToTarget_Validate() { return true; }
+
+	UFUNCTION(BlueprintCallable)
+		void Chase();
+	UFUNCTION(Server, Reliable, WithValidation)
+		virtual void Server_Chase();
+	void Server_Chase_Implementation();
+	bool Server_Chase_Validate() { return true; }
 
 protected:
 	UFUNCTION(Server, Reliable, WithValidation)
@@ -109,7 +123,6 @@ protected:
 
 public:
 	int spawnTime = 0;
-	FString initial;
 	int supply;
 
 
@@ -120,11 +133,19 @@ private:
 	FTimerDelegate attackDelayDele;
 	FTimerHandle attackDelayTimerHandle;
 
+	class USphereComponent *patrolPointTriggerOne;
+	class USphereComponent *patrolPointTriggerTwo;
+	class USphereComponent *nextPatrolPointTrigger;
+
+	FVector patrolPointOne;
+	FVector patrolPointTwo;
+	FVector nextPatrolPoint;
+
 protected:
 	TArray<class AFPSCharacter*> enemyPlayers;
 
 	UPROPERTY(Replicated)
-	AActor *target;
+		AActor *target;
 
 	UPROPERTY(BlueprintReadWrite, category = "RTSUnit")
 		UBlackboardComponent *blackBoard;
@@ -152,7 +173,6 @@ protected:
 	UAudioComponent *fireAudioComponent;
 
 	FVector fireEffectPos;
-		//TSubclassOf<UParticleSystem> fireParticle;
 
 	float deadDelay;
 	float fireRange;
@@ -167,9 +187,12 @@ protected:
 		bool bIsDie;
 
 	bool bIsHold;
+	bool bIsMarkTarget;
 
 	// BlackBoard Key
 	FName key_IsCanDeal = "IsCanDeal";
-
-
+	FName key_Target = "target";
+	FName key_IsWantToDeal = "IsWantToDeal";
+	FName key_IsPatrolling = "IsPatrolling";
+	FName key_IsChasing = "IsChasing";
 };

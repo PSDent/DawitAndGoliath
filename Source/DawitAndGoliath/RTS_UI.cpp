@@ -8,11 +8,15 @@
 #include "DNG_RTSBarrack.h"
 #include "DNG_RTSUnit.h"
 #include "DNGProperty.h"
+#include "Components/GridSlot.h"
 
 URTS_UI::URTS_UI(const FObjectInitializer &objInitializer) : Super(objInitializer)
 {
 	maxRow = 3;
 	maxColumn = 12;
+	entityPage = 0;
+	currentEntityPage = 0;
+	maxPages = 10;
 }
 
 void URTS_UI::DrawBox(FVector2D start, FVector2D end)
@@ -79,6 +83,7 @@ void URTS_UI::SendToPawnPanelInfo(FString key)
 void URTS_UI::DisplayUnitInform(ADNG_RTSBaseObject *unit)
 {
 	ResetProductionInform();
+	ResetUnitEntityGrid();
 
 	entityInformCanvas->SetVisibility(ESlateVisibility::Visible);
 	UTextBlock *unitName = Cast<UTextBlock>(entityInformCanvas->GetChildAt(0));
@@ -105,6 +110,8 @@ void URTS_UI::DisplayProductionInform(ADNG_RTSBaseObject *construction)
 {
 	//ResetUnitInform();
 	DisplayUnitInform(construction);
+	ResetUnitEntityGrid();
+
 
 	ADNG_RTSBarrack *barrack = Cast<ADNG_RTSBarrack>(construction);
 	focusingBarrack = barrack;
@@ -151,22 +158,37 @@ void URTS_UI::ResetProductionInform()
 	productionInformCanvas->SetVisibility(ESlateVisibility::Collapsed);
 }
 
-void URTS_UI::Display(ADNG_RTSBaseObject *obj)
+void URTS_UI::Display(TArray<ADNG_RTSBaseObject*>& objects)
 {
-	ADNG_RTSUnit *unit = Cast<ADNG_RTSUnit>(obj);
+	int objNum = objects.Num();
 
-	if (unit)
+	if (objNum == 0)
 	{
-		focusingBarrack = nullptr;
-		DisplayUnitInform(obj);
-		return;
+		ResetUnitInform();
+		ResetProductionInform();
+		ResetUnitEntityGrid();
 	}
-
-	ADNG_RTSBarrack *barrack = Cast<ADNG_RTSBarrack>(obj);
-	if (barrack)
+	else if (objNum == 1)
 	{
-		DisplayProductionInform(obj);
-		return;
+		ADNG_RTSUnit *unit = Cast<ADNG_RTSUnit>(objects[0]);
+
+		if (unit)
+		{
+			focusingBarrack = nullptr;
+			DisplayUnitInform(objects[0]);
+			return;
+		}
+
+		ADNG_RTSBarrack *barrack = Cast<ADNG_RTSBarrack>(objects[0]);
+		if (barrack)
+		{
+			DisplayProductionInform(objects[0]);
+			return;
+		}
+	}
+	else
+	{
+		DisplayUnitEntity(objects);
 	}
 }
 
@@ -184,12 +206,86 @@ void URTS_UI::RemoveQueueElement(int index)
 
 void URTS_UI::DisplayUnitEntity(TArray<ADNG_RTSBaseObject*> &objects)
 {
-	entityGrid->SetVisibility(ESlateVisibility::Visible);
+	entityCanvas->SetVisibility(ESlateVisibility::Visible);
+	ResetUnitInform();
+	ResetProductionInform();
+	ResetUnitEntity();
 
+	int entitiesInPage = maxColumn * maxRow;
+	int entityNum = objects.Num();
+	int pageTerm = entitiesInPage * currentEntityPage;
+	int pages = entityNum / entitiesInPage + 1;
 
+	for (int i = 0; i < maxPages; ++i)
+	{
+		UWidget *entityPageSlot = entityPageGrid->GetChildAt(i);
+
+		if (i < pages)
+		{
+			entityPageSlot->SetVisibility(ESlateVisibility::Visible);
+		}
+		else
+		{
+			entityPageSlot->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
+
+	for (int i = pageTerm; i < pageTerm + entitiesInPage; ++i)
+	{
+		if (i >= entityNum) break;
+
+		int row = (i % entitiesInPage) / maxRow;
+		int column = (i % entitiesInPage) % maxRow;
+		int index = i % entitiesInPage;
+
+		UWidget *entitySlot = Cast<UWidget>(entityGrid->GetChildAt(index));
+		UUserWidget *entitySlotWidget = Cast<UUserWidget>(entitySlot);
+
+		entitySlotWidget->SetVisibility(ESlateVisibility::Visible);
+		UTextBlock *text = Cast<UTextBlock>(entitySlotWidget->WidgetTree->FindWidget("InitialText"));
+		text->SetText(FText::FromString(objects[i]->initial));
+	}
 }
 
 void URTS_UI::ResetUnitEntity()
 {
+	for (int i = 0; i < maxRow * maxColumn; ++i)
+	{
+		UWidget *entitySlot = Cast<UWidget>(entityGrid->GetChildAt(i));
+		entitySlot->SetVisibility(ESlateVisibility::Collapsed);
+	}
+}
 
+void URTS_UI::ResetUnitEntityGrid()
+{
+	entityCanvas->SetVisibility(ESlateVisibility::Collapsed);
+}
+
+void URTS_UI::SelectEntity(int row, int column)
+{
+	int index = currentEntityPage * maxRow * maxColumn + (row * maxRow) + column;
+	ADNG_RTSBaseObject *temp = (*objectsArray)[index];
+
+	for (int i = 0; i < (*objectsArray).Num(); ++i)
+	{
+		(*objectsArray)[i]->SetSelectedStatus(false);
+	}
+	objectsArray->Empty();
+	temp->SetSelectedStatus(true);
+	objectsArray->Add(temp);
+}
+
+void URTS_UI::ExceptEntity(int row, int column)
+{
+	int startIndex = currentEntityPage * maxRow * maxColumn + (row * maxRow) + column;
+	for (int i = startIndex; i < objectsArray->Num(); ++i)
+	{
+		(*objectsArray)[i]->SetSelectedStatus(false);
+		objectsArray->RemoveAt(i);
+	}
+}
+
+void URTS_UI::SelectPage(int pageNum)
+{
+	currentEntityPage = pageNum;
 }

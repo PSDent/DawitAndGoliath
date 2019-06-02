@@ -32,7 +32,7 @@ ADNG_RTSBarrack::ADNG_RTSBarrack() : Super()
 
 	
 	unitName = "Barrack";
-
+	initial = "B";
 
 	rallyPoint.Set(-390.0f, -470.0f, 380.0f);
 

@@ -32,7 +32,7 @@ public:
 	URTS_UI(const FObjectInitializer &objInitializer);
 	void DrawBox(FVector2D start, FVector2D end);
 	
-	void Display(class ADNG_RTSBaseObject*);
+	void Display(TArray<class ADNG_RTSBaseObject*>&);
 	void ResetDisplay();
 
 	void DisplayUnitInform(class ADNG_RTSBaseObject*);
@@ -47,6 +47,9 @@ public:
 
 	void DisplayUnitEntity(TArray<class ADNG_RTSBaseObject*>&);
 	void ResetUnitEntity();
+	void ResetUnitEntityGrid();
+
+	void SetObjectsArray(TArray<class ADNG_RTSBaseObject*> *objArray) { objectsArray = objArray; }
 
 	// Getter
 	UImage* GetSelectionBoxImage() { return selectionBoxImage; };
@@ -59,6 +62,15 @@ public:
 		void RemoveQueueElement(int index);
 private:
 
+	UFUNCTION(BlueprintCallable)
+		void SelectEntity(int row, int column);
+
+	UFUNCTION(BlueprintCallable)
+		void ExceptEntity(int row, int column);
+
+	UFUNCTION(BlueprintCallable)
+		void SelectPage(int pageNum);
+
 protected:
 
 public:
@@ -66,15 +78,17 @@ public:
 		float currentProgress;
 	UPROPERTY(BlueprintReadOnly)
 		float totalProgress;
-
-	int entityPage;
+	UPROPERTY(BlueprintReadWrite)
+		int entityPage;
+	UPROPERTY(BlueprintReadWrite)
+		int currentEntityPage;
 
 private:
 	enum { SLOT_NUMBER, PRODUCTION_UNIT};
 	const int MAX_QUEUE_SIZE = 5;
 
 	class ADNG_RTSBarrack *focusingBarrack;
-
+	TArray<class ADNG_RTSBaseObject*> *objectsArray;
 private:
 
 protected:
@@ -83,6 +97,9 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 		int maxColumn;
+
+	UPROPERTY(BlueprintReadOnly)
+		int maxPages;
 
 	UPROPERTY(BlueprintReadWrite, category = "RTS_UI")
 		UImage *selectionBoxImage;
@@ -94,7 +111,13 @@ protected:
 		UCanvasPanel *entityInformCanvas;
 
 	UPROPERTY(BlueprintReadWrite, category = "RTS_UI")
+		UCanvasPanel *entityCanvas;
+
+	UPROPERTY(BlueprintReadWrite, category = "RTS_UI")
 		UGridPanel *entityGrid;
+
+	UPROPERTY(BlueprintReadWrite, category = "RTS_UI")
+		UGridPanel *entityPageGrid;
 
 	UPROPERTY(BlueprintReadWrite, category = "RTS_UI")
 		UCanvasPanel *productionInformCanvas;

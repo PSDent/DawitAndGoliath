@@ -14,9 +14,10 @@ ADNG_RTSUnit_Range::ADNG_RTSUnit_Range() : Super()
 	objProperty->SetHp(50.0f);
 	unitName = "RangeUnit";
 
-	damage = 50.0f;
+	damage = 1.0f;
 	fireRate = 1.0f;
 	fireRange = 600.0f;
+	traceRange = 1000.0f;
 
 	GetCharacterMovement()->MaxWalkSpeed = 300.0f;
 	spawnTime = 5;

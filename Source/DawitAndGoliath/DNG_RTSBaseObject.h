@@ -50,6 +50,8 @@ public:
 	UPROPERTY(Replicated)
 		bool bIsAlive;
 
+	FString initial;
+
 private:
 
 protected:

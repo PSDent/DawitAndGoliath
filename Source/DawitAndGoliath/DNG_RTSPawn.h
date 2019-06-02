@@ -112,6 +112,9 @@ public:
 	FVector targetPos;
 	AActor *targetActor;
 
+	UPROPERTY(BlueprintReadOnly)
+		bool bPressedShiftKey;
+
 private:
 	UPROPERTY(Replicated)
 		APlayerController *playerController;
@@ -158,11 +161,9 @@ private:
 	float height;
 
 	bool bPressedRightMouse;
-
-
 	bool bPressedLeftMouse;
 	
-	bool bPressedShiftKey;
+
 	bool bPressedCtrlKey;
 
 };
