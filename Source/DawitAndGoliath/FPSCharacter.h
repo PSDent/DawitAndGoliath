@@ -133,6 +133,8 @@ protected:
 
 	UAnimMontage* BoostMontage;
 
+	UAnimMontage* DeathMontage;
+
 	FTimerHandle GunFireTimerHandle;
 
 	FTimerHandle HealTimerHandle;
@@ -169,6 +171,8 @@ protected:
 		bool IsBoosting;
 
 	bool IsFireable = false;
+
+	bool IsDead = false;
 
 	DECLARE_DELEGATE_OneParam(BoolDelegate, bool);
 	

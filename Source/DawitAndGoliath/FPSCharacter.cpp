@@ -65,6 +65,10 @@ AFPSCharacter::AFPSCharacter() : Super()
 		TEXT("/Game/ParagonWraith/Characters/Heroes/Wraith/Animations/TravelMode_Transition_InMotion_Montage")
 	);
 
+	ConstructorHelpers::FObjectFinder<UAnimMontage> deathMontage(
+		TEXT("/Game/ParagonWraith/Characters/Heroes/Wraith/Animations/Death_Backward_Montage")
+	);
+
 	FireParticle = fireParticle.Object;
 	FlameParticle = flameParticle.Object;
 	MuzzleFlame = muzzleFlame.Object;
@@ -72,6 +76,7 @@ AFPSCharacter::AFPSCharacter() : Super()
 	GunFireSound = gunFireSound.Object;
 	FireMontage = fireMontage.Object;
 	BoostMontage = boostMontage.Object;
+	DeathMontage = deathMontage.Object;
 }
 
 // Called when the game starts or when spawned
@@ -180,6 +185,8 @@ void AFPSCharacter::BeginPlay()
 // Called every frame
 void AFPSCharacter::Tick(float DeltaTime)
 {
+	if (IsDead) return;
+
 	Super::Tick(DeltaTime);
 	if (IsBoosting)
 		Boost(DeltaTime);
@@ -190,6 +197,12 @@ void AFPSCharacter::Tick(float DeltaTime)
 			BoosterEnergy = 3;
 	}
 
+	if (Prop->GetHp() <= 0)
+	{
+		IsDead = true;
+		GetWorldTimerManager().ClearTimer(GunFireTimerHandle);
+		PlayAnimMontage(DeathMontage);
+	}
 }
 
 void AFPSCharacter::Fire(FFireParam params)
@@ -531,6 +544,8 @@ bool AFPSCharacter::MulticastEmitFlame_Validate(FVector loc, FRotator rot, UPart
 
 void AFPSCharacter::OnMousePressed()
 {
+	if (IsDead) return;
+
 	if (!IsFireable || !CurrentWeapon || IsBoosting) return;
 	IsLeftMousePressed = true;
 	
@@ -540,12 +555,16 @@ void AFPSCharacter::OnMousePressed()
 
 void AFPSCharacter::OnMouseReleased()
 {
+	if (IsDead) return;
+
 	IsLeftMousePressed = false;
 	GetWorldTimerManager().ClearTimer(GunFireTimerHandle);
 }
 
 void AFPSCharacter::MoveForward(float amount)
 {
+	if (IsDead) return;
+
 	if (amount)
 	{
 		FVector forwardVec = GetActorForwardVector();
@@ -555,6 +574,8 @@ void AFPSCharacter::MoveForward(float amount)
 
 void AFPSCharacter::MoveRight(float amount)
 {
+	if (IsDead) return;
+
 	if (amount)
 	{
 		FVector rightVec = GetActorRightVector();
@@ -564,6 +585,8 @@ void AFPSCharacter::MoveRight(float amount)
 
 void AFPSCharacter::RotateYaw(float amount)
 {
+	if (IsDead) return;
+
 	if (amount)
 	{
 		AddControllerYawInput(amount);
@@ -572,6 +595,8 @@ void AFPSCharacter::RotateYaw(float amount)
 
 void AFPSCharacter::RotatePitch(float amount)
 {
+	if (IsDead) return;
+
 	if (amount)
 	{
 		AddControllerPitchInput(amount);
@@ -580,6 +605,8 @@ void AFPSCharacter::RotatePitch(float amount)
 
 void AFPSCharacter::Jump()
 {
+	if (IsDead) return;
+
 	if (IsBoosting) return;
 	Super::Jump();
 }
