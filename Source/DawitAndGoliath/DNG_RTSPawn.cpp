@@ -340,7 +340,7 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 	extent = FVector(abs(extent.X), abs(extent.Y), abs(extent.Z));
 	selectionBox->SetWorldLocation(midPos);
 	selectionBox->SetBoxExtent(extent);
-	selectionBox->GetOverlappingActors(selectedActors, TSubclassOf<ADNG_RTSBaseObject>());
+	selectionBox->GetOverlappingActors(selectedActors, ADNG_RTSBaseObject::StaticClass());
 
 	for (auto actor : selectedActors)
 	{

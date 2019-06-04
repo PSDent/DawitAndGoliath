@@ -119,6 +119,7 @@ private:
 	UPROPERTY(Replicated)
 		APlayerController *playerController;
 	TArray<ADNG_RTSBaseObject*> selectedUnits;
+	TArray<TArray<ADNG_RTSBaseObject*>> squads;
 
 	// UI 
 	URTS_UI *userUI;

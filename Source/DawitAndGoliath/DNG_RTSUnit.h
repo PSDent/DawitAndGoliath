@@ -37,9 +37,9 @@ public:
 	UFUNCTION(BlueprintCallable, category = "RTSMelee")
 		void Move();
 	UFUNCTION(Server, Reliable, WithValidation)
-		virtual void Server_Move(FVector dest);
-	void Server_Move_Implementation(FVector dest);
-	bool Server_Move_Validate(FVector dest) { return true; }
+		virtual void Server_Move(FVector dest, bool justMoveVal);
+	void Server_Move_Implementation(FVector dest, bool justMoveVal);
+	bool Server_Move_Validate(FVector dest, bool justMoveVal) { return true; }
 
 	UFUNCTION(BlueprintCallable, category = "RTSMelee")
 		void Stop();
@@ -86,6 +86,10 @@ public:
 	void Multicast_FireEffect_Implementation(FVector pos);
 	bool Multicast_FireEffect_Validate(FVector pos) { return true; };
 
+	UFUNCTION(Server, Reliable, WithValidation)
+		virtual void Server_SetValueBool(FName key, bool val);
+	void Server_SetValueBool_Implementation(FName key, bool val);
+	bool Server_SetValueBool_Validate(FName key, bool val) { return true; }
 
 	UFUNCTION(BlueprintCallable, category = "RTSUnit")
 		virtual void Check();
@@ -109,6 +113,17 @@ private:
 		virtual void Server_Chase();
 	void Server_Chase_Implementation();
 	bool Server_Chase_Validate() { return true; }
+
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+		virtual void Multicast_GiveDamage(AActor *target, float damage);
+	void Multicast_GiveDamage_Implementation(AActor *target, float damage);
+	bool Multicast_GiveDamage_Validate(AActor *target, float damage) { return true; }
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		virtual void Server_CheckStopped();
+	void Server_CheckStopped_Implementation();
+	bool Server_CheckStopped_Validate() { return true; }
+
 
 protected:
 	UFUNCTION(Server, Reliable, WithValidation)
@@ -136,6 +151,7 @@ private:
 	class USphereComponent *patrolPointTriggerOne;
 	class USphereComponent *patrolPointTriggerTwo;
 	class USphereComponent *nextPatrolPointTrigger;
+	class USphereComponent *arriveTrigger;
 
 	FVector patrolPointOne;
 	FVector patrolPointTwo;
@@ -147,7 +163,7 @@ protected:
 	UPROPERTY(Replicated)
 		AActor *target;
 
-	UPROPERTY(BlueprintReadWrite, category = "RTSUnit")
+	UPROPERTY(Replicated, BlueprintReadWrite, category = "RTSUnit")
 		UBlackboardComponent *blackBoard;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AI")
@@ -179,7 +195,7 @@ protected:
 	float traceRange;
 	float fireRate;
 	float damage;
-
+	float arriveTriggerRad;
 
 	UPROPERTY(Replicated, BlueprintReadOnly, category = "RTSUnit")
 		bool bIsWalk;
@@ -195,4 +211,5 @@ protected:
 	FName key_IsWantToDeal = "IsWantToDeal";
 	FName key_IsPatrolling = "IsPatrolling";
 	FName key_IsChasing = "IsChasing";
+	FName key_IsJustMoving = "IsJustMoving";
 };
