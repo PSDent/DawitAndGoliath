@@ -17,6 +17,11 @@ class DAWITANDGOLIATH_API ADNGGameModeBase : public AGameModeBase
 public:
 	ADNGGameModeBase();
 
+	static void GameSet();
+	static void OnBarrackDestroyed();
+	static void OnPlayerKilled();
+
 private:
-	
+	static int BarrackCount;
+	static int PlayerCount;
 };

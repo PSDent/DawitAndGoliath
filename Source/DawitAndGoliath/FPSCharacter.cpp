@@ -201,7 +201,7 @@ void AFPSCharacter::Tick(float DeltaTime)
 	{
 		IsDead = true;
 		GetWorldTimerManager().ClearTimer(GunFireTimerHandle);
-		PlayAnimMontage(DeathMontage);
+		PlayAnimMontage(DeathMontage, 1.f);
 	}
 }
 

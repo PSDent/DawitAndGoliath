@@ -15,13 +15,13 @@ class DAWITANDGOLIATH_API UDNGProperty : public UActorComponent
 
 public:	
 	// Sets default values for this component's properties
-	UDNGProperty();
+	UDNGProperty();	
 
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-	UPROPERTY(VisibleAnyWhere, Category = "Stat")
+	UPROPERTY(BlueprintReadOnly)
 		float Hp;
 	UPROPERTY(VisibleAnyWhere, Category = "Stat")
 		float MaxHp;

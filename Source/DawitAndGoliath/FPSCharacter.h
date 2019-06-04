@@ -22,6 +22,8 @@ class DAWITANDGOLIATH_API AFPSCharacter : public ACharacter
 public:
 	// Sets default values for this character's properties
 	AFPSCharacter();
+
+	UPROPERTY(BlueprintReadOnly)
 	UDNGProperty* Prop;
 
 protected:
