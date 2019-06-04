@@ -33,7 +33,9 @@ ADNG_RTSUnit::ADNG_RTSUnit() : Super()
 
 	patrolPointTriggerOne = CreateDefaultSubobject<USphereComponent>(TEXT("patrolPointTriggerOne"));
 	patrolPointTriggerTwo = CreateDefaultSubobject<USphereComponent>(TEXT("patrolPointTriggerTwo"));
-
+	arriveTrigger = CreateDefaultSubobject<USphereComponent>(TEXT("arriveTrigger"));
+	patrolPointTriggerOne->SetSphereRadius(30.0f);
+	patrolPointTriggerTwo->SetSphereRadius(30.0f);
 	bIsHold = false;
 	bIsWalk = false;
 	deadDelay = 1.0f;
@@ -47,6 +49,7 @@ void ADNG_RTSUnit::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLife
 	DOREPLIFETIME(ADNG_RTSUnit, bIsDie);
 	DOREPLIFETIME(ADNG_RTSUnit, bIsWalk);
 	DOREPLIFETIME(ADNG_RTSUnit, target);
+	DOREPLIFETIME(ADNG_RTSUnit, blackBoard);
 }
 
 void ADNG_RTSUnit::BeginPlay()
@@ -79,6 +82,7 @@ void ADNG_RTSUnit::Server_BeginPlay_Implementation()
 	}
 
 	blackBoard->SetValueAsBool(key_IsCanDeal, true);
+	arriveTriggerRad = 20.0f;
 }
 
 void ADNG_RTSUnit::Tick(float DeltaTime)
@@ -90,7 +94,9 @@ void ADNG_RTSUnit::Tick(float DeltaTime)
 	if (GetCharacterMovement()->Velocity.Size2D() > 0.0f)
 		bIsWalk = true;
 	else
+	{
 		bIsWalk = false;
+	}
 
 	if (objProperty->GetHp() <= 0.0f && !bIsDie)
 	{
@@ -101,7 +107,26 @@ void ADNG_RTSUnit::Tick(float DeltaTime)
 	{
 		TurnToTarget();
 	}
+}
 
+void ADNG_RTSUnit::Server_CheckStopped_Implementation()
+{
+	bool isJustMoving = blackBoard->GetValueAsBool(key_IsJustMoving);
+	bool isPatrolling = blackBoard->GetValueAsBool(key_IsPatrolling);
+
+	if (!isJustMoving || isPatrolling) return;
+
+	TArray<AActor*> actors;
+	arriveTrigger->SetSphereRadius(arriveTriggerRad);
+	arriveTrigger->GetOverlappingActors(actors);
+	AActor *me = Cast<AActor>(this);
+	for (auto actor : actors)
+	{
+		if (actor == me)
+		{
+			Server_SetValueBool(key_IsJustMoving, false);
+		}
+	}
 }
 
 void ADNG_RTSUnit::TurnToTarget()
@@ -110,8 +135,6 @@ void ADNG_RTSUnit::TurnToTarget()
 	{
 		if (target)
 		{
-			//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Magenta, "Has Target");
-
 			FRotator deltaRot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), target->GetActorLocation());
 			deltaRot.Pitch = 0.0f;
 			SetActorRotation(deltaRot);
@@ -137,6 +160,12 @@ void ADNG_RTSUnit::Server_Die_Implementation()
 	bIsDie = true;
 	bIsAlive = false;
 	bIsSelected = false;
+	blackBoard->SetValueAsBool(key_IsPatrolling, false);
+	blackBoard->SetValueAsBool(key_IsWantToDeal, false);
+	blackBoard->SetValueAsBool(key_IsChasing, false);
+	blackBoard->SetValueAsBool(key_IsCanDeal, false);
+	aiController->StopMovement();
+
 	pawn->currentSupply -= supply;
 }
 
@@ -153,12 +182,16 @@ void ADNG_RTSUnit::Move()
 {
 	FVector dest;
 
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "MoveCLICK");
+
 	GetWorld()->GetTimerManager().ClearTimer(commandCheckHandle);
 	pawn->SetCommandingFlag(true);
 	if (/*!pawn->GetLeftMouseStatus() && */!pawn->GetRightMouseStatus())
 	{
 		pawn->GetPlayerController()->CurrentMouseCursor = EMouseCursor::Crosshairs;
 	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Magenta, FString::Printf(TEXT("%d"), blackBoard->GetValueAsBool(key_IsJustMoving)));
 
 	commandCheckDele.BindLambda(
 		[&] {
@@ -168,7 +201,8 @@ void ADNG_RTSUnit::Move()
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Detect Mouse Move Click");
 
-			Server_Move(pawn->targetPos);
+			Server_SetValueBool(key_IsPatrolling, false);
+			Server_Move(pawn->targetPos, true);
 
 			pawn->GetPlayerController()->CurrentMouseCursor = EMouseCursor::Default;
 
@@ -179,23 +213,33 @@ void ADNG_RTSUnit::Move()
 	GetWorld()->GetTimerManager().SetTimer(commandCheckHandle, commandCheckDele, 0.001f, true, 0.0f);
 }
 
-void ADNG_RTSUnit::Server_Move_Implementation(FVector dest)
+void ADNG_RTSUnit::Server_Move_Implementation(FVector dest, bool justMoveVal)
 {
-	if (aiController)
-		aiController->MoveToLocation(dest);
-	else
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "No AI Controller");
-}
+	target = nullptr;
+	blackBoard->SetValueAsBool(key_IsJustMoving, justMoveVal);
+	blackBoard->SetValueAsBool(key_IsChasing, false);
+	blackBoard->SetValueAsBool(key_IsWantToDeal, false);
+	aiController->MoveToLocation(dest);
 
+	arriveTrigger->SetWorldLocation(dest);
+}
 
 void ADNG_RTSUnit::Stop()
 {
 	Server_Stop();
 }
 
+void ADNG_RTSUnit::Server_SetValueBool_Implementation(FName key, bool val)
+{
+	blackBoard->SetValueAsBool(key, val);
+}
+
 void ADNG_RTSUnit::Server_Stop_Implementation()
 {
+	//GetWorld()->GetTimerManager().ClearTimer(commandCheckHandle);
 	aiController->StopMovement();
+	blackBoard->SetValueAsBool(key_IsPatrolling, false);
+	blackBoard->SetValueAsBool(key_IsJustMoving, false);
 }
 
 
@@ -206,6 +250,10 @@ void ADNG_RTSUnit::Hold()
 
 void ADNG_RTSUnit::Server_Hold_Implementation()
 {
+	GetWorld()->GetTimerManager().ClearTimer(commandCheckHandle);
+	blackBoard->SetValueAsBool(key_IsPatrolling, false);
+	blackBoard->SetValueAsBool(key_IsJustMoving, false);
+
 	aiController->StopMovement();
 	bIsHold = true;
 }
@@ -249,7 +297,7 @@ void ADNG_RTSUnit::Server_Patrol_Implementation(const FVector &posOne, const FVe
 	patrolPointTriggerTwo->SetWorldLocation(patrolPointTwo);
 	nextPatrolPointTrigger = patrolPointTriggerTwo;
 
-	Server_Move(nextPatrolPoint);
+	Server_Move(nextPatrolPoint, false);
 
 	blackBoard->SetValueAsBool(key_IsPatrolling, true);
 }
@@ -260,14 +308,14 @@ void ADNG_RTSUnit::Server_CheckPatrol_Implementation()
 
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "RUNNING");
 
-	TArray<AActor*> actors;
-	nextPatrolPointTrigger->SetWorldLocation(nextPatrolPoint);
-	nextPatrolPointTrigger->SetSphereRadius(30.0f);
-	nextPatrolPointTrigger->GetOverlappingActors(actors);
-	//if ()
-	//{
+	TArray<AActor*> objects;
+	DrawDebugSphere(GetWorld(), nextPatrolPointTrigger->GetComponentLocation(), nextPatrolPointTrigger->GetScaledSphereRadius(), 16, FColor::Green, false, 1.0f);
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, FString::Printf(TEXT("%f"), nextPatrolPointTrigger->GetScaledSphereRadius()));
+	DrawDebugSphere(GetWorld(), nextPatrolPointTrigger->GetComponentLocation(), 30.0f, 16, FColor::Red, false, 1.0f);
 
-	if (actors.Find(this) != INDEX_NONE)
+	nextPatrolPointTrigger->GetOverlappingActors(objects, ADNG_RTSUnit::StaticClass());
+
+	if (objects.Find(this) != INDEX_NONE)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Reached");
 
@@ -281,9 +329,10 @@ void ADNG_RTSUnit::Server_CheckPatrol_Implementation()
 			nextPatrolPoint = patrolPointOne;
 			nextPatrolPointTrigger = patrolPointTriggerOne;
 		}
-		Server_Move(nextPatrolPoint);
+		//nextPatrolPointTrigger->SetWorldLocation(nextPatrolPoint);
+
+		Server_Move(nextPatrolPoint, false);
 	}
-	//}
 }
 
 
@@ -306,7 +355,7 @@ void ADNG_RTSUnit::Attack()
 			else
 			{
 				bIsMarkTarget = false;
-				Server_Move(pawn->targetPos);
+				Server_Move(pawn->targetPos, false);
 				GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Attack Ground");
 			}
 
@@ -321,11 +370,11 @@ void ADNG_RTSUnit::Attack()
 
 void ADNG_RTSUnit::Server_Attack_Implementation(AActor *targetActor)
 {
+	blackBoard->SetValueAsBool(key_IsPatrolling, false);
 	target = targetActor;
 	GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Attack Target");
 	Deal();
 }
-
 
 void ADNG_RTSUnit::Deal()
 {
@@ -336,13 +385,19 @@ void ADNG_RTSUnit::Server_Deal_Implementation()
 {
 	if (!target) return;
 
+	blackBoard->SetValueAsBool(key_IsPatrolling, false);
+
 	bool isInRange = GetDistanceTo(target) <= fireRange ? true : false;
 	bool isCoolTime = blackBoard->GetValueAsBool(key_IsCanDeal);
 	bool isMe = target == Cast<AActor>(this);
 	bool isMoving = GetCharacterMovement()->Velocity.Size2D() != 0;
+	bool isJustMoving = blackBoard->GetValueAsBool(key_IsJustMoving);
 
-	if (!isInRange || !isCoolTime || isMe || isMoving) return;
-
+	if (!isInRange || !isCoolTime || isMe || isMoving || isJustMoving || !bIsAlive)
+	{
+		return;
+	}
+	
 	if (bIsWalk)
 	{
 		Server_Stop();
@@ -352,18 +407,7 @@ void ADNG_RTSUnit::Server_Deal_Implementation()
 	TurnToTarget();
 
 	blackBoard->SetValueAsBool(key_IsCanDeal, false);
-	GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Attack");
-	GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, target->GetName());
-
-	if (target->IsA(AFPSCharacter::StaticClass()))
-	{
-		Cast<AFPSCharacter>(target)->Prop->DealDamage(damage);
-	}
-	else if (Cast<ADNG_RTSBaseObject>(target))
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Hit!");
-		Cast<ADNG_RTSBaseObject>(target)->objProperty->DealDamage(damage);
-	}
+	Multicast_GiveDamage(target, damage);
 
 	attackDelayDele.BindLambda(
 		[&]()
@@ -372,6 +416,21 @@ void ADNG_RTSUnit::Server_Deal_Implementation()
 	}
 	);
 	GetWorld()->GetTimerManager().SetTimer(attackDelayTimerHandle, attackDelayDele, 0.01f, false, fireRate);
+}
+
+void ADNG_RTSUnit::Multicast_GiveDamage_Implementation(AActor *target, float damage)
+{
+	TArray<UActorComponent*> arr;
+	target->GetComponents(arr);
+
+	for (UActorComponent* c : arr)
+		if (c->IsA(UDNGProperty::StaticClass()))
+		{
+			UDNGProperty* prop = Cast<UDNGProperty>(c);
+			if (prop)
+				prop->DealDamage(damage);
+			return;
+		}
 }
 
 void ADNG_RTSUnit::Multicast_FireEffect_Implementation(FVector pos)
@@ -400,6 +459,7 @@ void ADNG_RTSUnit::Multicast_FireEffect_Implementation(FVector pos)
 void ADNG_RTSUnit::Check()
 {
 	CompareDistance();
+	Server_CheckStopped();
 }
 
 void ADNG_RTSUnit::CompareDistance()
@@ -409,28 +469,21 @@ void ADNG_RTSUnit::CompareDistance()
 
 void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 {
-	//GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "CompareDist");
+	bool isJustMoving = blackBoard->GetValueAsBool(key_IsJustMoving);
+	if (isJustMoving) return;
 
 	ADNG_RTSBaseObject *obj = Cast<ADNG_RTSBaseObject>(target);
 	if (obj)
 	{
 		if (obj->objProperty->GetHp() <= 0.0f)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "a");
-
 			target = nullptr;
-		}
 	}
 
 	AFPSCharacter *fpsObj = Cast<AFPSCharacter>(target);
 	if (fpsObj)
 	{
 		if (fpsObj->GetHp() <= 0.0f)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "b");
-
 			target = nullptr;
-		}
 	}
 
 	if (target)
@@ -439,47 +492,29 @@ void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 		bool isDealing = blackBoard->GetValueAsBool(key_IsWantToDeal);
 		bool isChasing = blackBoard->GetValueAsBool(key_IsChasing);
 
-		if (isMoving && isDealing && !isChasing)
+		if ((isMoving && isDealing && !isChasing))
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Cancle");
-
 			target = nullptr;
 			return;
 		}
-		GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "NORMAL");
 
 		float dist = GetDistanceTo(target);
 
-		
-		if (dist <= fireRange)
+		if (dist <= fireRange && !isJustMoving)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Fire");
-
 			blackBoard->SetValueAsBool(key_IsWantToDeal, true);
 			blackBoard->SetValueAsBool(key_IsChasing, false);
-			Server_Stop();
+			Server_Stop(); 
 			return;
 		}
-		else if (dist <= traceRange)
+		else if (dist <= traceRange || bIsMarkTarget)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Trace");
-
-			blackBoard->SetValueAsBool(key_IsWantToDeal, false);
-			blackBoard->SetValueAsBool(key_IsChasing, true);	
-			return;
-		}
-		if (bIsMarkTarget)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Mark");
-
 			blackBoard->SetValueAsBool(key_IsWantToDeal, false);
 			blackBoard->SetValueAsBool(key_IsChasing, true);
 			return;
 		}
 		else
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Nobody");
-
 			blackBoard->SetValueAsBool(key_IsWantToDeal, false);
 			blackBoard->SetValueAsBool(key_IsChasing, false);
 		}
@@ -487,26 +522,15 @@ void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 
 	// 정확히 지정한 적이 없다면 모든 적 리스트에서 거리를 찾아서 제일 짧은 거리에 있는 적을 공격
 	AFPSCharacter *shortestDistEnemy = nullptr;
-	float shortestDist = fireRange;
+	float shortestDist = traceRange;
 	for (auto enemy : enemyPlayers)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "com");
-
 		float dist = GetDistanceTo(enemy);
 
 		if (dist <= shortestDist)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Shortest");
-
 			shortestDistEnemy = enemy;
-		}
 	}
-
 	target = shortestDistEnemy;
-	if (target)
-	{
-		Server_Stop();
-	}
 }
 
 void ADNG_RTSUnit::Chase()
@@ -516,7 +540,9 @@ void ADNG_RTSUnit::Chase()
 
 void ADNG_RTSUnit::Server_Chase_Implementation()
 {
-	if (bIsHold || !target) return;
+	bool isJustMoving = blackBoard->GetValueAsBool(key_IsJustMoving);
 
-	Server_Move(target->GetActorLocation());
+	if (bIsHold || !target || isJustMoving) return;
+
+	Server_Move(target->GetActorLocation(), false);
 }
