@@ -63,6 +63,7 @@ void ADNG_RTSPawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLife
 	DOREPLIFETIME(ADNG_RTSPawn, playerController);
 	DOREPLIFETIME(ADNG_RTSPawn, currentSupply);
 	DOREPLIFETIME(ADNG_RTSPawn, maxSupply);
+	DOREPLIFETIME(ADNG_RTSPawn, targetPos);
 }
 
 // Called when the game starts or when spawned
@@ -293,7 +294,7 @@ void ADNG_RTSPawn::SelectAllSameType()
 	DrawDebugCapsule(GetWorld(), baseUnit->GetActorLocation(), 1000.0f, selectionAllRadius, FQuat::Identity, FColor::Orange, true, 3.0f);
 
 	TArray<AActor*> selectedAllUnits;
-	selectionCapsule->GetOverlappingActors(selectedAllUnits, TSubclassOf<ADNG_RTSBaseObject>());
+	selectionCapsule->GetOverlappingActors(selectedAllUnits, ADNG_RTSBaseObject::StaticClass());
 	
 	selectedUnits.Empty();
 
@@ -345,7 +346,6 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 	for (auto actor : selectedActors)
 	{
 		ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(actor);
-
 		if (!unit || !unit->bIsAlive)
 			selectedActors.Remove(actor);
 	}
@@ -363,7 +363,6 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 		{
 			ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(actor);
 
-			// Controller 인수로 전달하여 
 			if (unit)
 			{
 				SetObjectOwner(unit, Controller);
@@ -432,6 +431,7 @@ void ADNG_RTSPawn::Server_SetObjectOwner_Implementation(ADNG_RTSBaseObject *obj,
 void ADNG_RTSPawn::RMousePress()
 {
 	bPressedRightMouse = true;
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "RMB Detected");
 
 	FHitResult outHit;
 	Cast<APlayerController>(Controller)->GetHitResultUnderCursor(ECC_Visibility, false, outHit);
@@ -592,8 +592,9 @@ void ADNG_RTSPawn::ExecuteCommand(FKey key)
 		if (selectedUnits[j]->GetCmdInfoMap().Contains(key))
 		{
 			FString unitCmdName = selectedUnits[j]->GetCmdInfoMap().Find(key)->name;
-			FString mostUnitCmdName = mostUnit->GetCmdInfoMap().Find(key)->name;
-			
+			FString mostUnitCmdName = "";
+			if(mostUnit)
+				mostUnitCmdName = mostUnit->GetCmdInfoMap().Find(key)->name;
 			if (unitCmdName == mostUnitCmdName)
 			{
 				selectedUnits[j]->GetCmdInfoMap().Find(key)->commandDele.ExecuteIfBound();

@@ -22,6 +22,4 @@ public:
 	static void OnPlayerKilled();
 
 private:
-	static int BarrackCount;
-	static int PlayerCount;
 };

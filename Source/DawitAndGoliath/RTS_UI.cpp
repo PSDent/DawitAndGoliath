@@ -34,6 +34,8 @@ void URTS_UI::DrawBox(FVector2D start, FVector2D end)
 
 void URTS_UI::SetCommandOnPanel(FCommandInfo cmdInfo)
 {
+	if (cmdInfo.row == -1 && cmdInfo.column == -1) return;
+
 	int index = cmdInfo.row * 4 + cmdInfo.column;
 
 	UUserWidget *cmdBtn = Cast<UUserWidget>(commandPanel->GetChildAt(index));
@@ -112,7 +114,6 @@ void URTS_UI::DisplayProductionInform(ADNG_RTSBaseObject *construction)
 	DisplayUnitInform(construction);
 	ResetUnitEntityGrid();
 
-
 	ADNG_RTSBarrack *barrack = Cast<ADNG_RTSBarrack>(construction);
 	focusingBarrack = barrack;
 
@@ -140,8 +141,6 @@ void URTS_UI::DisplayProductionInform(ADNG_RTSBaseObject *construction)
 		}
 		else
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, FString::FromInt(queueSlots.Num()));
-
 			queueSlots[i]->SetActiveWidgetIndex(PRODUCTION_UNIT);
 			UUserWidget *productionButton = Cast<UUserWidget>(queueSlots[i]->GetChildAt(PRODUCTION_UNIT));
 			UButton *slotButton = Cast<UButton>(productionButton->WidgetTree->FindWidget("SlotButton"));

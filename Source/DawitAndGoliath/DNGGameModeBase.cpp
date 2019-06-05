@@ -6,8 +6,7 @@
 ADNGGameModeBase::ADNGGameModeBase()
 {
 	bUseSeamlessTravel = true;
-	BarrackCount = 2;
-	PlayerCount = 1;
+
 }
 
 void ADNGGameModeBase::GameSet()
@@ -17,13 +16,11 @@ void ADNGGameModeBase::GameSet()
 
 void ADNGGameModeBase::OnBarrackDestroyed()
 {
-	--BarrackCount;
-	if (BarrackCount == 0) GameSet();
+
 }
 
 void ADNGGameModeBase::OnPlayerKilled()
 {
-	--PlayerCount;
-	if (PlayerCount == 0) GameSet();
+
 }
 

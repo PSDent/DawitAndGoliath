@@ -37,6 +37,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "RTS")
 		void CancleCurrentSpawn();
 
+	UFUNCTION(BlueprintCallable, Category = "RTS")
+		void SetRallyPointByRBClick();
+
 	// Getter
 	TArray<TSubclassOf<ADNG_RTSUnit>>& GetSpawnQueue() { return spawnQueue; }
 	void RemoveQueueElement(int index);

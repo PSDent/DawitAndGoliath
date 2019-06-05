@@ -27,6 +27,9 @@ ADNG_RTSBarrack::ADNG_RTSBarrack() : Super()
 	dele.BindUFunction(this, FName("SetRallyPoint"));
 	commandInfoMap.Add(EKeys::Y, FCommandInfo("SetRallyPoint", "Set Units go to the Clicked Point", EKeys::Y, 1, 3, dele));
 	
+	dele.BindUFunction(this, FName("SetRallyPointByRBClick"));
+	commandInfoMap.Add(EKeys::RightMouseButton, FCommandInfo("SetRallyPointByRBClick", "", EKeys::RightMouseButton, -1, -1, dele));
+
 	dele.BindUFunction(this, FName("CancleCurrentSpawn"));
 	commandInfoMap.Add(EKeys::Escape, FCommandInfo("Cancle Producing", "Cancle Now Producing Unit", EKeys::Escape, 3, 3, dele));
 
@@ -83,6 +86,11 @@ void ADNG_RTSBarrack::SpawnTankerUnit()
 	AddSpawnQueue("Tanker");
 }
 
+void ADNG_RTSBarrack::SetRallyPointByRBClick()
+{
+	Server_SetRallyPoint(pawn->targetPos);
+}
+
 void ADNG_RTSBarrack::SetRallyPoint()
 {
 	pawn->SetCommandingFlag(true);
@@ -91,6 +99,7 @@ void ADNG_RTSBarrack::SetRallyPoint()
 
 	rallyDele.BindLambda(
 		[&] {
+
 		if (pawn->GetLeftMouseStatus() || pawn->GetRightMouseStatus())
 		{
 			Server_SetRallyPoint(pawn->targetPos);
@@ -147,7 +156,7 @@ void ADNG_RTSBarrack::Spawning(float time)
 		TSubclassOf<ADNG_RTSUnit> unitType;
 		if (spawnQueue.Num())
 		{
-			unitType = spawnQueue.Top();
+			unitType = spawnQueue[0];
 			ADNG_RTSPawn *rtsPawn = Cast<ADNG_RTSPawn>(pawn);
 			int nextSupply = rtsPawn->currentSupply + unitType.GetDefaultObject()->supply;
 			int maxSupply = rtsPawn->maxSupply;
@@ -160,13 +169,14 @@ void ADNG_RTSBarrack::Spawning(float time)
 		spawnTime -= time;
 		if (spawnTime <= 0)
 		{
-			unitType = spawnQueue.Pop();
+			unitType = spawnQueue[0]; // 뒤에있는걸 꺼낸다???
+			spawnQueue.RemoveAt(0);
 			SpawnUnit(unitType);
 
 			if (spawnQueue.Num())
 			{
 				TSubclassOf<ADNG_RTSUnit> unitType;
-				unitType = spawnQueue.Top();
+				unitType = spawnQueue[0];
 				spawnTime = unitType.GetDefaultObject()->spawnTime;
 				spawnTotalTime = spawnTime;
 

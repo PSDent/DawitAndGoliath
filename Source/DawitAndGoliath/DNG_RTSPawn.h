@@ -109,7 +109,8 @@ public:
 	UPROPERTY(Replicated, BlueprintReadOnly)
 		int maxSupply;
 
-	FVector targetPos;
+	UPROPERTY(Replicated)
+		FVector targetPos;
 	AActor *targetActor;
 
 	UPROPERTY(BlueprintReadOnly)

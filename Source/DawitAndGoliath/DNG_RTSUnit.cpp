@@ -36,6 +36,7 @@ ADNG_RTSUnit::ADNG_RTSUnit() : Super()
 	arriveTrigger = CreateDefaultSubobject<USphereComponent>(TEXT("arriveTrigger"));
 	patrolPointTriggerOne->SetSphereRadius(30.0f);
 	patrolPointTriggerTwo->SetSphereRadius(30.0f);
+	arriveTrigger->SetSphereRadius(30.0f);
 	bIsHold = false;
 	bIsWalk = false;
 	deadDelay = 1.0f;
@@ -82,7 +83,10 @@ void ADNG_RTSUnit::Server_BeginPlay_Implementation()
 	}
 
 	blackBoard->SetValueAsBool(key_IsCanDeal, true);
-	arriveTriggerRad = 20.0f;
+	blackBoard->SetValueAsBool(key_IsAlive, true);
+	blackBoard->SetValueAsBool(key_IsPatrolling, false);
+
+	//arriveTriggerRad = 20.0f;
 }
 
 void ADNG_RTSUnit::Tick(float DeltaTime)
@@ -94,19 +98,13 @@ void ADNG_RTSUnit::Tick(float DeltaTime)
 	if (GetCharacterMovement()->Velocity.Size2D() > 0.0f)
 		bIsWalk = true;
 	else
-	{
 		bIsWalk = false;
-	}
 
 	if (objProperty->GetHp() <= 0.0f && !bIsDie)
-	{
 		Server_Die();
-	}
 
 	if (target && !bIsWalk)
-	{
 		TurnToTarget();
-	}
 }
 
 void ADNG_RTSUnit::Server_CheckStopped_Implementation()
@@ -117,14 +115,17 @@ void ADNG_RTSUnit::Server_CheckStopped_Implementation()
 	if (!isJustMoving || isPatrolling) return;
 
 	TArray<AActor*> actors;
-	arriveTrigger->SetSphereRadius(arriveTriggerRad);
 	arriveTrigger->GetOverlappingActors(actors);
+
 	AActor *me = Cast<AActor>(this);
 	for (auto actor : actors)
 	{
 		if (actor == me)
 		{
+			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, "CheckStopped");
+
 			Server_SetValueBool(key_IsJustMoving, false);
+			return;
 		}
 	}
 }
@@ -164,7 +165,11 @@ void ADNG_RTSUnit::Server_Die_Implementation()
 	blackBoard->SetValueAsBool(key_IsWantToDeal, false);
 	blackBoard->SetValueAsBool(key_IsChasing, false);
 	blackBoard->SetValueAsBool(key_IsCanDeal, false);
+	blackBoard->SetValueAsBool(key_IsAlive, false);
 	aiController->StopMovement();
+
+	Cast<UCapsuleComponent>(RootComponent)->SetCollisionProfileName("NoCollision");
+	GetMesh()->SetCollisionProfileName("NoCollision");
 
 	pawn->currentSupply -= supply;
 }
@@ -191,8 +196,6 @@ void ADNG_RTSUnit::Move()
 		pawn->GetPlayerController()->CurrentMouseCursor = EMouseCursor::Crosshairs;
 	}
 
-	GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Magenta, FString::Printf(TEXT("%d"), blackBoard->GetValueAsBool(key_IsJustMoving)));
-
 	commandCheckDele.BindLambda(
 		[&] {
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Time Ticking");
@@ -215,13 +218,18 @@ void ADNG_RTSUnit::Move()
 
 void ADNG_RTSUnit::Server_Move_Implementation(FVector dest, bool justMoveVal)
 {
+	if (!bIsAlive) return;
+
 	target = nullptr;
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "MoveMove");
+
 	blackBoard->SetValueAsBool(key_IsJustMoving, justMoveVal);
 	blackBoard->SetValueAsBool(key_IsChasing, false);
 	blackBoard->SetValueAsBool(key_IsWantToDeal, false);
 	aiController->MoveToLocation(dest);
 
-	arriveTrigger->SetWorldLocation(dest);
+	arriveTrigger->SetWorldLocation(dest); // 요놈이 문제였다
+	DrawDebugSphere(GetWorld(), dest, 64.0f, 16, FColor::Blue, false, 3.0f);
 }
 
 void ADNG_RTSUnit::Stop()
@@ -288,17 +296,15 @@ void ADNG_RTSUnit::Patrol()
 
 void ADNG_RTSUnit::Server_Patrol_Implementation(const FVector &posOne, const FVector &posTwo)
 {
-	// nowPos == posOne;
 	patrolPointOne = posOne;
 	patrolPointTwo = posTwo;
-	nextPatrolPoint = patrolPointTwo;
+	nextPatrolPoint = posTwo;
 
 	patrolPointTriggerOne->SetWorldLocation(patrolPointOne);
 	patrolPointTriggerTwo->SetWorldLocation(patrolPointTwo);
 	nextPatrolPointTrigger = patrolPointTriggerTwo;
 
 	Server_Move(nextPatrolPoint, false);
-
 	blackBoard->SetValueAsBool(key_IsPatrolling, true);
 }
 
@@ -306,18 +312,20 @@ void ADNG_RTSUnit::Server_CheckPatrol_Implementation()
 {
 	if (!blackBoard->GetValueAsBool(key_IsPatrolling)) return;
 
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "RUNNING");
-
 	TArray<AActor*> objects;
-	DrawDebugSphere(GetWorld(), nextPatrolPointTrigger->GetComponentLocation(), nextPatrolPointTrigger->GetScaledSphereRadius(), 16, FColor::Green, false, 1.0f);
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, FString::Printf(TEXT("%f"), nextPatrolPointTrigger->GetScaledSphereRadius()));
-	DrawDebugSphere(GetWorld(), nextPatrolPointTrigger->GetComponentLocation(), 30.0f, 16, FColor::Red, false, 1.0f);
+	//nextPatrolPointTrigger->SetSphereRadius(32.0f);		
 
-	nextPatrolPointTrigger->GetOverlappingActors(objects, ADNG_RTSUnit::StaticClass());
+	//nextPatrolPointTrigger->GetOverlappingActors(objects, ADNG_RTSUnit::StaticClass());
+	//DrawDebugSphere(GetWorld(), arriveTrigger->GetComponentLocation(), 32.0f, 16, FColor::White, false, 1.0f);
+
+	patrolPointTriggerTwo->SetSphereRadius(16.0f);
+	patrolPointTriggerTwo->SetWorldLocation(patrolPointTwo);
+	patrolPointTriggerTwo->GetOverlappingActors(objects, ADNG_RTSUnit::StaticClass());
+	DrawDebugSphere(GetWorld(), patrolPointTriggerTwo->GetComponentLocation(), 64.0f, 16, FColor::Red, false, 1.0f);
 
 	if (objects.Find(this) != INDEX_NONE)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Reached");
+		//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Reached");
 
 		if (nextPatrolPoint == patrolPointOne)
 		{
@@ -329,7 +337,7 @@ void ADNG_RTSUnit::Server_CheckPatrol_Implementation()
 			nextPatrolPoint = patrolPointOne;
 			nextPatrolPointTrigger = patrolPointTriggerOne;
 		}
-		//nextPatrolPointTrigger->SetWorldLocation(nextPatrolPoint);
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "SERVER Check Patorl");
 
 		Server_Move(nextPatrolPoint, false);
 	}
@@ -371,6 +379,8 @@ void ADNG_RTSUnit::Attack()
 void ADNG_RTSUnit::Server_Attack_Implementation(AActor *targetActor)
 {
 	blackBoard->SetValueAsBool(key_IsPatrolling, false);
+	blackBoard->SetValueAsBool(key_IsJustMoving, false);
+
 	target = targetActor;
 	GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Attack Target");
 	Deal();
@@ -507,7 +517,7 @@ void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 			Server_Stop(); 
 			return;
 		}
-		else if (dist <= traceRange || bIsMarkTarget)
+		else if ((dist <= traceRange && !isJustMoving) || bIsMarkTarget)
 		{
 			blackBoard->SetValueAsBool(key_IsWantToDeal, false);
 			blackBoard->SetValueAsBool(key_IsChasing, true);

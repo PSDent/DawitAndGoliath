@@ -212,4 +212,5 @@ protected:
 	FName key_IsPatrolling = "IsPatrolling";
 	FName key_IsChasing = "IsChasing";
 	FName key_IsJustMoving = "IsJustMoving";
+	FName key_IsAlive = "IsAlive";
 };
