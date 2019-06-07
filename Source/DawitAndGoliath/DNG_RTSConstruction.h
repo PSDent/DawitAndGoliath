@@ -22,13 +22,27 @@ public:
 private:
 
 protected:
+	virtual void Die() override;
+	UFUNCTION(Reliable, Server, WithValidation)
+		virtual void Server_ConstructionDie();
+	void Server_ConstructionDie_Implementation();
+	bool Server_ConstructionDie_Validate() { return true; }
 
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+		virtual void Multicast_DestructionEffect();
+	void Multicast_DestructionEffect_Implementation();
+	bool Multicast_DestructionEffect_Validate() { return true; }
 
 public:
 
 private:
-	
-protected:
+	FTimerHandle destructionTimer;
+	FTimerDelegate destructionDele;
 
-	
+
+protected:
+	float destructionTime = 1.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "RTS Construction")
+		class UParticleSystem *destructionFX;
 };

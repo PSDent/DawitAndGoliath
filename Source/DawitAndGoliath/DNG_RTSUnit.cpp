@@ -34,6 +34,13 @@ ADNG_RTSUnit::ADNG_RTSUnit() : Super()
 	patrolPointTriggerOne = CreateDefaultSubobject<USphereComponent>(TEXT("patrolPointTriggerOne"));
 	patrolPointTriggerTwo = CreateDefaultSubobject<USphereComponent>(TEXT("patrolPointTriggerTwo"));
 	arriveTrigger = CreateDefaultSubobject<USphereComponent>(TEXT("arriveTrigger"));
+
+	//patrolPointTriggerOne->AttachTo(RootComponent);
+	//patrolPointTriggerTwo->AttachTo(RootComponent);
+	//arriveTrigger->AttachTo(RootComponent);
+
+	//arriveTrigger->SetRelativeLocation(FVector(0, 0, 0));
+
 	patrolPointTriggerOne->SetSphereRadius(30.0f);
 	patrolPointTriggerTwo->SetSphereRadius(30.0f);
 	arriveTrigger->SetSphereRadius(30.0f);
@@ -156,22 +163,36 @@ void ADNG_RTSUnit::Server_TurnToTarget_Implementation()
 	TurnToTarget();
 }
 
-void ADNG_RTSUnit::Server_Die_Implementation()
+void ADNG_RTSUnit::Die()
 {
-	bIsDie = true;
-	bIsAlive = false;
-	bIsSelected = false;
-	blackBoard->SetValueAsBool(key_IsPatrolling, false);
-	blackBoard->SetValueAsBool(key_IsWantToDeal, false);
-	blackBoard->SetValueAsBool(key_IsChasing, false);
-	blackBoard->SetValueAsBool(key_IsCanDeal, false);
-	blackBoard->SetValueAsBool(key_IsAlive, false);
-	aiController->StopMovement();
+	if (Role == ROLE_Authority)
+	{
+		Super::Die();
 
-	Cast<UCapsuleComponent>(RootComponent)->SetCollisionProfileName("NoCollision");
-	GetMesh()->SetCollisionProfileName("NoCollision");
+		bIsDie = true;
+		bIsAlive = false;
+		bIsSelected = false;
+		blackBoard->SetValueAsBool(key_IsPatrolling, false);
+		blackBoard->SetValueAsBool(key_IsWantToDeal, false);
+		blackBoard->SetValueAsBool(key_IsChasing, false);
+		blackBoard->SetValueAsBool(key_IsCanDeal, false);
+		blackBoard->SetValueAsBool(key_IsAlive, false);
+		aiController->StopMovement();
 
-	pawn->currentSupply -= supply;
+		Cast<UCapsuleComponent>(RootComponent)->SetCollisionProfileName("NoCollision");
+		GetMesh()->SetCollisionProfileName("NoCollision");
+
+		pawn->currentSupply -= supply;
+	}
+	else
+	{
+		Server_UnitDie();
+	}
+}
+
+void ADNG_RTSUnit::Server_UnitDie_Implementation()
+{
+	Die();
 }
 
 void ADNG_RTSUnit::Server_AfterDie_Implementation()
@@ -310,7 +331,8 @@ void ADNG_RTSUnit::Server_Patrol_Implementation(const FVector &posOne, const FVe
 
 void ADNG_RTSUnit::Server_CheckPatrol_Implementation()
 {
-	if (!blackBoard->GetValueAsBool(key_IsPatrolling)) return;
+	static bool test = false;
+	if (!blackBoard->GetValueAsBool(key_IsPatrolling) || test) return;
 
 	TArray<AActor*> objects;
 	//nextPatrolPointTrigger->SetSphereRadius(32.0f);		
@@ -318,26 +340,29 @@ void ADNG_RTSUnit::Server_CheckPatrol_Implementation()
 	//nextPatrolPointTrigger->GetOverlappingActors(objects, ADNG_RTSUnit::StaticClass());
 	//DrawDebugSphere(GetWorld(), arriveTrigger->GetComponentLocation(), 32.0f, 16, FColor::White, false, 1.0f);
 
-	patrolPointTriggerTwo->SetSphereRadius(16.0f);
-	patrolPointTriggerTwo->SetWorldLocation(patrolPointTwo);
-	patrolPointTriggerTwo->GetOverlappingActors(objects, ADNG_RTSUnit::StaticClass());
-	DrawDebugSphere(GetWorld(), patrolPointTriggerTwo->GetComponentLocation(), 64.0f, 16, FColor::Red, false, 1.0f);
+	nextPatrolPointTrigger->SetSphereRadius(16.0f);
+	nextPatrolPointTrigger->SetWorldLocation(nextPatrolPoint);
+	nextPatrolPointTrigger->GetOverlappingActors(objects, ADNG_RTSUnit::StaticClass());
+
+	DrawDebugSphere(GetWorld(), nextPatrolPointTrigger->GetComponentLocation(), 512.0f, 16, FColor::Red, false, 1.0f);
+	//상대위치 관련있을지도
+	DrawDebugSphere(GetWorld(), arriveTrigger->GetComponentLocation(), 64.0f, 16, FColor::Cyan, false, 0.1f);
 
 	if (objects.Find(this) != INDEX_NONE)
 	{
-		//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Reached");
+
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Reached");
 
 		if (nextPatrolPoint == patrolPointOne)
 		{
 			nextPatrolPoint = patrolPointTwo;
 			nextPatrolPointTrigger = patrolPointTriggerTwo;
 		}
-		else
+		else if(nextPatrolPoint == patrolPointTwo)
 		{
 			nextPatrolPoint = patrolPointOne;
 			nextPatrolPointTrigger = patrolPointTriggerOne;
 		}
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "SERVER Check Patorl");
 
 		Server_Move(nextPatrolPoint, false);
 	}

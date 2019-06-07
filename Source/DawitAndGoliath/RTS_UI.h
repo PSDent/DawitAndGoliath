@@ -32,7 +32,7 @@ public:
 	URTS_UI(const FObjectInitializer &objInitializer);
 	void DrawBox(FVector2D start, FVector2D end);
 	
-	void Display(TArray<class ADNG_RTSBaseObject*>&);
+	void Display(TArray<class ADNG_RTSBaseObject*>*);
 	void ResetDisplay();
 
 	void DisplayUnitInform(class ADNG_RTSBaseObject*);
@@ -45,7 +45,7 @@ public:
 	void ResetCommandOnPanel();
 	void SetMouseCursor();
 
-	void DisplayUnitEntity(TArray<class ADNG_RTSBaseObject*>&);
+	void DisplayUnitEntity(TArray<class ADNG_RTSBaseObject*>*);
 	void ResetUnitEntity();
 	void ResetUnitEntityGrid();
 

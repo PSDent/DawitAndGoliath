@@ -58,8 +58,8 @@ void ADNG_RTSBarrack::BeginPlay()
 
 	if (objProperty)
 	{
-		objProperty->SetMaxHp(12000);
-		objProperty->SetHp(12000);
+		objProperty->SetMaxHp(50);
+		objProperty->SetHp(50);
 	}
 
 	spawnPoint = RootComponent->GetChildComponent(3)->GetComponentLocation();
@@ -68,6 +68,10 @@ void ADNG_RTSBarrack::BeginPlay()
 void ADNG_RTSBarrack::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (objProperty->GetHp() <= 0.0f && bIsAlive)
+		Die();
+
 	Spawning(DeltaTime);
 }
 
@@ -153,6 +157,8 @@ void ADNG_RTSBarrack::Spawning(float time)
 {
 	if (Role == ROLE_Authority)
 	{
+		if (!bIsAlive) return;
+
 		TSubclassOf<ADNG_RTSUnit> unitType;
 		if (spawnQueue.Num())
 		{

@@ -157,9 +157,11 @@ void URTS_UI::ResetProductionInform()
 	productionInformCanvas->SetVisibility(ESlateVisibility::Collapsed);
 }
 
-void URTS_UI::Display(TArray<ADNG_RTSBaseObject*>& objects)
+void URTS_UI::Display(TArray<ADNG_RTSBaseObject*> *objects)
 {
-	int objNum = objects.Num();
+	if (!objects) return;
+
+	int objNum = objects->Num();
 
 	if (objNum == 0)
 	{
@@ -169,19 +171,19 @@ void URTS_UI::Display(TArray<ADNG_RTSBaseObject*>& objects)
 	}
 	else if (objNum == 1)
 	{
-		ADNG_RTSUnit *unit = Cast<ADNG_RTSUnit>(objects[0]);
+		ADNG_RTSUnit *unit = Cast<ADNG_RTSUnit>((*objects)[0]);
 
 		if (unit)
 		{
 			focusingBarrack = nullptr;
-			DisplayUnitInform(objects[0]);
+			DisplayUnitInform((*objects)[0]);
 			return;
 		}
 
-		ADNG_RTSBarrack *barrack = Cast<ADNG_RTSBarrack>(objects[0]);
+		ADNG_RTSBarrack *barrack = Cast<ADNG_RTSBarrack>((*objects)[0]);
 		if (barrack)
 		{
-			DisplayProductionInform(objects[0]);
+			DisplayProductionInform((*objects)[0]);
 			return;
 		}
 	}
@@ -203,7 +205,7 @@ void URTS_UI::RemoveQueueElement(int index)
 		focusingBarrack->RemoveQueueElement(index);
 }
 
-void URTS_UI::DisplayUnitEntity(TArray<ADNG_RTSBaseObject*> &objects)
+void URTS_UI::DisplayUnitEntity(TArray<ADNG_RTSBaseObject*> *objects)
 {
 	entityCanvas->SetVisibility(ESlateVisibility::Visible);
 	ResetUnitInform();
@@ -211,7 +213,7 @@ void URTS_UI::DisplayUnitEntity(TArray<ADNG_RTSBaseObject*> &objects)
 	ResetUnitEntity();
 
 	int entitiesInPage = maxColumn * maxRow;
-	int entityNum = objects.Num();
+	int entityNum = objects->Num();
 	int pageTerm = entitiesInPage * currentEntityPage;
 	int pages = entityNum / entitiesInPage + 1;
 
@@ -242,7 +244,7 @@ void URTS_UI::DisplayUnitEntity(TArray<ADNG_RTSBaseObject*> &objects)
 
 		entitySlotWidget->SetVisibility(ESlateVisibility::Visible);
 		UTextBlock *text = Cast<UTextBlock>(entitySlotWidget->WidgetTree->FindWidget("InitialText"));
-		text->SetText(FText::FromString(objects[i]->initial));
+		text->SetText(FText::FromString((*objects)[i]->initial));
 	}
 }
 
