@@ -74,6 +74,12 @@ private:
 	void Server_AddSupply_Implementation(int deltaSupply);
 	bool Server_AddSupply_Validate(int deltaSupply) { return true; }
 
+	virtual void NotifyDestroyed();	
+	UFUNCTION(Reliable, Server, WithValidation)
+		virtual void ServerNotifyDestroyed();
+	void ServerNotifyDestroyed_Implementation();
+	bool ServerNotifyDestroyed_Validate() { return true; }
+
 
 public:
 
@@ -105,6 +111,5 @@ private:
 	FVector spawnPoint;
 
 protected:
-
 	
 };

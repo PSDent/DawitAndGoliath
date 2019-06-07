@@ -1,13 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "DNGGameModeBase.h"
+#include "FPSCharacter.h"
+#include "Kismet/GameplayStatics.h"
 #include "Engine.h"
 
 ADNGGameModeBase::ADNGGameModeBase()
 {
 	bUseSeamlessTravel = true;
 	BarrackCount = 2;
-	PlayerCount = 1;
+	
 }
 
 void ADNGGameModeBase::GameSet()
@@ -18,12 +20,14 @@ void ADNGGameModeBase::GameSet()
 void ADNGGameModeBase::OnBarrackDestroyed()
 {
 	--BarrackCount;
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("Barrack left : %d"), BarrackCount));
 	if (BarrackCount == 0) GameSet();
 }
 
 void ADNGGameModeBase::OnPlayerKilled()
 {
-	--PlayerCount;
-	if (PlayerCount == 0) GameSet();
+	--CurrentPlayerCount;
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("Player left : %d"), CurrentPlayerCount));
+	if (CurrentPlayerCount == 0) GameSet();
 }
 

@@ -8,6 +8,7 @@
 #include "DNG_RTSUnit_Range.h"
 #include "DNG_RTSPawn.h"
 #include "FPSCharacter.h"
+#include "DNGGameModeBase.h"
 #include "Net/UnrealNetwork.h"
 
 ADNG_RTSBarrack::ADNG_RTSBarrack() : Super()
@@ -55,21 +56,27 @@ void ADNG_RTSBarrack::BeginPlay()
 
 	if (objProperty)
 	{
-		objProperty->SetMaxHp(12000);
-		objProperty->SetHp(12000);
+		objProperty->SetMaxHp(1000);
+		objProperty->SetHp(1000);
 	}
 
 	spawnPoint = RootComponent->GetChildComponent(3)->GetComponentLocation();
-}
+}	
 
 void ADNG_RTSBarrack::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	Spawning(DeltaTime);
+	if (objProperty->GetHp() == 0)
+	{
+		NotifyDestroyed();
+		//PrimaryActorTick.bCanEverTick = false;
+		SetActorTickEnabled(false);
+	}
 }
 
 void ADNG_RTSBarrack::SpawnMeleeUnit()
-{
+	{
 	AddSpawnQueue("Melee");
 }
 
@@ -256,4 +263,16 @@ void ADNG_RTSBarrack::Server_AddSupply_Implementation(int deltaSupply)
 	ADNG_RTSPawn *rtsPawn = Cast<ADNG_RTSPawn>(pawn);
 	rtsPawn->currentSupply += deltaSupply;
 
+}
+
+void ADNG_RTSBarrack::NotifyDestroyed()
+{
+
+	ServerNotifyDestroyed();
+}
+
+void ADNG_RTSBarrack::ServerNotifyDestroyed_Implementation()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Emerald, "destroyed");
+	Cast<ADNGGameModeBase>(GetWorld()->GetAuthGameMode())->OnBarrackDestroyed();
 }
