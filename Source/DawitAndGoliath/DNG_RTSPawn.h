@@ -34,14 +34,20 @@ public:
 	void PressCtrlKey() { bPressedCtrlKey = true; }
 	void ReleasedCtrlKey() { bPressedCtrlKey = false; }
 
+	// MiniMap
+	void CamMoveTo(FVector2D pos);
+
 	// setter
 	void SetCommandingFlag(bool flag) { bIsCommanding = flag; }
 
-	// getter
+	///### getter ###
 	bool GetLeftMouseStatus() { return bPressedLeftMouse; }
 	bool GetRightMouseStatus() { return bPressedRightMouse; }
 	APlayerController* GetPlayerController() { return playerController; }
 	URTS_UI* GetUI() { return userUI; };
+	UGameViewportClient* GetViewportClient() { return viewPort; }
+
+	///####################
 
 	UFUNCTION(Reliable, Client, WithValidation)
 		virtual void Client_Init();

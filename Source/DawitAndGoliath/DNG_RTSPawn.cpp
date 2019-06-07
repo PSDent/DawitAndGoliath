@@ -80,6 +80,8 @@ void ADNG_RTSPawn::BeginPlay()
 	
 	FVector newPos = GetActorLocation() + FVector::UpVector * height;
 	SetActorLocation(newPos);
+	viewPort = GEngine->GameViewport;
+	viewPort->GetViewportSize(viewportSize);
 }
 
 // Called every frame
@@ -90,23 +92,11 @@ void ADNG_RTSPawn::Tick(float DeltaTime)
 	if (!bIsInitialized) return;
 
 	userUI->Display(&selectedUnits);
-
-	//for (int i = 0; i < selectedUnits.Num(); ++i)
-	//{
-	//	if (!selectedUnits[i]->bIsAlive)
-	//	{
-	//		selectedUnits.RemoveAt(i);
-	//	}
-	//}
-
-	viewPort = GEngine->GameViewport;
-	check(viewPort);
-	viewPort->GetViewportSize(viewportSize);
-
+	//check(viewPort);
 	if (viewPort->IsFocused(viewPort->Viewport))
 	{
 		viewPort->GetMousePosition(mousePos);
-		
+
 		MoveCam(DeltaTime);
 
 		if (bPressedLeftMouse && !bIsClickedPanel)
@@ -225,6 +215,7 @@ void ADNG_RTSPawn::BasicInit()
 
 	userUI = CreateWidget<URTS_UI>(GetWorld(), UI_Class);
 	userUI->SetObjectsArray(&selectedUnits);
+	userUI->rtsPawn = this;
 
 	viewPort = GEngine->GameViewport;
 
@@ -681,10 +672,6 @@ void ADNG_RTSPawn::ReceiveCmdPanel(FKey key)
 	}
 }
 
-// 클라일 때 문제가 발생.
-// 클라에는 유닛이 존재하나
-// 서버에는 유닛이 이미 없는 터라
-// 모순이 발생 = 크래쉬
 void ADNG_RTSPawn::ResetSelectedUnits()
 {
 
@@ -742,4 +729,10 @@ void ADNG_RTSPawn::Multicast_RemoveFromSquad_Implementation(class ADNG_RTSBaseOb
 		squads[squadNum].objArray.Remove(obj);
 	else
 		selectedUnits.Remove(obj);
+}
+
+void ADNG_RTSPawn::CamMoveTo(FVector2D pos)
+{
+	FVector newPos(pos.X, pos.Y, GetActorLocation().Z);
+	SetActorLocation(newPos);
 }

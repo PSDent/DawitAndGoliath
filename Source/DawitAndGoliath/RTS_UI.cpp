@@ -8,6 +8,7 @@
 #include "DNG_RTSBarrack.h"
 #include "DNG_RTSUnit.h"
 #include "DNGProperty.h"
+#include "public/UnrealClient.h"
 #include "Components/GridSlot.h"
 
 URTS_UI::URTS_UI(const FObjectInitializer &objInitializer) : Super(objInitializer)
@@ -17,6 +18,37 @@ URTS_UI::URTS_UI(const FObjectInitializer &objInitializer) : Super(objInitialize
 	entityPage = 0;
 	currentEntityPage = 0;
 	maxPages = 10;
+}
+
+void URTS_UI::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
+{
+	Super::NativeTick(MyGeometry, DeltaTime);
+
+	FVector2D pos, viewSize;
+	rtsPawn->GetViewportClient()->GetMousePosition(pos);
+
+	if (rtsPawn->GetLeftMouseStatus())
+	{
+		viewPort = rtsPawn->GetViewportClient()->Viewport;
+		
+		rtsPawn->GetViewportClient()->GetViewportSize(viewSize);
+		if (pos.X > minimapSize || pos.Y < viewSize.Y - minimapSize)
+		{
+			viewPort->SetMouse(prevMousePos.X, prevMousePos.Y);
+			GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "In " + pos.ToString());
+
+			viewPort->LockMouseToViewport(true);
+
+		}
+		else
+		{
+			// 이동 위치가 이상.
+			float x = pos.X * mapRatio;
+			float y = (viewSize.Y - pos.Y) * mapRatio;
+			rtsPawn->CamMoveTo(FVector2D());
+		}
+	}
+	prevMousePos = pos;
 }
 
 void URTS_UI::DrawBox(FVector2D start, FVector2D end)
