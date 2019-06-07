@@ -28,6 +28,9 @@ ADNG_RTSBarrack::ADNG_RTSBarrack() : Super()
 	dele.BindUFunction(this, FName("SetRallyPoint"));
 	commandInfoMap.Add(EKeys::Y, FCommandInfo("SetRallyPoint", "Set Units go to the Clicked Point", EKeys::Y, 1, 3, dele));
 	
+	dele.BindUFunction(this, FName("SetRallyPointByRBClick"));
+	commandInfoMap.Add(EKeys::RightMouseButton, FCommandInfo("SetRallyPointByRBClick", "", EKeys::RightMouseButton, -1, -1, dele));
+
 	dele.BindUFunction(this, FName("CancleCurrentSpawn"));
 	commandInfoMap.Add(EKeys::Escape, FCommandInfo("Cancle Producing", "Cancle Now Producing Unit", EKeys::Escape, 3, 3, dele));
 
@@ -56,8 +59,8 @@ void ADNG_RTSBarrack::BeginPlay()
 
 	if (objProperty)
 	{
-		objProperty->SetMaxHp(1000);
-		objProperty->SetHp(1000);
+		objProperty->SetMaxHp(50);
+		objProperty->SetHp(50);
 	}
 
 	spawnPoint = RootComponent->GetChildComponent(3)->GetComponentLocation();
@@ -66,6 +69,10 @@ void ADNG_RTSBarrack::BeginPlay()
 void ADNG_RTSBarrack::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (objProperty->GetHp() <= 0.0f && bIsAlive)
+		Die();
+
 	Spawning(DeltaTime);
 	if (objProperty->GetHp() == 0)
 	{
@@ -90,6 +97,11 @@ void ADNG_RTSBarrack::SpawnTankerUnit()
 	AddSpawnQueue("Tanker");
 }
 
+void ADNG_RTSBarrack::SetRallyPointByRBClick()
+{
+	Server_SetRallyPoint(pawn->targetPos);
+}
+
 void ADNG_RTSBarrack::SetRallyPoint()
 {
 	pawn->SetCommandingFlag(true);
@@ -98,6 +110,7 @@ void ADNG_RTSBarrack::SetRallyPoint()
 
 	rallyDele.BindLambda(
 		[&] {
+
 		if (pawn->GetLeftMouseStatus() || pawn->GetRightMouseStatus())
 		{
 			Server_SetRallyPoint(pawn->targetPos);
@@ -124,8 +137,8 @@ void ADNG_RTSBarrack::SpawnUnit(TSubclassOf<ADNG_RTSUnit> unitType)
 		spawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		spawnInfo.bNoFail = true;
 		spawnInfo.Instigator = Instigator;
-		// SpawnActor·Î ½ºÆùÇÏ´Â °æ¿ì Controller°¡ ÀÚµ¿À¸·Î Å¾Àç µÇÀÖÁö ¾Ê´Â´Ù
-		// ÀÌ¸¦ ¸·±â À§ÇØ BP¿¡¼­ Auto Posses AI ¶õÀ» Placed in World or SpawnÀ¸·Î ¹Ù²ãÁØ´Ù.
+		// SpawnActorï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ Controllerï¿½ï¿½ ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½ Å¾ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê´Â´ï¿½
+		// ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ BPï¿½ï¿½ï¿½ï¿½ Auto Posses AI ï¿½ï¿½ï¿½ï¿½ Placed in World or Spawnï¿½ï¿½ï¿½ï¿½ ï¿½Ù²ï¿½ï¿½Ø´ï¿½.
 
 		ADNG_RTSUnit *spawnedUnit = GetWorld()->SpawnActor<ADNG_RTSUnit>(unitType, spawnPoint, FRotator::ZeroRotator, spawnInfo);
 		spawnedUnit->SetPawn(pawn);
@@ -151,10 +164,12 @@ void ADNG_RTSBarrack::Spawning(float time)
 {
 	if (Role == ROLE_Authority)
 	{
+		if (!bIsAlive) return;
+
 		TSubclassOf<ADNG_RTSUnit> unitType;
 		if (spawnQueue.Num())
 		{
-			unitType = spawnQueue.Top();
+			unitType = spawnQueue[0];
 			ADNG_RTSPawn *rtsPawn = Cast<ADNG_RTSPawn>(pawn);
 			int nextSupply = rtsPawn->currentSupply + unitType.GetDefaultObject()->supply;
 			int maxSupply = rtsPawn->maxSupply;
@@ -167,13 +182,14 @@ void ADNG_RTSBarrack::Spawning(float time)
 		spawnTime -= time;
 		if (spawnTime <= 0)
 		{
-			unitType = spawnQueue.Pop();
+			unitType = spawnQueue[0]; // ï¿½Ú¿ï¿½ï¿½Ö´Â°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½???
+			spawnQueue.RemoveAt(0);
 			SpawnUnit(unitType);
 
 			if (spawnQueue.Num())
 			{
 				TSubclassOf<ADNG_RTSUnit> unitType;
-				unitType = spawnQueue.Top();
+				unitType = spawnQueue[0];
 				spawnTime = unitType.GetDefaultObject()->spawnTime;
 				spawnTotalTime = spawnTime;
 
