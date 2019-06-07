@@ -70,15 +70,12 @@ void ADNG_RTSBarrack::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (objProperty->GetHp() <= 0.0f && bIsAlive)
-		Die();
-
 	Spawning(DeltaTime);
-	if (objProperty->GetHp() == 0)
+	if (objProperty->GetHp() <= 0.0f && bIsAlive)
 	{
+		Die();
 		NotifyDestroyed();
 		//PrimaryActorTick.bCanEverTick = false;
-		SetActorTickEnabled(false);
 	}
 }
 
@@ -137,7 +134,7 @@ void ADNG_RTSBarrack::SpawnUnit(TSubclassOf<ADNG_RTSUnit> unitType)
 		spawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		spawnInfo.bNoFail = true;
 		spawnInfo.Instigator = Instigator;
-		// SpawnActor�� �����ϴ� ��� Controller�� �ڵ����� ž�� ������ �ʴ´�
+		// SpawnActor�� �����ϴ� ���?Controller�� �ڵ����� ž�� ������ �ʴ´�
 		// �̸� ���� ���� BP���� Auto Posses AI ���� Placed in World or Spawn���� �ٲ��ش�.
 
 		ADNG_RTSUnit *spawnedUnit = GetWorld()->SpawnActor<ADNG_RTSUnit>(unitType, spawnPoint, FRotator::ZeroRotator, spawnInfo);
