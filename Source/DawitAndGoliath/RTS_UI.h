@@ -29,10 +29,12 @@ class DAWITANDGOLIATH_API URTS_UI : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	void NativeTick(const FGeometry& MyGeometry, float DeltaTime) override;
+
 	URTS_UI(const FObjectInitializer &objInitializer);
 	void DrawBox(FVector2D start, FVector2D end);
 	
-	void Display(TArray<class ADNG_RTSBaseObject*>&);
+	void Display(TArray<class ADNG_RTSBaseObject*>*);
 	void ResetDisplay();
 
 	void DisplayUnitInform(class ADNG_RTSBaseObject*);
@@ -45,7 +47,7 @@ public:
 	void ResetCommandOnPanel();
 	void SetMouseCursor();
 
-	void DisplayUnitEntity(TArray<class ADNG_RTSBaseObject*>&);
+	void DisplayUnitEntity(TArray<class ADNG_RTSBaseObject*>*);
 	void ResetUnitEntity();
 	void ResetUnitEntityGrid();
 
@@ -74,6 +76,9 @@ private:
 protected:
 
 public:
+	class ADNG_RTSPawn *rtsPawn;
+
+
 	UPROPERTY(BlueprintReadOnly)
 		float currentProgress;
 	UPROPERTY(BlueprintReadOnly)
@@ -82,14 +87,24 @@ public:
 		int entityPage;
 	UPROPERTY(BlueprintReadWrite)
 		int currentEntityPage;
+	UPROPERTY(BlueprintReadWrite)
+		FVector leftBot_Point;
+	UPROPERTY(BlueprintReadWrite)
+		float mapRatio;
+	UPROPERTY(BlueprintReadWrite)
+		float minimapSize;
 
 private:
 	enum { SLOT_NUMBER, PRODUCTION_UNIT};
 	const int MAX_QUEUE_SIZE = 5;
 
+	class FViewport *viewPort;
 	class ADNG_RTSBarrack *focusingBarrack;
 	TArray<class ADNG_RTSBaseObject*> *objectsArray;
+
+	FVector2D prevMousePos;
 private:
+
 
 protected:
 	UPROPERTY(BlueprintReadOnly)

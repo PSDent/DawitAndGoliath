@@ -46,13 +46,14 @@ ADNG_RTSPawn::ADNG_RTSPawn() : Super()
 	bIsInitialized = false;
 	baseUnit = nullptr;
 
-	selectedUnits.Empty();
 	EKeys::GetAllKeys(keys);
 	
 	targetActor = nullptr;
 
 	currentSupply = 0;
 	maxSupply = 100;
+	
+	squads.Init(FBaseObjectArray(), SQUAD_SIZE);
 }
 
 void ADNG_RTSPawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
@@ -63,6 +64,9 @@ void ADNG_RTSPawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLife
 	DOREPLIFETIME(ADNG_RTSPawn, playerController);
 	DOREPLIFETIME(ADNG_RTSPawn, currentSupply);
 	DOREPLIFETIME(ADNG_RTSPawn, maxSupply);
+	DOREPLIFETIME(ADNG_RTSPawn, targetPos);
+	//DOREPLIFETIME(ADNG_RTSPawn, selectedUnits);
+	DOREPLIFETIME(ADNG_RTSPawn, squads);
 }
 
 // Called when the game starts or when spawned
@@ -76,6 +80,8 @@ void ADNG_RTSPawn::BeginPlay()
 	
 	FVector newPos = GetActorLocation() + FVector::UpVector * height;
 	SetActorLocation(newPos);
+	viewPort = GEngine->GameViewport;
+	viewPort->GetViewportSize(viewportSize);
 }
 
 // Called every frame
@@ -85,24 +91,12 @@ void ADNG_RTSPawn::Tick(float DeltaTime)
 
 	if (!bIsInitialized) return;
 
-	userUI->Display(selectedUnits);
-
-	for (int i = 0; i < selectedUnits.Num(); ++i)
-	{
-		if (!selectedUnits[i]->bIsAlive)
-		{
-			selectedUnits.RemoveAt(i);
-		}
-	}
-
-	viewPort = GEngine->GameViewport;
-	check(viewPort);
-	viewPort->GetViewportSize(viewportSize);
-
+	userUI->Display(&selectedUnits);
+	//check(viewPort);
 	if (viewPort->IsFocused(viewPort->Viewport))
 	{
 		viewPort->GetMousePosition(mousePos);
-		
+
 		MoveCam(DeltaTime);
 
 		if (bPressedLeftMouse && !bIsClickedPanel)
@@ -110,6 +104,43 @@ void ADNG_RTSPawn::Tick(float DeltaTime)
 	}
 	CheckKeysAndExecute();
 	FindMostUnit();
+}
+
+template<int num>
+void ADNG_RTSPawn::SetSquad()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("Set Squad : %d"), num));
+	
+	squads[num].objArray.Empty();
+	for (auto unit : selectedUnits)
+	{
+		unit->AttachSquad(num);
+		squads[num].objArray.Add(unit);
+	}
+}
+
+template<int num>
+void ADNG_RTSPawn::GetSquad()
+{
+	if (!squads[num].objArray.Num()) return;
+	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("Get Squad : %d, %d"), num, squads[num].objArray.Num()));
+
+	ResetSelectedUnits();
+	selectedUnits = squads[num].objArray;
+	SetSelectedUnits();
+}
+
+template<int num>
+void ADNG_RTSPawn::AddToSquad()
+{
+	for (auto unit : selectedUnits)
+	{
+		if (!squads[num].objArray.Contains(unit))
+		{
+			unit->AttachSquad(num);
+			squads[num].objArray.Add(unit);
+		}
+	}
 }
 
 // Called to bind functionality to input
@@ -128,7 +159,40 @@ void ADNG_RTSPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 	PlayerInputComponent->BindAction("Ctrl", IE_Pressed, this, &ADNG_RTSPawn::PressCtrlKey);
 	PlayerInputComponent->BindAction("Ctrl", IE_Released, this, &ADNG_RTSPawn::ReleasedCtrlKey);
-	
+
+	PlayerInputComponent->BindAction("1", IE_Pressed, this, &ADNG_RTSPawn::GetSquad<1>);
+	PlayerInputComponent->BindAction("2", IE_Pressed, this, &ADNG_RTSPawn::GetSquad<2>);
+	PlayerInputComponent->BindAction("3", IE_Pressed, this, &ADNG_RTSPawn::GetSquad<3>);
+	PlayerInputComponent->BindAction("4", IE_Pressed, this, &ADNG_RTSPawn::GetSquad<4>);
+	PlayerInputComponent->BindAction("5", IE_Pressed, this, &ADNG_RTSPawn::GetSquad<5>);
+	PlayerInputComponent->BindAction("6", IE_Pressed, this, &ADNG_RTSPawn::GetSquad<6>);
+	PlayerInputComponent->BindAction("7", IE_Pressed, this, &ADNG_RTSPawn::GetSquad<7>);
+	PlayerInputComponent->BindAction("8", IE_Pressed, this, &ADNG_RTSPawn::GetSquad<8>);
+	PlayerInputComponent->BindAction("9", IE_Pressed, this, &ADNG_RTSPawn::GetSquad<9>);
+	PlayerInputComponent->BindAction("0", IE_Pressed, this, &ADNG_RTSPawn::GetSquad<0>);
+
+	PlayerInputComponent->BindAction("Ctrl1", IE_Pressed, this, &ADNG_RTSPawn::SetSquad<1>);
+	PlayerInputComponent->BindAction("Ctrl2", IE_Pressed, this, &ADNG_RTSPawn::SetSquad<2>);
+	PlayerInputComponent->BindAction("Ctrl3", IE_Pressed, this, &ADNG_RTSPawn::SetSquad<3>);
+	PlayerInputComponent->BindAction("Ctrl4", IE_Pressed, this, &ADNG_RTSPawn::SetSquad<4>);
+	PlayerInputComponent->BindAction("Ctrl5", IE_Pressed, this, &ADNG_RTSPawn::SetSquad<5>);
+	PlayerInputComponent->BindAction("Ctrl6", IE_Pressed, this, &ADNG_RTSPawn::SetSquad<6>);
+	PlayerInputComponent->BindAction("Ctrl7", IE_Pressed, this, &ADNG_RTSPawn::SetSquad<7>);
+	PlayerInputComponent->BindAction("Ctrl8", IE_Pressed, this, &ADNG_RTSPawn::SetSquad<8>);
+	PlayerInputComponent->BindAction("Ctrl9", IE_Pressed, this, &ADNG_RTSPawn::SetSquad<9>);
+	PlayerInputComponent->BindAction("Ctrl0", IE_Pressed, this, &ADNG_RTSPawn::SetSquad<0>);
+
+	PlayerInputComponent->BindAction("Shift1", IE_Pressed, this, &ADNG_RTSPawn::AddToSquad<1>);
+	PlayerInputComponent->BindAction("Shift2", IE_Pressed, this, &ADNG_RTSPawn::AddToSquad<2>);
+	PlayerInputComponent->BindAction("Shift3", IE_Pressed, this, &ADNG_RTSPawn::AddToSquad<3>);
+	PlayerInputComponent->BindAction("Shift4", IE_Pressed, this, &ADNG_RTSPawn::AddToSquad<4>);
+	PlayerInputComponent->BindAction("Shift5", IE_Pressed, this, &ADNG_RTSPawn::AddToSquad<5>);
+	PlayerInputComponent->BindAction("Shift6", IE_Pressed, this, &ADNG_RTSPawn::AddToSquad<6>);
+	PlayerInputComponent->BindAction("Shift7", IE_Pressed, this, &ADNG_RTSPawn::AddToSquad<7>);
+	PlayerInputComponent->BindAction("Shift8", IE_Pressed, this, &ADNG_RTSPawn::AddToSquad<8>);
+	PlayerInputComponent->BindAction("Shift9", IE_Pressed, this, &ADNG_RTSPawn::AddToSquad<9>);
+	PlayerInputComponent->BindAction("Shift0", IE_Pressed, this, &ADNG_RTSPawn::AddToSquad<0>);
+
 	PlayerInputComponent->BindAction("LMousePress", IE_DoubleClick, this, &ADNG_RTSPawn::SelectAllSameType);
 	PlayerInputComponent->BindAction("CtrlLMouse", IE_Pressed, this, &ADNG_RTSPawn::SelectAllSameType);
 }
@@ -151,6 +215,7 @@ void ADNG_RTSPawn::BasicInit()
 
 	userUI = CreateWidget<URTS_UI>(GetWorld(), UI_Class);
 	userUI->SetObjectsArray(&selectedUnits);
+	userUI->rtsPawn = this;
 
 	viewPort = GEngine->GameViewport;
 
@@ -173,6 +238,7 @@ bool ADNG_RTSPawn::Client_Init_Validate()
 {
 	return true;
 }
+
 
 void ADNG_RTSPawn::MoveCam(float DeltaTime)
 {
@@ -279,13 +345,8 @@ void ADNG_RTSPawn::LMouseRelease()
 // 더블클릭 or Ctrl + 좌클릭
 void ADNG_RTSPawn::SelectAllSameType()
 {
-	// 더블클릭 시 뭔가 좀 멈추는 듯
 	if (!baseUnit || bIsCommanding) return;
 
-	// Shift키를 눌렀다면 선택 유닛 리스트에 추가한다
-
-	// 아니라면 그냥 그 유닛 뭉치들만 유닛 리스트에 추가한다.
-	// 별도의 변수들을 유저 폰 자체에 넣어서 이 함수를 작동시킨다.
 	selectionCapsule->SetCapsuleRadius(selectionAllRadius);
 	selectionCapsule->SetCapsuleHalfHeight(1000.0f); 
 	selectionCapsule->SetWorldLocation(baseUnit->GetActorLocation());
@@ -293,7 +354,7 @@ void ADNG_RTSPawn::SelectAllSameType()
 	DrawDebugCapsule(GetWorld(), baseUnit->GetActorLocation(), 1000.0f, selectionAllRadius, FQuat::Identity, FColor::Orange, true, 3.0f);
 
 	TArray<AActor*> selectedAllUnits;
-	selectionCapsule->GetOverlappingActors(selectedAllUnits, TSubclassOf<ADNG_RTSBaseObject>());
+	selectionCapsule->GetOverlappingActors(selectedAllUnits, ADNG_RTSBaseObject::StaticClass());
 	
 	selectedUnits.Empty();
 
@@ -345,7 +406,6 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 	for (auto actor : selectedActors)
 	{
 		ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(actor);
-
 		if (!unit || !unit->bIsAlive)
 			selectedActors.Remove(actor);
 	}
@@ -363,7 +423,6 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 		{
 			ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(actor);
 
-			// Controller 인수로 전달하여 
 			if (unit)
 			{
 				SetObjectOwner(unit, Controller);
@@ -432,6 +491,7 @@ void ADNG_RTSPawn::Server_SetObjectOwner_Implementation(ADNG_RTSBaseObject *obj,
 void ADNG_RTSPawn::RMousePress()
 {
 	bPressedRightMouse = true;
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "RMB Detected");
 
 	FHitResult outHit;
 	Cast<APlayerController>(Controller)->GetHitResultUnderCursor(ECC_Visibility, false, outHit);
@@ -592,8 +652,9 @@ void ADNG_RTSPawn::ExecuteCommand(FKey key)
 		if (selectedUnits[j]->GetCmdInfoMap().Contains(key))
 		{
 			FString unitCmdName = selectedUnits[j]->GetCmdInfoMap().Find(key)->name;
-			FString mostUnitCmdName = mostUnit->GetCmdInfoMap().Find(key)->name;
-			
+			FString mostUnitCmdName = "";
+			if(mostUnit)
+				mostUnitCmdName = mostUnit->GetCmdInfoMap().Find(key)->name;
 			if (unitCmdName == mostUnitCmdName)
 			{
 				selectedUnits[j]->GetCmdInfoMap().Find(key)->commandDele.ExecuteIfBound();
@@ -611,3 +672,67 @@ void ADNG_RTSPawn::ReceiveCmdPanel(FKey key)
 	}
 }
 
+void ADNG_RTSPawn::ResetSelectedUnits()
+{
+
+	for (auto unit : selectedUnits)
+	{
+		if (unit)
+			unit->SetSelectedStatus(false);
+	}
+
+}
+
+void ADNG_RTSPawn::Server_ResetSelectedUnits_Implementation()
+{
+	ResetSelectedUnits();
+}
+
+void ADNG_RTSPawn::SetSelectedUnits()
+{
+
+	for (auto unit : selectedUnits)
+	{
+		if (unit)
+			unit->SetSelectedStatus(true);
+
+	}
+}
+
+void ADNG_RTSPawn::Server_SetSelectedUnits_Implementation()
+{
+	SetSelectedUnits();
+}
+
+void ADNG_RTSPawn::RemoveFromSquad(ADNG_RTSBaseObject *obj, int squadNum)
+{
+	if (Role == ROLE_Authority)
+	{
+		Multicast_RemoveFromSquad(obj, squadNum);
+	}
+	else
+	{
+		Server_RemoveFromSquad(obj, squadNum);
+	}
+}
+
+void ADNG_RTSPawn::Server_RemoveFromSquad_Implementation(ADNG_RTSBaseObject *obj, int squadNum)
+{
+	RemoveFromSquad(obj, squadNum);
+}
+
+void ADNG_RTSPawn::Multicast_RemoveFromSquad_Implementation(class ADNG_RTSBaseObject *obj, int squadNum)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "DELETE");
+	
+	if (squadNum >= 0)
+		squads[squadNum].objArray.Remove(obj);
+	else
+		selectedUnits.Remove(obj);
+}
+
+void ADNG_RTSPawn::CamMoveTo(FVector2D pos)
+{
+	FVector newPos(pos.X, pos.Y, GetActorLocation().Z);
+	SetActorLocation(newPos);
+}

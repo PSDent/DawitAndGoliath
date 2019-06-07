@@ -16,6 +16,17 @@ public:
 
 };
 
+USTRUCT()
+struct FBaseObjectArray
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+		TArray<class ADNG_RTSBaseObject*> objArray;
+
+};
+
 USTRUCT(BlueprintType)
 struct FCommandInfo
 {

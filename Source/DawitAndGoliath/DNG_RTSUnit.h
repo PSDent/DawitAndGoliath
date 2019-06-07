@@ -124,12 +124,12 @@ private:
 	void Server_CheckStopped_Implementation();
 	bool Server_CheckStopped_Validate() { return true; }
 
-
 protected:
+	virtual void Die() override;
 	UFUNCTION(Server, Reliable, WithValidation)
-		virtual void Server_Die();
-	void Server_Die_Implementation();
-	bool Server_Die_Validate() { return true; }
+		virtual void Server_UnitDie();
+	void Server_UnitDie_Implementation();
+	bool Server_UnitDie_Validate() { return true; }
 
 	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
 		virtual void Server_AfterDie();
@@ -139,7 +139,6 @@ protected:
 public:
 	int spawnTime = 0;
 	int supply;
-
 
 private:
 	FTimerDelegate afterDieDele;
@@ -212,4 +211,5 @@ protected:
 	FName key_IsPatrolling = "IsPatrolling";
 	FName key_IsChasing = "IsChasing";
 	FName key_IsJustMoving = "IsJustMoving";
+	FName key_IsAlive = "IsAlive";
 };

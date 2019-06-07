@@ -34,14 +34,20 @@ public:
 	void PressCtrlKey() { bPressedCtrlKey = true; }
 	void ReleasedCtrlKey() { bPressedCtrlKey = false; }
 
+	// MiniMap
+	void CamMoveTo(FVector2D pos);
+
 	// setter
 	void SetCommandingFlag(bool flag) { bIsCommanding = flag; }
 
-	// getter
+	///### getter ###
 	bool GetLeftMouseStatus() { return bPressedLeftMouse; }
 	bool GetRightMouseStatus() { return bPressedRightMouse; }
 	APlayerController* GetPlayerController() { return playerController; }
 	URTS_UI* GetUI() { return userUI; };
+	UGameViewportClient* GetViewportClient() { return viewPort; }
+
+	///####################
 
 	UFUNCTION(Reliable, Client, WithValidation)
 		virtual void Client_Init();
@@ -53,6 +59,18 @@ public:
 		virtual void Server_SetObjectOwner(class ADNG_RTSBaseObject *obj, AController *ownController);
 	void Server_SetObjectOwner_Implementation(class ADNG_RTSBaseObject *obj, AController *ownController);
 	bool Server_SetObjectOwner_Validate(class ADNG_RTSBaseObject *obj, AController *ownController) { return true; }
+
+	void RemoveFromSquad(class ADNG_RTSBaseObject *obj, int squadNum);
+	UFUNCTION(Reliable, Server, WithValidation)
+		void Server_RemoveFromSquad(class ADNG_RTSBaseObject *obj, int squadNum);
+	void Server_RemoveFromSquad_Implementation(class ADNG_RTSBaseObject *obj, int squadNum);
+	bool Server_RemoveFromSquad_Validate(class ADNG_RTSBaseObject *obj, int squadNum) { return true; }
+
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+		void Multicast_RemoveFromSquad(class ADNG_RTSBaseObject *obj, int squadNum);
+	void Multicast_RemoveFromSquad_Implementation(class ADNG_RTSBaseObject *obj, int squadNum);
+	bool Multicast_RemoveFromSquad_Validate(class ADNG_RTSBaseObject *obj, int squadNum) { return true; }
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -82,6 +100,28 @@ private:
 	void MappingCmdPanel();
 	void ExecuteCommand(FKey key);
 
+	void ResetSelectedUnits();
+	UFUNCTION(Server, Reliable, WithValidation)
+		virtual void Server_ResetSelectedUnits();
+	void Server_ResetSelectedUnits_Implementation();
+	bool Server_ResetSelectedUnits_Validate() { return true; }
+
+	void SetSelectedUnits();
+	UFUNCTION(Server, Reliable, WithValidation)
+		virtual void Server_SetSelectedUnits();
+	void Server_SetSelectedUnits_Implementation();
+	bool Server_SetSelectedUnits_Validate() { return true; }
+
+
+	template<int num>
+	void SetSquad();
+
+	template<int num>
+	void GetSquad();
+
+	template<int num>
+	void AddToSquad();
+
 	void DrawSelectBox();
 	void SelectionUnitsInBox();
 	void MoveUnits(FVector dest);
@@ -109,7 +149,8 @@ public:
 	UPROPERTY(Replicated, BlueprintReadOnly)
 		int maxSupply;
 
-	FVector targetPos;
+	UPROPERTY(Replicated)
+		FVector targetPos;
 	AActor *targetActor;
 
 	UPROPERTY(BlueprintReadOnly)
@@ -118,8 +159,13 @@ public:
 private:
 	UPROPERTY(Replicated)
 		APlayerController *playerController;
+
+	// 이거 잘 해결하고 SHIFT 부대 눌렀을 떄 추가로 넣는것도 구현해라
+	// 그리고 미니맵
+	// 그리고 버그들
 	TArray<ADNG_RTSBaseObject*> selectedUnits;
-	TArray<TArray<ADNG_RTSBaseObject*>> squads;
+	UPROPERTY(Replicated)
+	TArray<FBaseObjectArray> squads;
 
 	// UI 
 	URTS_UI *userUI;
@@ -163,8 +209,8 @@ private:
 
 	bool bPressedRightMouse;
 	bool bPressedLeftMouse;
-	
-
 	bool bPressedCtrlKey;
 
+private:
+	const int SQUAD_SIZE = 10;
 };

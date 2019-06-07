@@ -8,6 +8,7 @@
 #include "DNG_RTSBarrack.h"
 #include "DNG_RTSUnit.h"
 #include "DNGProperty.h"
+#include "public/UnrealClient.h"
 #include "Components/GridSlot.h"
 
 URTS_UI::URTS_UI(const FObjectInitializer &objInitializer) : Super(objInitializer)
@@ -17,6 +18,37 @@ URTS_UI::URTS_UI(const FObjectInitializer &objInitializer) : Super(objInitialize
 	entityPage = 0;
 	currentEntityPage = 0;
 	maxPages = 10;
+}
+
+void URTS_UI::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
+{
+	Super::NativeTick(MyGeometry, DeltaTime);
+
+	FVector2D pos, viewSize;
+	rtsPawn->GetViewportClient()->GetMousePosition(pos);
+
+	if (rtsPawn->GetLeftMouseStatus())
+	{
+		viewPort = rtsPawn->GetViewportClient()->Viewport;
+		
+		rtsPawn->GetViewportClient()->GetViewportSize(viewSize);
+		if (pos.X > minimapSize || pos.Y < viewSize.Y - minimapSize)
+		{
+			viewPort->SetMouse(prevMousePos.X, prevMousePos.Y);
+			GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "In " + pos.ToString());
+
+			viewPort->LockMouseToViewport(true);
+
+		}
+		else
+		{
+			// 이동 위치가 이상.
+			float x = pos.X * mapRatio;
+			float y = (viewSize.Y - pos.Y) * mapRatio;
+			rtsPawn->CamMoveTo(FVector2D());
+		}
+	}
+	prevMousePos = pos;
 }
 
 void URTS_UI::DrawBox(FVector2D start, FVector2D end)
@@ -34,6 +66,8 @@ void URTS_UI::DrawBox(FVector2D start, FVector2D end)
 
 void URTS_UI::SetCommandOnPanel(FCommandInfo cmdInfo)
 {
+	if (cmdInfo.row == -1 && cmdInfo.column == -1) return;
+
 	int index = cmdInfo.row * 4 + cmdInfo.column;
 
 	UUserWidget *cmdBtn = Cast<UUserWidget>(commandPanel->GetChildAt(index));
@@ -112,7 +146,6 @@ void URTS_UI::DisplayProductionInform(ADNG_RTSBaseObject *construction)
 	DisplayUnitInform(construction);
 	ResetUnitEntityGrid();
 
-
 	ADNG_RTSBarrack *barrack = Cast<ADNG_RTSBarrack>(construction);
 	focusingBarrack = barrack;
 
@@ -140,8 +173,6 @@ void URTS_UI::DisplayProductionInform(ADNG_RTSBaseObject *construction)
 		}
 		else
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, FString::FromInt(queueSlots.Num()));
-
 			queueSlots[i]->SetActiveWidgetIndex(PRODUCTION_UNIT);
 			UUserWidget *productionButton = Cast<UUserWidget>(queueSlots[i]->GetChildAt(PRODUCTION_UNIT));
 			UButton *slotButton = Cast<UButton>(productionButton->WidgetTree->FindWidget("SlotButton"));
@@ -158,9 +189,11 @@ void URTS_UI::ResetProductionInform()
 	productionInformCanvas->SetVisibility(ESlateVisibility::Collapsed);
 }
 
-void URTS_UI::Display(TArray<ADNG_RTSBaseObject*>& objects)
+void URTS_UI::Display(TArray<ADNG_RTSBaseObject*> *objects)
 {
-	int objNum = objects.Num();
+	if (!objects) return;
+
+	int objNum = objects->Num();
 
 	if (objNum == 0)
 	{
@@ -170,19 +203,19 @@ void URTS_UI::Display(TArray<ADNG_RTSBaseObject*>& objects)
 	}
 	else if (objNum == 1)
 	{
-		ADNG_RTSUnit *unit = Cast<ADNG_RTSUnit>(objects[0]);
+		ADNG_RTSUnit *unit = Cast<ADNG_RTSUnit>((*objects)[0]);
 
 		if (unit)
 		{
 			focusingBarrack = nullptr;
-			DisplayUnitInform(objects[0]);
+			DisplayUnitInform((*objects)[0]);
 			return;
 		}
 
-		ADNG_RTSBarrack *barrack = Cast<ADNG_RTSBarrack>(objects[0]);
+		ADNG_RTSBarrack *barrack = Cast<ADNG_RTSBarrack>((*objects)[0]);
 		if (barrack)
 		{
-			DisplayProductionInform(objects[0]);
+			DisplayProductionInform((*objects)[0]);
 			return;
 		}
 	}
@@ -204,7 +237,7 @@ void URTS_UI::RemoveQueueElement(int index)
 		focusingBarrack->RemoveQueueElement(index);
 }
 
-void URTS_UI::DisplayUnitEntity(TArray<ADNG_RTSBaseObject*> &objects)
+void URTS_UI::DisplayUnitEntity(TArray<ADNG_RTSBaseObject*> *objects)
 {
 	entityCanvas->SetVisibility(ESlateVisibility::Visible);
 	ResetUnitInform();
@@ -212,7 +245,7 @@ void URTS_UI::DisplayUnitEntity(TArray<ADNG_RTSBaseObject*> &objects)
 	ResetUnitEntity();
 
 	int entitiesInPage = maxColumn * maxRow;
-	int entityNum = objects.Num();
+	int entityNum = objects->Num();
 	int pageTerm = entitiesInPage * currentEntityPage;
 	int pages = entityNum / entitiesInPage + 1;
 
@@ -243,7 +276,7 @@ void URTS_UI::DisplayUnitEntity(TArray<ADNG_RTSBaseObject*> &objects)
 
 		entitySlotWidget->SetVisibility(ESlateVisibility::Visible);
 		UTextBlock *text = Cast<UTextBlock>(entitySlotWidget->WidgetTree->FindWidget("InitialText"));
-		text->SetText(FText::FromString(objects[i]->initial));
+		text->SetText(FText::FromString((*objects)[i]->initial));
 	}
 }
 
