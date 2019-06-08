@@ -108,6 +108,8 @@ void ADNG_RTSBaseObject::RemoveMeFromSquad()
 {
 	if (Role == ROLE_Authority)
 	{
+		if (!pawn) return;
+
 		for (auto squadNum : attachSquadsArray)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "REMOVE");

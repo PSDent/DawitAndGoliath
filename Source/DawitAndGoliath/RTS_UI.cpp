@@ -18,6 +18,8 @@ URTS_UI::URTS_UI(const FObjectInitializer &objInitializer) : Super(objInitialize
 	entityPage = 0;
 	currentEntityPage = 0;
 	maxPages = 10;
+	bIsClickMinimap = false;
+	bIsMouseOnMinimap = false;
 }
 
 void URTS_UI::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
@@ -27,28 +29,35 @@ void URTS_UI::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
 	FVector2D pos, viewSize;
 	rtsPawn->GetViewportClient()->GetMousePosition(pos);
 
-	if (rtsPawn->GetLeftMouseStatus())
+	viewPort = rtsPawn->GetViewportClient()->Viewport;
+	rtsPawn->GetViewportClient()->GetViewportSize(viewSize);
+	if (pos.X < minimapSize && pos.Y > viewSize.Y - minimapSize)
 	{
-		viewPort = rtsPawn->GetViewportClient()->Viewport;
-		
-		rtsPawn->GetViewportClient()->GetViewportSize(viewSize);
-		if (pos.X > minimapSize || pos.Y < viewSize.Y - minimapSize)
-		{
-			viewPort->SetMouse(prevMousePos.X, prevMousePos.Y);
-			GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "In " + pos.ToString());
+		float y = leftBot_Point.Y + pos.X * mapRatio;
+		float x = leftBot_Point.X + (viewSize.Y - pos.Y) * mapRatio;
 
-			viewPort->LockMouseToViewport(true);
+		minimapWorldPos.X = x;
+		minimapWorldPos.Y = y;
 
-		}
-		else
+		bIsMouseOnMinimap = true;
+
+		if (bIsClickMinimap)
 		{
-			// 이동 위치가 이상.
-			float x = pos.X * mapRatio;
-			float y = (viewSize.Y - pos.Y) * mapRatio;
-			rtsPawn->CamMoveTo(FVector2D());
+			if (rtsPawn->GetLeftMouseStatus())
+			{
+				if (!rtsPawn->GetCommandingStatus())
+				{
+					rtsPawn->CamMoveTo(FVector2D(x, y));
+				}
+			}
 		}
 	}
-	prevMousePos = pos;
+	else
+	{
+		bIsMouseOnMinimap = false;
+		if (!rtsPawn->GetLeftMouseStatus())
+			bIsClickMinimap = false;
+	}
 }
 
 void URTS_UI::DrawBox(FVector2D start, FVector2D end)

@@ -339,7 +339,40 @@ void ADNG_RTSPawn::LMouseRelease()
 
 	if(!bIsCommanding)
 		SelectionUnitsInBox();
+
 	bIsCommanding = false;
+}
+
+void ADNG_RTSPawn::RMousePress()
+{
+	bPressedRightMouse = true;
+
+	FVector dest;
+	if (!userUI->GetIsMouseOnMinimap())
+	{
+		FHitResult outHit;
+		Cast<APlayerController>(Controller)->GetHitResultUnderCursor(ECC_Visibility, false, outHit);
+		dest = outHit.Location;
+		targetPos = outHit.Location;
+		AActor *actor = outHit.GetActor();
+	}
+	else
+	{
+		FVector2D mapPos = userUI->GetMinimapWorldPos();
+		GetMinimapToWorldPos(mapPos);
+		targetPos = minimapTargetPos;
+	}
+	// 적 클릭 시 공격
+
+	// 아군 클릭 시 아군 따라가기
+
+	// 땅 바닥 클릭 시 이동
+	MoveUnits(dest);
+}
+
+void ADNG_RTSPawn::RMouseRelease()
+{
+	bPressedRightMouse = false;
 }
 
 // 더블클릭 or Ctrl + 좌클릭
@@ -486,30 +519,6 @@ void ADNG_RTSPawn::SetObjectOwner(ADNG_RTSBaseObject *obj, AController *ownContr
 void ADNG_RTSPawn::Server_SetObjectOwner_Implementation(ADNG_RTSBaseObject *obj, AController *ownController)
 {
 	SetObjectOwner(obj, ownController);
-}
-
-void ADNG_RTSPawn::RMousePress()
-{
-	bPressedRightMouse = true;
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "RMB Detected");
-
-	FHitResult outHit;
-	Cast<APlayerController>(Controller)->GetHitResultUnderCursor(ECC_Visibility, false, outHit);
-	FVector dest = outHit.Location;
-	targetPos = outHit.Location;
-
-	AActor *actor = outHit.GetActor();
-	// 적 클릭 시 공격
-
-	// 아군 클릭 시 아군 따라가기
-
-	// 땅 바닥 클릭 시 이동
-	MoveUnits(dest);
-}
-
-void ADNG_RTSPawn::RMouseRelease()
-{
-	bPressedRightMouse = false;
 }
 
 void ADNG_RTSPawn::MoveUnits(FVector dest)
@@ -728,11 +737,32 @@ void ADNG_RTSPawn::Multicast_RemoveFromSquad_Implementation(class ADNG_RTSBaseOb
 	if (squadNum >= 0)
 		squads[squadNum].objArray.Remove(obj);
 	else
-		selectedUnits.Remove(obj);
+		if(selectedUnits.Contains(obj))
+			selectedUnits.Remove(obj);
 }
 
 void ADNG_RTSPawn::CamMoveTo(FVector2D pos)
 {
-	FVector newPos(pos.X, pos.Y, GetActorLocation().Z);
+	// 삼각 함수를 통해 카메라 위치를 지정
+	float degree = -rtsCamera->RelativeRotation.Pitch;
+	float radian = FMath::DegreesToRadians(degree);
+	float tanSeta = FMath::Tan(radian);
+	float b = GetActorLocation().Z;
+	float a = b / tanSeta;
+  
+	float x = pos.X - a;
+	float y = pos.Y;
+	float z = GetActorLocation().Z;
+
+	FVector newPos(x, y, z);
 	SetActorLocation(newPos);
+}
+
+void ADNG_RTSPawn::GetMinimapToWorldPos(FVector2D pos)
+{
+	FHitResult outHit;
+	FVector start(pos.X, pos.Y, UPPER_HEIGHT);
+	FVector end(pos.X, pos.Y, LOWER_HEIGHT);
+	GetWorld()->LineTraceSingleByChannel(outHit, start, end, ECC_Visibility);
+	minimapTargetPos = outHit.Location;
 }
