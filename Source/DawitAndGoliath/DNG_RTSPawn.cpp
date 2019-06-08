@@ -733,6 +733,26 @@ void ADNG_RTSPawn::Multicast_RemoveFromSquad_Implementation(class ADNG_RTSBaseOb
 
 void ADNG_RTSPawn::CamMoveTo(FVector2D pos)
 {
-	FVector newPos(pos.X, pos.Y, GetActorLocation().Z);
+	// 삼각 함수를 통해 카메라 위치를 지정
+	float degree = -rtsCamera->RelativeRotation.Pitch;
+	float radian = FMath::DegreesToRadians(degree);
+	float tanSeta = FMath::Tan(radian);
+	float b = GetActorLocation().Z;
+	float a = b / tanSeta;
+  
+	float x = pos.X - a;
+	float y = pos.Y;
+	float z = GetActorLocation().Z;
+
+	FVector newPos(x, y, z);
 	SetActorLocation(newPos);
+}
+
+void ADNG_RTSPawn::GetMinimapToWorldPos(FVector2D pos)
+{
+	FHitResult outHit;
+	FVector start(pos.X, pos.Y, UPPER_HEIGHT);
+	FVector end(pos.X, pos.Y, LOWER_HEIGHT);
+	GetWorld()->LineTraceSingleByChannel(outHit, start, end, ECC_Visibility);
+
 }

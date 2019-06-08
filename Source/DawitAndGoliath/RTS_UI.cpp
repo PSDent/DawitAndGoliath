@@ -27,6 +27,9 @@ void URTS_UI::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
 	FVector2D pos, viewSize;
 	rtsPawn->GetViewportClient()->GetMousePosition(pos);
 
+	//rtsPawn->CamMoveTo(FVector2D(leftBot_Point.X, leftBot_Point.Y));
+
+
 	if (rtsPawn->GetLeftMouseStatus())
 	{
 		viewPort = rtsPawn->GetViewportClient()->Viewport;
@@ -42,10 +45,9 @@ void URTS_UI::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
 		}
 		else
 		{
-			// 이동 위치가 이상.
-			float x = pos.X * mapRatio;
-			float y = (viewSize.Y - pos.Y) * mapRatio;
-			rtsPawn->CamMoveTo(FVector2D());
+			float y = leftBot_Point.Y + pos.X * mapRatio;
+			float x = leftBot_Point.X + (viewSize.Y - pos.Y) * mapRatio;
+			rtsPawn->CamMoveTo(FVector2D(x, y));
 		}
 	}
 	prevMousePos = pos;

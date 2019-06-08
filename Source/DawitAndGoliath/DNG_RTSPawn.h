@@ -95,6 +95,8 @@ private:
 	void SelectAllSameType();
 	void DoubleClick();
 
+	void GetMinimapToWorldPos(FVector2D pos);
+
 	// Unit Command
 	void FindMostUnit();
 	void MappingCmdPanel();
@@ -213,4 +215,6 @@ private:
 
 private:
 	const int SQUAD_SIZE = 10;
+	const float UPPER_HEIGHT = 10000.0f;
+	const float LOWER_HEIGHT = -1000.0f;
 };
