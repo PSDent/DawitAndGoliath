@@ -36,6 +36,7 @@ public:
 
 	// MiniMap
 	void CamMoveTo(FVector2D pos);
+	void GetMinimapToWorldPos(FVector2D pos);
 
 	// setter
 	void SetCommandingFlag(bool flag) { bIsCommanding = flag; }
@@ -43,6 +44,8 @@ public:
 	///### getter ###
 	bool GetLeftMouseStatus() { return bPressedLeftMouse; }
 	bool GetRightMouseStatus() { return bPressedRightMouse; }
+	bool GetCommandingStatus() { return bIsCommanding; }
+
 	APlayerController* GetPlayerController() { return playerController; }
 	URTS_UI* GetUI() { return userUI; };
 	UGameViewportClient* GetViewportClient() { return viewPort; }
@@ -94,8 +97,6 @@ private:
 
 	void SelectAllSameType();
 	void DoubleClick();
-
-	void GetMinimapToWorldPos(FVector2D pos);
 
 	// Unit Command
 	void FindMostUnit();
@@ -153,6 +154,8 @@ public:
 
 	UPROPERTY(Replicated)
 		FVector targetPos;
+	FVector minimapTargetPos;
+
 	AActor *targetActor;
 
 	UPROPERTY(BlueprintReadOnly)
@@ -184,7 +187,6 @@ private:
 	bool bIsCommanding;
 	bool bIsTargeted;
 	bool bIsClickedPanel;
-	bool bIsCommading;
 
 	bool bIsInitialized;
 

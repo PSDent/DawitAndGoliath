@@ -54,6 +54,9 @@ public:
 	void SetObjectsArray(TArray<class ADNG_RTSBaseObject*> *objArray) { objectsArray = objArray; }
 
 	// Getter
+	bool GetIsMouseOnMinimap() { return bIsMouseOnMinimap; }
+	FVector2D GetMinimapWorldPos() { return minimapWorldPos; }
+
 	UImage* GetSelectionBoxImage() { return selectionBoxImage; };
 	UGridPanel* GetCommandPanel() { return commandPanel; };
 	
@@ -93,6 +96,9 @@ public:
 		float mapRatio;
 	UPROPERTY(BlueprintReadWrite)
 		float minimapSize;
+	UPROPERTY(BlueprintReadWrite)
+		bool bIsClickMinimap;
+	bool bIsMouseOnMinimap;
 
 private:
 	enum { SLOT_NUMBER, PRODUCTION_UNIT};
@@ -102,7 +108,7 @@ private:
 	class ADNG_RTSBarrack *focusingBarrack;
 	TArray<class ADNG_RTSBaseObject*> *objectsArray;
 
-	FVector2D prevMousePos;
+	FVector2D minimapWorldPos;
 private:
 
 

@@ -42,6 +42,7 @@ ADNG_RTSBarrack::ADNG_RTSBarrack() : Super()
 
 	spawnTime = 0;
 	spawnTotalTime = 0;
+	destructionTime = 1.0f;
 }
 
 void ADNG_RTSBarrack::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
@@ -280,7 +281,6 @@ void ADNG_RTSBarrack::Server_AddSupply_Implementation(int deltaSupply)
 
 void ADNG_RTSBarrack::NotifyDestroyed()
 {
-
 	ServerNotifyDestroyed();
 }
 
