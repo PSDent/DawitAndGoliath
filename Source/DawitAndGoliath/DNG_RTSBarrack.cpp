@@ -8,6 +8,7 @@
 #include "DNG_RTSUnit_Range.h"
 #include "DNG_RTSPawn.h"
 #include "FPSCharacter.h"
+#include "DNGGameModeBase.h"
 #include "Net/UnrealNetwork.h"
 
 ADNG_RTSBarrack::ADNG_RTSBarrack() : Super()
@@ -63,20 +64,23 @@ void ADNG_RTSBarrack::BeginPlay()
 	}
 
 	spawnPoint = RootComponent->GetChildComponent(3)->GetComponentLocation();
-}
+}	
 
 void ADNG_RTSBarrack::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (objProperty->GetHp() <= 0.0f && bIsAlive)
-		Die();
-
 	Spawning(DeltaTime);
+	if (objProperty->GetHp() <= 0.0f && bIsAlive)
+	{
+		Die();
+		NotifyDestroyed();
+		//PrimaryActorTick.bCanEverTick = false;
+	}
 }
 
 void ADNG_RTSBarrack::SpawnMeleeUnit()
-{
+	{
 	AddSpawnQueue("Melee");
 }
 
@@ -130,8 +134,8 @@ void ADNG_RTSBarrack::SpawnUnit(TSubclassOf<ADNG_RTSUnit> unitType)
 		spawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		spawnInfo.bNoFail = true;
 		spawnInfo.Instigator = Instigator;
-		// SpawnActor·Î ½ºÆùÇÏ´Â °æ¿ì Controller°¡ ÀÚµ¿À¸·Î Å¾Àç µÇÀÖÁö ¾Ê´Â´Ù
-		// ÀÌ¸¦ ¸·±â À§ÇØ BP¿¡¼­ Auto Posses AI ¶õÀ» Placed in World or SpawnÀ¸·Î ¹Ù²ãÁØ´Ù.
+		// SpawnActorï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿?Controllerï¿½ï¿½ ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½ Å¾ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê´Â´ï¿½
+		// ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ BPï¿½ï¿½ï¿½ï¿½ Auto Posses AI ï¿½ï¿½ï¿½ï¿½ Placed in World or Spawnï¿½ï¿½ï¿½ï¿½ ï¿½Ù²ï¿½ï¿½Ø´ï¿½.
 
 		ADNG_RTSUnit *spawnedUnit = GetWorld()->SpawnActor<ADNG_RTSUnit>(unitType, spawnPoint, FRotator::ZeroRotator, spawnInfo);
 		spawnedUnit->SetPawn(pawn);
@@ -175,7 +179,7 @@ void ADNG_RTSBarrack::Spawning(float time)
 		spawnTime -= time;
 		if (spawnTime <= 0)
 		{
-			unitType = spawnQueue[0]; // µÚ¿¡ÀÖ´Â°É ²¨³½´Ù???
+			unitType = spawnQueue[0]; // ï¿½Ú¿ï¿½ï¿½Ö´Â°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½???
 			spawnQueue.RemoveAt(0);
 			SpawnUnit(unitType);
 
@@ -272,4 +276,16 @@ void ADNG_RTSBarrack::Server_AddSupply_Implementation(int deltaSupply)
 	ADNG_RTSPawn *rtsPawn = Cast<ADNG_RTSPawn>(pawn);
 	rtsPawn->currentSupply += deltaSupply;
 
+}
+
+void ADNG_RTSBarrack::NotifyDestroyed()
+{
+
+	ServerNotifyDestroyed();
+}
+
+void ADNG_RTSBarrack::ServerNotifyDestroyed_Implementation()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Emerald, "destroyed");
+	Cast<ADNGGameModeBase>(GetWorld()->GetAuthGameMode())->OnBarrackDestroyed();
 }

@@ -3,6 +3,7 @@
 #include "FPSCharacter.h"
 #include "FPSGameMode.h"
 #include "TestEnemyPawn.h"
+#include "DNGGameModeBase.h"
 #include "UnrealNetwork.h"
 #include "FireParam.h"
 #include "DNG_RTSBarrack.h"
@@ -185,7 +186,6 @@ void AFPSCharacter::BeginPlay()
 // Called every frame
 void AFPSCharacter::Tick(float DeltaTime)
 {
-	if (IsDead) return;
 
 	Super::Tick(DeltaTime);
 	if (IsBoosting)
@@ -202,6 +202,8 @@ void AFPSCharacter::Tick(float DeltaTime)
 		IsDead = true;
 		GetWorldTimerManager().ClearTimer(GunFireTimerHandle);
 		PlayAnimMontage(DeathMontage, 1.f);
+		NotifyDeath();
+		SetActorTickEnabled(false);
 	}
 }
 
@@ -319,17 +321,32 @@ void AFPSCharacter::MulticastGiveDamage_Implementation(AActor* target, float dmg
 	for (UActorComponent* c : arr)
 		if (c->IsA(UDNGProperty::StaticClass()))
 		{
-			//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("WTF"));
 			UDNGProperty* prop = Cast<UDNGProperty>(c);
 			if (prop)
 			{
 				prop->DealDamage(dmg);
 			}
 		}
-	//UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), FireParticle, target->GetActorLocation(), FRotator::ZeroRotator);
 }
 
 bool AFPSCharacter::MulticastGiveDamage_Validate(AActor* target, float dmg, FVector loc)
+{
+	return true;
+}
+
+void AFPSCharacter::NotifyDeath()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "CallNotifyDeath");
+	ServerNotifyDeath();
+}
+
+void AFPSCharacter::ServerNotifyDeath_Implementation()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "NotifyDeath");
+	Cast<ADNGGameModeBase>(GetWorld()->GetAuthGameMode())->OnPlayerKilled();
+}
+
+bool AFPSCharacter::ServerNotifyDeath_Validate()
 {
 	return true;
 }
@@ -340,7 +357,6 @@ void AFPSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLi
 
 	DOREPLIFETIME(AFPSCharacter, CurrentWeapon);
 	DOREPLIFETIME(AFPSCharacter, IsBoosting);
-	//DOREPLIFETIME(AFPSCharacter, Weapons);
 
 }
 
@@ -368,7 +384,7 @@ bool AFPSCharacter::CheckFlameHit(FVector socLoc, AActor* target)
 
 void AFPSCharacter::Heal()
 {
-	if (!IsHealable) return;
+	if (!IsHealable || IsDead) return;
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Heal"));
 	IsHealable = false;
 	Prop->DealDamage(-40);

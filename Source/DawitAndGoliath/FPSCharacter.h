@@ -120,6 +120,15 @@ protected:
 
 	virtual bool MulticastEmitFlame_Validate(FVector loc, FRotator rot, UParticleSystem* particle, FVector scale);
 
+	virtual void NotifyDeath();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		virtual void ServerNotifyDeath();
+
+	virtual void ServerNotifyDeath_Implementation();
+
+	virtual bool ServerNotifyDeath_Validate();
+
 	UFUNCTION(BlueprintCallable)
 		virtual void EnableFire() { IsFireable = true; }
 	
