@@ -29,7 +29,11 @@ public:
 
 	// Key
 	void PressShiftKey() { bPressedShiftKey = true; }
-	void ReleasedShiftKey() { bPressedShiftKey = false; }
+	void ReleasedShiftKey() { 
+		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Emerald, "SHIFT Off");
+
+		bPressedShiftKey = false; 
+	}
 
 	void PressCtrlKey() { bPressedCtrlKey = true; }
 	void ReleasedCtrlKey() { bPressedCtrlKey = false; }

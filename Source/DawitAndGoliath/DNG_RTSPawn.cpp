@@ -92,7 +92,12 @@ void ADNG_RTSPawn::Tick(float DeltaTime)
 	if (!bIsInitialized) return;
 
 	userUI->Display(&selectedUnits);
-	//check(viewPort);
+
+	if (bPressedShiftKey)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Emerald, "SHIFT ON");
+	}
+
 	if (viewPort->IsFocused(viewPort->Viewport))
 	{
 		viewPort->GetMousePosition(mousePos);
