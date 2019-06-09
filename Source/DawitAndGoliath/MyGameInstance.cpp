@@ -191,6 +191,7 @@ bool UMyGameInstance::JoinSession(TSharedPtr<const FUniqueNetId> UserId, FName S
 		{
 			OnJoinSessionCompleteDelegateHandle = Sessions->AddOnJoinSessionCompleteDelegate_Handle(OnJoinSessionCompleteDelegate);
 			bSuccessful = Sessions->JoinSession(*UserId, SessionName, SearchResult);
+			//Sessions->Exit
 		}
 	}
 
@@ -220,28 +221,6 @@ void UMyGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCom
 				TArray<APlayerState*> playerArr = gameStateBase->PlayerArray;
 
 				//CallFunctionByNameWithArguments
-			}
-		}
-	}
-}
-
-void UMyGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
-{
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("OnDestroySessionComplete %s, %d"), *SessionName.ToString(), bWasSuccessful));
-
-	IOnlineSubsystem *OnlineSub = IOnlineSubsystem::Get();
-
-	if (OnlineSub)
-	{
-		IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();
-		
-		if (Sessions.IsValid())
-		{
-			Sessions->ClearOnDestroySessionCompleteDelegate_Handle(OnDestroySessionCompleteDelegateHandle);
-
-			if (bWasSuccessful)
-			{
-				UGameplayStatics::OpenLevel(GetWorld(), "MainMenu", true);
 			}
 		}
 	}
@@ -300,6 +279,28 @@ void UMyGameInstance::DestroySessionAndLeaveGame()
 	}
 }
 
+void UMyGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("OnDestroySessionComplete %s, %d"), *SessionName.ToString(), bWasSuccessful));
+
+	IOnlineSubsystem *OnlineSub = IOnlineSubsystem::Get();
+
+	if (OnlineSub)
+	{
+		IOnlineSessionPtr Sessions = OnlineSub->GetSessionInterface();
+
+		if (Sessions.IsValid())
+		{
+			Sessions->ClearOnDestroySessionCompleteDelegate_Handle(OnDestroySessionCompleteDelegateHandle);
+
+			if (bWasSuccessful)
+			{
+				UGameplayStatics::OpenLevel(GetWorld(), "MainMenu", true);
+			}
+		}
+	}
+}
+
 void UMyGameInstance::JoinOnClicked_Implementation(FBlueprintSessionResult sessionResult)
 {
 	ULocalPlayer * const Player = GetFirstGamePlayer();
@@ -308,11 +309,6 @@ void UMyGameInstance::JoinOnClicked_Implementation(FBlueprintSessionResult sessi
 	
 	JoinSession(Player->GetPreferredUniqueNetId().GetUniqueNetId(), GameSessionName, sessionResult.OnlineResult);
 }
-
-// 클났다
-// 호스트가 FPS 선택하고
-// 이외 참가자가 RTS 선택하면
-// RTS가 뻑이 가버림
 
 void UMyGameInstance::TravelToGameLevel(FName sessionHostName)
 {
@@ -384,10 +380,7 @@ void UMyGameInstance::InitPlayersPawn()
 			FActorSpawnParameters spawnInfo;
 			spawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-			/// 여기서 Access Violation 발생
 			FString roleName = Cast<AMyPlayerState>(Cast<APlayerController>(playerCtrlArr[i])->PlayerState)->playRoleName;
-
-			/// #여기 starting Point 가 아예 없는 경우도 발생한다
 			FRotator rot(0, 0, 0);
 
 			if (roleName == "Shooter")

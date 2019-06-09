@@ -219,6 +219,16 @@ public:
 	UFUNCTION(BlueprintCallable)
 		float GetBoosterEnergyPer();
 
+	UFUNCTION(Reliable, Client, WithValidation)
+		virtual void Client_Init();
+	void Client_Init_Implementation();
+	bool Client_Init_Validate() { return true; }
+
+private:
+	UMaterial *friendlyPointMaterial;
+	UMaterial *enemyPointMaterial;
+	UMaterialBillboardComponent *minimapPointer;
+
 	//UFUNCTION(Server, Reliable, WithValidation)
 	//virtual void ServerSetWeapon(EWeaponType type);
 

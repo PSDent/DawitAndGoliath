@@ -91,6 +91,9 @@ protected:
 	FOnDestroySessionCompleteDelegate OnDestroySessionCompleteDelegate;
 	FDelegateHandle OnDestroySessionCompleteDelegateHandle;
 
+	// Exit Session
+	//FOnEndSessionComplete
+
 protected:
 	virtual void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
 	virtual void OnStartOnlineGameComplete(FName SessionName, bool bWasSuccessful);
