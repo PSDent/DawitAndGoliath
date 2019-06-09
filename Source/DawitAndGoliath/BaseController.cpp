@@ -35,3 +35,8 @@ void ABaseController::Possess(APawn *pawn)
 		Cast<ADNG_RTSPawn>(pawn)->Init();
 	}
 }
+
+void ABaseController::ShowGameSetUI_Implementation()
+{
+
+}
