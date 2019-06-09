@@ -78,6 +78,28 @@ AFPSCharacter::AFPSCharacter() : Super()
 	FireMontage = fireMontage.Object;
 	BoostMontage = boostMontage.Object;
 	DeathMontage = deathMontage.Object;
+
+	static ConstructorHelpers::FObjectFinder<UMaterial> enemyPointMaterialObj(TEXT("Material'/Game/Sprite/EnemyPoint.EnemyPoint'"));
+	static ConstructorHelpers::FObjectFinder<UMaterial> friendlyPointMaterialObj(TEXT("Material'/Game/Sprite/FriendlyPoint.FriendlyPoint'"));
+
+	if (friendlyPointMaterialObj.Succeeded())
+		friendlyPointMaterial = friendlyPointMaterialObj.Object;
+
+	if (enemyPointMaterialObj.Succeeded())
+		enemyPointMaterial = enemyPointMaterialObj.Object;
+
+	//Client_Init_Implementation();
+}
+
+void AFPSCharacter::Client_Init_Implementation()
+{
+	minimapPointer = CreateDefaultSubobject<UMaterialBillboardComponent>(TEXT("MinimapPointer"));
+	minimapPointer->SetupAttachment(RootComponent);
+	minimapPointer->SetRelativeLocation(FVector(0, 0, 3000.0f));
+	minimapPointer->SetRelativeScale3D(FVector(100.0f, 100.0f, 1.0f));
+	minimapPointer->bHiddenInGame = false;
+	minimapPointer->bVisible = true;
+	minimapPointer->AddElement(enemyPointMaterial, nullptr, false, 128.0f, 128.0f, nullptr);
 }
 
 // Called when the game starts or when spawned

@@ -289,8 +289,16 @@ void ADNG_RTSPawn::LMousePress()
 
 	playerController->GetHitResultUnderCursor(ECC_GameTraceChannel1, true, outHit);
 
-	targetPos = outHit.Location;
-	
+	if (!userUI->GetIsMouseOnMinimap())
+	{
+		targetPos = outHit.Location;
+	}
+	else
+	{
+		GetMinimapToWorldPos(userUI->GetMinimapWorldPos());
+		targetPos = minimapTargetPos;
+	}
+
 	if (Cast<ADNG_RTSBaseObject>(outHit.GetActor()) || Cast<AFPSCharacter>(outHit.GetActor()))
 		targetActor = outHit.GetActor();
 	else

@@ -33,5 +33,16 @@ void ABaseController::Possess(APawn *pawn)
 	else if (pawn->IsA(ADNG_RTSPawn::StaticClass()))
 	{
 		Cast<ADNG_RTSPawn>(pawn)->Init();
+
+		TArray<AActor*> actors;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ADNG_RTSBaseObject::StaticClass(), actors);
+
+		for (auto obj : actors)
+		{
+			ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(obj);
+			unit->SetOwner(pawn);
+			unit->Controller->SetOwner(pawn);
+			unit->Client_AfterInit();
+		}
 	}
 }
