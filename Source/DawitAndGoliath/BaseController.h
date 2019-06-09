@@ -21,6 +21,11 @@ public:
 	void BeginPlay() override;
 	void Possess(APawn *pawn) override;
 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+		void ShowGameSetUI();
+
+	void ShowGameSetUI_Implementation();
+
 private:
 
 };

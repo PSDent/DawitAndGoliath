@@ -12,7 +12,6 @@
 // Sets default values
 AFPSCharacter::AFPSCharacter() : Super()
 {
-	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
 	bAlwaysRelevant = true;
@@ -127,21 +126,17 @@ void AFPSCharacter::BeginPlay()
 		
 	TArray<USceneComponent*> comps;
 	SpringArm3rd->GetChildrenComponents(true, comps);
-	//for (USceneComponent* c : comps)
-	//	if (c->GetFName() == FName(TEXT("DefaultStatePos")))
-	//		Cam3rd->RelativeLocation = c->RelativeLocation;
 	
 	UGun* gun = NewObject<UGun>();
 	gun->GunInit(TEXT("Rifle"), 20, 0.1f, 30000, 1.0f, 2.f, 30, GunFireSound);
 	gun->SetParticle(FireParticle, MuzzleFlame);
 	Weapons.Add(gun);
-	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::FromInt(Weapons.Num()));
+
 	gun = NewObject<UGun>();
 	gun->GunInit(TEXT("MachineGun"), 15, 0.06f, 5000, 6.0f, 6.f, 80, GunFireSound);
 	gun->SetParticle(FireParticle, MuzzleFlame);
 	Weapons.Add(gun);
 
-	//CurrentWeapon = Weapons[0];
 	UAreaWeapon* flame = NewObject<UAreaWeapon>();
 	flame->SetParticle(FlameParticle, MuzzleFlame);
 	UStaticMeshComponent* comp = nullptr;
@@ -157,9 +152,6 @@ void AFPSCharacter::BeginPlay()
 	flame->GetAreaMesh()->OnComponentEndOverlap.AddDynamic(flame, &UAreaWeapon::OnOverlapEnd);
 	Weapons.Add(flame);
 
-	//GetWorld()->GetGameViewport()->SetMouseLockMode(EMouseLockMode::LockAlways);
-
-	//ChangeWeapon<EWeaponType::Rifle>();
 	FireDele.BindLambda([&] {
 		if (IsBoosting)
 		{
@@ -261,8 +253,6 @@ void AFPSCharacter::Fire(FFireParam params)
 void AFPSCharacter::ServerFire_Implementation(FFireParam params)
 {
 	MulticastFire(params);
-
-	// Fire(params);
 }
 
 void AFPSCharacter::MulticastFire_Implementation(FFireParam params)
@@ -278,12 +268,8 @@ void AFPSCharacter::MulticastFire_Implementation(FFireParam params)
 	);
 	PlayAnimMontage(FireMontage, 1.f);
 
-	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::FromInt((int)CurrentWeaponType));
-
-
 	if (params.IsGun)
 	{
-		//CurrentWeapon �ٿ��� ���?ũ���� (���� �ٲٸ鼭 �� ��ٺ���?���� ũ����)
 		FHitResult hit = UGun::GetTarget(params.Location, params.SocketLocation, params.Rotation, GetWorld(), this, params.Range);
 		AActor* target = hit.GetActor();
 		if (target)
@@ -296,7 +282,6 @@ void AFPSCharacter::MulticastFire_Implementation(FFireParam params)
 				for (UActorComponent* c : arr)
 					if (c->IsA(UDNGProperty::StaticClass()))
 					{
-						//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("WTF"));
 						UDNGProperty* prop = Cast<UDNGProperty>(c);
 						if (prop)
 						{
@@ -306,9 +291,7 @@ void AFPSCharacter::MulticastFire_Implementation(FFireParam params)
 					}
 			}
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), FireParticle, hit.Location, FRotator::ZeroRotator);
-
 		}
-		//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, FString::SanitizeFloat(params.AttackRate));
 	}
 	else
 	{
@@ -358,13 +341,13 @@ bool AFPSCharacter::MulticastGiveDamage_Validate(AActor* target, float dmg, FVec
 
 void AFPSCharacter::NotifyDeath()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "CallNotifyDeath");
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "CallNotifyDeath");
 	ServerNotifyDeath();
 }
 
 void AFPSCharacter::ServerNotifyDeath_Implementation()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "NotifyDeath");
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "NotifyDeath");
 	Cast<ADNGGameModeBase>(GetWorld()->GetAuthGameMode())->OnPlayerKilled();
 }
 
@@ -467,7 +450,6 @@ template <EWeaponType T>
 void AFPSCharacter::ChangeWeapon()
 {
 	if (GetWorldTimerManager().IsTimerActive(GunFireTimerHandle)) return;
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Change weapon"));
 	ChangeWeapon(T);
 }
 
@@ -490,9 +472,6 @@ void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAction("Heal", IE_Pressed, this, &AFPSCharacter::Heal);
 	PlayerInputComponent->BindAction("LeftFire", IE_Pressed, this, &AFPSCharacter::OnMousePressed);
 	PlayerInputComponent->BindAction("LeftFire", IE_Released, this, &AFPSCharacter::OnMouseReleased);
-	//PlayerInputComponent->BindAction("Rifle", IE_Pressed, this, &AFPSCharacter::ChangeWeapon<EWeaponType::Rifle>);
-	//PlayerInputComponent->BindAction("MachineGun", IE_Pressed, this, &AFPSCharacter::ChangeWeapon<EWeaponType::MachineGun>);
-	//PlayerInputComponent->BindAction("Flame", IE_Pressed, this, &AFPSCharacter::ChangeWeapon<EWeaponType::FlameThrower>);
 	PlayerInputComponent->BindAction<BoolDelegate>("Boost", IE_Pressed, this, &AFPSCharacter::SetBoost, true);
 	PlayerInputComponent->BindAction<BoolDelegate>("Boost", IE_Released, this, &AFPSCharacter::SetBoost, false);
 
@@ -587,7 +566,6 @@ void AFPSCharacter::OnMousePressed()
 	if (!IsFireable || !CurrentWeapon || IsBoosting) return;
 	IsLeftMousePressed = true;
 	
-	//SplitRange = Cast<UGun>(CurrentWeapon)->GetSplitRange();	
 	GetWorldTimerManager().SetTimer(GunFireTimerHandle, FireDele, CurrentWeapon->GetAttackRate(), true, 0.0f);
 }
 

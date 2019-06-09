@@ -46,3 +46,8 @@ void ABaseController::Possess(APawn *pawn)
 		}
 	}
 }
+
+void ABaseController::ShowGameSetUI_Implementation()
+{
+
+}

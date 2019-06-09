@@ -76,7 +76,6 @@ void ADNG_RTSBarrack::Tick(float DeltaTime)
 	{
 		Die();
 		NotifyDestroyed();
-		//PrimaryActorTick.bCanEverTick = false;
 	}
 }
 

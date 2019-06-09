@@ -12,6 +12,7 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Character.h"
+#include "UserWidget.h"
 #include "FPSCharacter.generated.h"
 
 UCLASS()
@@ -161,6 +162,9 @@ protected:
 	UParticleSystem* BoosterParticle;
 
 	FTimerDelegate FireDele;
+
+	UPROPERTY(BlueprintReadWrite)
+		UUserWidget* UserWidget;
 
 	//UPROPERTY(Transient, Replicated)
 	TArray<UWeapon*> Weapons;
