@@ -250,7 +250,6 @@ void ADNG_RTSUnit::Server_Move_Implementation(FVector dest, bool justMoveVal)
 	aiController->MoveToLocation(dest);
 
 	arriveTrigger->SetWorldLocation(dest); // 요놈이 문제였다
-	DrawDebugSphere(GetWorld(), dest, 64.0f, 16, FColor::Blue, false, 3.0f);
 }
 
 void ADNG_RTSUnit::Stop()

@@ -22,9 +22,9 @@ public:
 	void Possess(APawn *pawn) override;
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-		void ShowGameSetUI();
+		void ShowGameSetUI(bool isRts);
 
-	void ShowGameSetUI_Implementation();
+	void ShowGameSetUI_Implementation(bool isRts);
 
 private:
 

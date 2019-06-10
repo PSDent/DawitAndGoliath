@@ -13,15 +13,14 @@ ADNGGameModeBase::ADNGGameModeBase()
 	
 }
 
-void ADNGGameModeBase::GameSet()
+void ADNGGameModeBase::GameSet(bool isRts)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "Game Set");
 	TArray<AActor*> arr;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ABaseController::StaticClass(), arr);
 	for (auto a : arr)
 	{
-		Cast<ABaseController>(a)->ShowGameSetUI();
-
+		Cast<ABaseController>(a)->ShowGameSetUI(isRts);
 	}
 }
 
@@ -31,7 +30,7 @@ void ADNGGameModeBase::OnBarrackDestroyed()
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("Barrack left : %d"), BarrackCount));
 	if (BarrackCount == 0)
 	{
-		GameSet();
+		GameSet(false);
 	}
 }
 
@@ -41,7 +40,7 @@ void ADNGGameModeBase::OnPlayerKilled()
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("Player left : %d"), CurrentPlayerCount));
 	if (CurrentPlayerCount == 0)
 	{
-		GameSet();
+		GameSet(true);
 	}
 }
 

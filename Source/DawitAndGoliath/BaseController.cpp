@@ -47,7 +47,7 @@ void ABaseController::Possess(APawn *pawn)
 	}
 }
 
-void ABaseController::ShowGameSetUI_Implementation()
+void ABaseController::ShowGameSetUI_Implementation(bool isRts)
 {
 
 }

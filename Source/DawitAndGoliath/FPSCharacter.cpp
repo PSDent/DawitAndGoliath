@@ -106,9 +106,6 @@ void AFPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if(Cam3rd)
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, "CAMCMA");
-
 
 	bUseControllerRotationYaw = true;
 	bUseControllerRotationRoll = true;
@@ -121,8 +118,6 @@ void AFPSCharacter::BeginPlay()
 		Prop->SetMaxHp(100);
 		Prop->SetHp(100);
 	}
-	if (Prop)
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("Hp : %f"), Prop->GetHp()));
 		
 	TArray<USceneComponent*> comps;
 	SpringArm3rd->GetChildrenComponents(true, comps);
@@ -166,7 +161,6 @@ void AFPSCharacter::BeginPlay()
 
 			return;
 		}
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::FromInt(CurrentWeapon->GetBulletCount()));
 
 		if (CurrentWeapon->IsA(UGun::StaticClass()))
 			Fire(FFireParam());
@@ -193,8 +187,6 @@ void AFPSCharacter::BeginPlay()
 			}
 		}
 	});
-
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "FPSCHARACTER");
 }
 
 // Called every frame
@@ -213,22 +205,15 @@ void AFPSCharacter::Tick(float DeltaTime)
 
 	if (Prop->GetHp() <= 0)
 	{
-		IsDead = true;
+		NotifyDeath();
 		GetWorldTimerManager().ClearTimer(GunFireTimerHandle);
 		PlayAnimMontage(DeathMontage, 1.f);
-		NotifyDeath();
 		SetActorTickEnabled(false);
 	}
 }
 
 void AFPSCharacter::Fire(FFireParam params)
 {
-	if (!Cam3rd)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "Fuck");
-		return;
-	}
-
 	params.WeaponType = CurrentWeaponType;
 
 	params.Location = Cam3rd->GetComponentLocation();
@@ -295,7 +280,7 @@ void AFPSCharacter::MulticastFire_Implementation(FFireParam params)
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Fire"));
+		
 	}
 }
 
@@ -341,19 +326,17 @@ bool AFPSCharacter::MulticastGiveDamage_Validate(AActor* target, float dmg, FVec
 
 void AFPSCharacter::NotifyDeath()
 {
+
 	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "CallNotifyDeath");
 	ServerNotifyDeath();
+	IsDead = true;
 }
 
 void AFPSCharacter::ServerNotifyDeath_Implementation()
 {
+	if (IsDead) return;
 	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "NotifyDeath");
 	Cast<ADNGGameModeBase>(GetWorld()->GetAuthGameMode())->OnPlayerKilled();
-}
-
-bool AFPSCharacter::ServerNotifyDeath_Validate()
-{
-	return true;
 }
 
 void AFPSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifetimeProps) const
@@ -497,7 +480,6 @@ void AFPSCharacter::SetBoost(bool value)
 	
 	IsBoosting = value;
 	ServerSetBoost(IsBoosting);
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::FromInt(MovementComponent->MaxWalkSpeed));
 }
 
 void AFPSCharacter::ServerSetBoost_Implementation(bool value)
