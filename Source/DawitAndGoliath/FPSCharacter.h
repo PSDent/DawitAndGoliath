@@ -125,10 +125,8 @@ protected:
 
 	UFUNCTION(Server, Reliable, WithValidation)
 		virtual void ServerNotifyDeath();
-
-	virtual void ServerNotifyDeath_Implementation();
-
-	virtual bool ServerNotifyDeath_Validate();
+	void ServerNotifyDeath_Implementation();
+	bool ServerNotifyDeath_Validate() { return true; }
 
 	UFUNCTION(BlueprintCallable)
 		virtual void EnableFire() { IsFireable = true; }

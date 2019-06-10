@@ -74,8 +74,8 @@ void ADNG_RTSBarrack::Tick(float DeltaTime)
 	Spawning(DeltaTime);
 	if (objProperty->GetHp() <= 0.0f && bIsAlive)
 	{
-		Die();
 		NotifyDestroyed();
+		Die();
 	}
 }
 
@@ -285,6 +285,7 @@ void ADNG_RTSBarrack::NotifyDestroyed()
 
 void ADNG_RTSBarrack::ServerNotifyDestroyed_Implementation()
 {
+	if (!bIsAlive) return;
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Emerald, "destroyed");
 	Cast<ADNGGameModeBase>(GetWorld()->GetAuthGameMode())->OnBarrackDestroyed();
 }
