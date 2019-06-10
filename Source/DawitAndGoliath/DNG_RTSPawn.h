@@ -27,17 +27,6 @@ public:
 	void Init();
 	void ReceiveCmdPanel(FKey key);
 
-	// Key
-	void PressShiftKey() { bPressedShiftKey = true; }
-	void ReleasedShiftKey() { 
-		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Emerald, "SHIFT Off");
-
-		bPressedShiftKey = false; 
-	}
-
-	void PressCtrlKey() { bPressedCtrlKey = true; }
-	void ReleasedCtrlKey() { bPressedCtrlKey = false; }
-
 	// MiniMap
 	void CamMoveTo(FVector2D pos);
 	void GetMinimapToWorldPos(FVector2D pos);
@@ -85,6 +74,13 @@ protected:
 
 private:
 
+	// Key
+	void PressShiftKey() { bPressedShiftKey = true; }
+	void ReleasedShiftKey();
+
+	void PressCtrlKey() { bPressedCtrlKey = true; }
+	void ReleasedCtrlKey() { bPressedCtrlKey = false; }
+
 	// Initialize
 	void BasicInit();
 
@@ -105,7 +101,10 @@ private:
 	// Unit Command
 	void FindMostUnit();
 	void MappingCmdPanel();
+	
 	void ExecuteCommand(FKey key);
+	//UFUNCTION(Server, Reliable, WithValidation)
+
 
 	void ResetSelectedUnits();
 	UFUNCTION(Server, Reliable, WithValidation)
@@ -118,7 +117,6 @@ private:
 		virtual void Server_SetSelectedUnits();
 	void Server_SetSelectedUnits_Implementation();
 	bool Server_SetSelectedUnits_Validate() { return true; }
-
 
 	template<int num>
 	void SetSquad();
@@ -164,6 +162,8 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 		bool bPressedShiftKey;
+	UPROPERTY(BlueprintReadWrite)
+		bool bPressedShiftLMB;
 
 private:
 	UPROPERTY(Replicated)

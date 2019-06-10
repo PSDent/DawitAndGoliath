@@ -34,21 +34,22 @@ ADNG_RTSPawn::ADNG_RTSPawn() : Super()
 	unitsPlacementOffset = 300.0f;
 	selectionAllRadius = 2000.0f;
 
+	bPressedShiftLMB = false;
 	bPressedLeftMouse = false;
 	bPressedShiftKey = false;
 	bPressedCtrlKey = false;
+
 	bIsDoubleClicked = false;
 	bIsCommanding = false;
 	bIsTargeted = false;
 	bIsClickedPanel = false;
 	bIsCommanding = false;
-
 	bIsInitialized = false;
+
 	baseUnit = nullptr;
+	targetActor = nullptr;
 
 	EKeys::GetAllKeys(keys);
-	
-	targetActor = nullptr;
 
 	currentSupply = 0;
 	maxSupply = 100;
@@ -93,7 +94,7 @@ void ADNG_RTSPawn::Tick(float DeltaTime)
 
 	userUI->Display(&selectedUnits);
 
-	if (bPressedShiftKey)
+	if (Cast<APlayerController>(Controller)->IsInputKeyDown(EKeys::LeftShift))
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Emerald, "SHIFT ON");
 	}
@@ -202,6 +203,11 @@ void ADNG_RTSPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAction("CtrlLMouse", IE_Pressed, this, &ADNG_RTSPawn::SelectAllSameType);
 }
 
+void ADNG_RTSPawn::ReleasedShiftKey() 
+{
+	bPressedShiftKey = false;	
+}
+
 void ADNG_RTSPawn::Init()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Purple, "Init");
@@ -223,6 +229,7 @@ void ADNG_RTSPawn::BasicInit()
 	userUI->rtsPawn = this;
 
 	viewPort = GEngine->GameViewport;
+	viewPort->SetIgnoreInput(false);
 
 	if (userUI)
 	{
@@ -286,11 +293,14 @@ void ADNG_RTSPawn::MoveUpCam(float direction)
 	FVector newPos = GetActorLocation() + deltaMovement;
 
 	SetActorLocation(newPos);
+
 }
 
 void ADNG_RTSPawn::LMousePress()
 {
 	FHitResult outHit;
+	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "LMouse Press");
+
 
 	playerController->GetHitResultUnderCursor(ECC_GameTraceChannel1, true, outHit);
 
@@ -310,6 +320,14 @@ void ADNG_RTSPawn::LMousePress()
 		targetActor = nullptr;
 
 	bPressedLeftMouse = true;
+	/*if (bPressedShiftKey)
+	{
+		bPressedShiftLMB = true;
+	}
+	else
+	{
+		bPressedShiftLMB = false;
+	}*/
 
 	mouseStartPos.X = mousePos.X;
 	mouseStartPos.Y = mousePos.Y;
@@ -660,7 +678,13 @@ void ADNG_RTSPawn::CheckKeysAndExecute()
 	{
 		if (playerController->IsInputKeyDown(cmd.Key))
 		{
-			ExecuteCommand(cmd.Key);
+			if (mostUnit)
+			{
+				if (mostUnit->GetCmdInfoMap().Contains(cmd.Key))
+				{
+					ExecuteCommand(cmd.Key);
+				}
+			}
 		}
 	}
 }
@@ -669,17 +693,25 @@ void ADNG_RTSPawn::ExecuteCommand(FKey key)
 {
 	// 키를 꾹 누르고 있을 때 처음 키를 누르고 있는 시간에 일정 시간을 둔 후,
 	// 일정 시간이 지나면 프레임마다 명령을 수행하도록 구현할 것.
+
+	FString mostUnitCmdName = "";
+	if (mostUnit)
+		mostUnitCmdName = mostUnit->GetCmdInfoMap().Find(key)->name;
+
 	for (int j = 0; j < selectedUnits.Num(); ++j)
 	{
 		if (selectedUnits[j]->GetCmdInfoMap().Contains(key))
 		{
 			FString unitCmdName = selectedUnits[j]->GetCmdInfoMap().Find(key)->name;
-			FString mostUnitCmdName = "";
-			if(mostUnit)
-				mostUnitCmdName = mostUnit->GetCmdInfoMap().Find(key)->name;
-			if (unitCmdName == mostUnitCmdName)
+
+			if (mostUnit && unitCmdName == mostUnitCmdName)
 			{
 				selectedUnits[j]->GetCmdInfoMap().Find(key)->commandDele.ExecuteIfBound();
+			}
+			else
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, "FAIL?");
+
 			}
 		}
 	}
