@@ -240,9 +240,11 @@ void ADNG_RTSUnit::Server_Move_Implementation(FVector dest, bool justMoveVal)
 {
 	if (!bIsAlive) return;
 
-	target = nullptr;
+	// target = nullptr;
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "MoveMove");
 
+	if (justMoveVal) 
+		target = nullptr;
 	blackBoard->SetValueAsBool(key_IsJustMoving, justMoveVal);
 	blackBoard->SetValueAsBool(key_IsChasing, false);
 	blackBoard->SetValueAsBool(key_IsWantToDeal, false);
@@ -509,19 +511,25 @@ void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 	if (obj)
 	{
 		if (obj->objProperty->GetHp() <= 0.0f)
+		{
 			target = nullptr;
+			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "UNIT DIE");
+		}
 	}
 
 	AFPSCharacter *fpsObj = Cast<AFPSCharacter>(target);
 	if (fpsObj)
 	{
 		if (fpsObj->GetHp() <= 0.0f)
+		{
 			target = nullptr;
+			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "CHARACTER DIE");
+		}
 	}
 
 	if (target)
 	{
-		//GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Has Target");
+		GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Has Target");
 
 		bool isMoving = GetCharacterMovement()->Velocity.Size2D() > 0;
 		bool isDealing = blackBoard->GetValueAsBool(key_IsWantToDeal);
@@ -530,6 +538,8 @@ void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 		if ((isMoving && isDealing && !isChasing))
 		{
 			target = nullptr;
+			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "End");
+
 			return;
 		}
 
@@ -548,18 +558,20 @@ void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 		{
 			blackBoard->SetValueAsBool(key_IsWantToDeal, false);
 			blackBoard->SetValueAsBool(key_IsChasing, true);
+			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "GOGO");
+
 			return;
 		}
 		else
 		{
 			blackBoard->SetValueAsBool(key_IsWantToDeal, false);
 			blackBoard->SetValueAsBool(key_IsChasing, false);
+			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "ELSE");
+
 		}
 	}
 	else
 	{
-		//GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "None Target");
-
 	}
 
 	// 정확히 지정한 적이 없다면 모든 적 리스트에서 거리를 찾아서 제일 짧은 거리에 있는 적을 공격

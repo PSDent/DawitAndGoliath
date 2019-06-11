@@ -175,6 +175,9 @@ public:
 		bool bPressedCtrlKey;
 
 private:
+	FTimerDelegate doubleClickDele;
+	FTimerHandle doubleClickHandle;
+
 	UPROPERTY(Replicated)
 		APlayerController *playerController;
 
@@ -193,11 +196,13 @@ private:
 
 	float selectionAllRadius;
 	float unitsPlacementOffset;
+	float doubleClickDelay;
+
+	bool bIsCanDoubleClick;
 	bool bIsDoubleClicked;
 	bool bIsCommanding;
 	bool bIsTargeted;
 	bool bIsClickedPanel;
-
 	bool bIsInitialized;
 
 	// Key
