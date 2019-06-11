@@ -94,11 +94,6 @@ void ADNG_RTSPawn::Tick(float DeltaTime)
 
 	userUI->Display(&selectedUnits);
 
-	if (Cast<APlayerController>(Controller)->IsInputKeyDown(EKeys::LeftShift))
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Emerald, "SHIFT ON");
-	}
-
 	if (viewPort->IsFocused(viewPort->Viewport))
 	{
 		viewPort->GetMousePosition(mousePos);

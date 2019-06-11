@@ -36,6 +36,7 @@ public:
 	
 	
 	FSessionPlayersInfo GetSessionPlayersInfo();
+
 private:
 
 private:

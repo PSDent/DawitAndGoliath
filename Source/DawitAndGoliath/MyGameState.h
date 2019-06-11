@@ -13,5 +13,7 @@ UCLASS()
 class DAWITANDGOLIATH_API AMyGameState : public AGameState
 {
 	GENERATED_BODY()
-	
+
+protected:
+
 };
