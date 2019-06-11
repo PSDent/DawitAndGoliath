@@ -21,11 +21,14 @@ ADNG_RTSPawn::ADNG_RTSPawn() : Super()
 	rtsCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("RTS_Cam"));
 	rtsCamera->AttachTo(RootComponent);
 	rtsCamera->bUsePawnControlRotation = false;
+	
 	//rtsCamera->SetRelativeRotation(FRotator(-60.0f, -40.0f, 0.0f));
 	rtsCamera->SetRelativeRotation(FRotator(-60.0f, 0.0f, 0.0f));
 
 	selectionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("SelectionBox"));
+	selectionBox->SetCollisionProfileName("SelectionProfile");
 	selectionCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("SelectionCapsule"));
+	selectionCapsule->SetCollisionProfileName("SelectionProfile");
 
 	camScrollBoundary = 20.0f;
 	scrollSpeed = 3000.0f;
@@ -35,6 +38,7 @@ ADNG_RTSPawn::ADNG_RTSPawn() : Super()
 	selectionAllRadius = 2000.0f;
 
 	bPressedShiftLMB = false;
+	bPressedCtrlLMB = false;
 	bPressedLeftMouse = false;
 	bPressedShiftKey = false;
 	bPressedCtrlKey = false;
@@ -48,6 +52,9 @@ ADNG_RTSPawn::ADNG_RTSPawn() : Super()
 
 	baseUnit = nullptr;
 	targetActor = nullptr;
+
+	prevSelectUnit = nullptr;
+	nowSelectUnit = nullptr;
 
 	EKeys::GetAllKeys(keys);
 
@@ -76,7 +83,6 @@ void ADNG_RTSPawn::BeginPlay()
 	Super::BeginPlay();
 	
 	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "RTSCHARACTER");
-	//Cast<APlayerController>(Controller)->SetInputMode(FInputModeGameOnly());
 	GetWorld()->GetGameViewport()->SetMouseLockMode(EMouseLockMode::LockAlways);
 	
 	FVector newPos = GetActorLocation() + FVector::UpVector * height;
@@ -195,7 +201,7 @@ void ADNG_RTSPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAction("Shift0", IE_Pressed, this, &ADNG_RTSPawn::AddToSquad<0>);
 
 	PlayerInputComponent->BindAction("LMousePress", IE_DoubleClick, this, &ADNG_RTSPawn::SelectAllSameType);
-	PlayerInputComponent->BindAction("CtrlLMouse", IE_Pressed, this, &ADNG_RTSPawn::SelectAllSameType);
+	//PlayerInputComponent->BindAction("CtrlLMouse", IE_Pressed, this, &ADNG_RTSPawn::SelectAllSameType);
 }
 
 void ADNG_RTSPawn::ReleasedShiftKey() 
@@ -224,7 +230,6 @@ void ADNG_RTSPawn::BasicInit()
 	userUI->rtsPawn = this;
 
 	viewPort = GEngine->GameViewport;
-	viewPort->SetIgnoreInput(false);
 
 	if (userUI)
 	{
@@ -288,14 +293,12 @@ void ADNG_RTSPawn::MoveUpCam(float direction)
 	FVector newPos = GetActorLocation() + deltaMovement;
 
 	SetActorLocation(newPos);
-
 }
 
 void ADNG_RTSPawn::LMousePress()
 {
 	FHitResult outHit;
 	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "LMouse Press");
-
 
 	playerController->GetHitResultUnderCursor(ECC_GameTraceChannel1, true, outHit);
 
@@ -310,19 +313,15 @@ void ADNG_RTSPawn::LMousePress()
 	}
 
 	if (Cast<ADNG_RTSBaseObject>(outHit.GetActor()) || Cast<AFPSCharacter>(outHit.GetActor()))
+	{
 		targetActor = outHit.GetActor();
+
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "Selecet Actor");
+	}
 	else
 		targetActor = nullptr;
 
 	bPressedLeftMouse = true;
-	/*if (bPressedShiftKey)
-	{
-		bPressedShiftLMB = true;
-	}
-	else
-	{
-		bPressedShiftLMB = false;
-	}*/
 
 	mouseStartPos.X = mousePos.X;
 	mouseStartPos.Y = mousePos.Y;
@@ -330,22 +329,23 @@ void ADNG_RTSPawn::LMousePress()
 	selectionStartPos = outHit.Location;
 	baseUnit = Cast<ADNG_RTSBaseObject>(outHit.GetActor());
 
-	if (bPressedCtrlKey)
+	if (bPressedCtrlKey && !userUI->bIsHovered)
 	{
 		SelectAllSameType();
 		baseUnit = nullptr;
-	}
-	else
-	{
-
 	}
 }
 
 void ADNG_RTSPawn::LMouseRelease()
 {
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "LMB Downed");
+
 	bPressedLeftMouse = false;
 	userUI->GetSelectionBoxImage()->SetVisibility(ESlateVisibility::Collapsed);
 	
+	FHitResult outHit;
+	playerController->GetHitResultUnderCursor(ECC_Visibility, false, outHit);
+	selectionEndPos = outHit.Location;
 	if (bIsDoubleClicked)
 	{
 		bIsDoubleClicked = false;
@@ -359,11 +359,7 @@ void ADNG_RTSPawn::LMouseRelease()
 	if (bIsClickedPanel)
 		bIsClickedPanel = false;
 
-	FHitResult outHit;
-	playerController->GetHitResultUnderCursor(ECC_Visibility, false, outHit);
-	selectionEndPos = outHit.Location;
-
-	if(!bIsCommanding)
+	if(!bIsCommanding && !userUI->bIsHovered)
 		SelectionUnitsInBox();
 
 	bIsCommanding = false;
@@ -388,11 +384,6 @@ void ADNG_RTSPawn::RMousePress()
 		GetMinimapToWorldPos(mapPos);
 		targetPos = minimapTargetPos;
 	}
-	// 적 클릭 시 공격
-
-	// 아군 클릭 시 아군 따라가기
-
-	// 땅 바닥 클릭 시 이동
 	MoveUnits(dest);
 }
 
@@ -404,6 +395,9 @@ void ADNG_RTSPawn::RMouseRelease()
 // 더블클릭 or Ctrl + 좌클릭
 void ADNG_RTSPawn::SelectAllSameType()
 {
+	ADNG_RTSBaseObject *obj = Cast<ADNG_RTSBaseObject>(targetActor);
+	if (!obj || !obj->bIsCurrentSelected) return;
+
 	if (!baseUnit || bIsCommanding) return;
 
 	selectionCapsule->SetCapsuleRadius(selectionAllRadius);
@@ -422,8 +416,8 @@ void ADNG_RTSPawn::SelectAllSameType()
 	for (auto actor : selectedAllUnits)
 	{
 		ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(actor);
-
-		if (!unit || !unit->bIsAlive) continue;
+		bool alreadyHas = selectedUnits.Contains(unit);
+		if (!unit || !unit->bIsAlive || alreadyHas) continue;
 
 		if (baseUnitName == unit->GetUnitName())
 		{
@@ -469,15 +463,15 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 			selectedActors.Remove(actor);
 	}
 
+	if (selectedActors.Num() == 1)
+		Cast<ADNG_RTSBaseObject>(selectedActors[0])->SetSelectedTimer();
+
 	if (!bPressedShiftKey)
 	{
 		for (int i = 0; i < selectedUnits.Num(); ++i)
-		{
 			selectedUnits[i]->SetSelectedStatus(false);
-		}
-
 		selectedUnits.Empty();
-		
+
 		for (auto actor : selectedActors)
 		{
 			ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(actor);
@@ -491,10 +485,6 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 			}
 		}
 	}
-	// 서로 다른 종류의 유닛을
-	// Shift + Left MB 후
-	// 명령 내릴 시 팅김.
-
 	else if (bPressedShiftKey)
 	{
 		if (selectedActors.Num() == 1)
@@ -505,6 +495,7 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 			unit->SetSelectedStatus(status);
 			if (status)
 			{
+				unit->SetSelectedTimer();
 				SetObjectOwner(unit, Controller);
 				selectedUnits.Add(unit);
 				unit->SetPawn(this);
@@ -517,6 +508,8 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 			for (auto actor : selectedActors)
 			{
 				ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(actor);
+				bool alreadyHas = selectedUnits.Contains(unit);
+				if (alreadyHas) continue;
 				unit->SetSelectedStatus(true);
 				unit->SetPawn(this);
 				SetObjectOwner(unit, Controller);
@@ -524,6 +517,9 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 			}
 		}
 	}
+
+	selectionStartPos = FVector::ZeroVector;
+	selectionEndPos = FVector::ZeroVector;
 }
 
 void ADNG_RTSPawn::SetObjectOwner(ADNG_RTSBaseObject *obj, AController *ownController)

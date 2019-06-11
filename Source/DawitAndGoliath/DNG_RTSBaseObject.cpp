@@ -63,6 +63,7 @@ ADNG_RTSBaseObject::ADNG_RTSBaseObject() : Super()
 
 	bIsSelected = false;
 	bIsAlive = true;
+	bIsCurrentSelected = false;
 }
 
 void ADNG_RTSBaseObject::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
@@ -82,6 +83,16 @@ void ADNG_RTSBaseObject::BeginPlay()
 	Super::BeginPlay();
 
 	aiController = Cast<ADNG_RTSUnitAIController>(Controller);
+}
+
+void ADNG_RTSBaseObject::SetSelectedTimer()
+{
+	bIsCurrentSelected = true;
+	selectTimerDele.BindLambda([&]
+	{
+		bIsCurrentSelected = false;
+	});
+	GetWorld()->GetTimerManager().SetTimer(selectTimerHandle, selectTimerDele, 0.1f, false, 0.2f);
 }
 
 void ADNG_RTSBaseObject::Client_Init_Implementation()

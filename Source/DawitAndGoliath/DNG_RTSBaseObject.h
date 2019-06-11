@@ -41,6 +41,8 @@ public:
 	void Client_AfterInit_Implementation();
 	bool Client_AfterInit_Validate() { return true; }
 
+	void SetSelectedTimer();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -85,9 +87,14 @@ public:
 	UPROPERTY(Replicated)
 		bool bIsAlive;
 
+	bool bIsCurrentSelected;
+
 	FString initial;
 
 private:
+	FTimerDelegate selectTimerDele;
+	FTimerHandle selectTimerHandle;
+
 	UTexture2D *minimapPointerTexture;
 	UMaterialBillboardComponent *minimapPointer;
 
