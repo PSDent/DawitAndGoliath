@@ -326,23 +326,20 @@ bool AFPSCharacter::MulticastGiveDamage_Validate(AActor* target, float dmg, FVec
 
 void AFPSCharacter::NotifyDeath()
 {
-
-	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "CallNotifyDeath");
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "Call NotifyDeath");
 	ServerNotifyDeath();
 	IsDead = true;
 }
 
 void AFPSCharacter::ServerNotifyDeath_Implementation()
 {
-	if (IsDead) return;
-	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "NotifyDeath");
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "Execute NotifyDeath");
 	Cast<ADNGGameModeBase>(GetWorld()->GetAuthGameMode())->OnPlayerKilled();
 }
 
 void AFPSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
 	DOREPLIFETIME(AFPSCharacter, CurrentWeapon);
 	DOREPLIFETIME(AFPSCharacter, IsBoosting);
 

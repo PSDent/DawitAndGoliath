@@ -207,8 +207,6 @@ void ADNG_RTSUnit::Move()
 {
 	FVector dest;
 
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "MoveCLICK");
-
 	GetWorld()->GetTimerManager().ClearTimer(commandCheckHandle);
 	pawn->SetCommandingFlag(true);
 	if (/*!pawn->GetLeftMouseStatus() && */!pawn->GetRightMouseStatus())
@@ -218,11 +216,9 @@ void ADNG_RTSUnit::Move()
 
 	commandCheckDele.BindLambda(
 		[&] {
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Time Ticking");
 
 		if (pawn->GetLeftMouseStatus() || pawn->GetRightMouseStatus())
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Detect Mouse Move Click");
 
 			Server_SetValueBool(key_IsPatrolling, false);
 			Server_Move(pawn->targetPos, true);
@@ -241,7 +237,6 @@ void ADNG_RTSUnit::Server_Move_Implementation(FVector dest, bool justMoveVal)
 	if (!bIsAlive) return;
 
 	target = nullptr;
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "MoveMove");
 
 	blackBoard->SetValueAsBool(key_IsJustMoving, justMoveVal);
 	blackBoard->SetValueAsBool(key_IsChasing, false);
@@ -539,7 +534,6 @@ void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 		{
 			blackBoard->SetValueAsBool(key_IsWantToDeal, true);
 			blackBoard->SetValueAsBool(key_IsChasing, false);
-			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Fire!!");
 
 			Server_Stop(); 
 			return;
