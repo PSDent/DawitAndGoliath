@@ -71,7 +71,7 @@ private:
 		void SelectEntity(int row, int column);
 
 	UFUNCTION(BlueprintCallable)
-		void ExceptEntity(int row, int column);
+		void ExceptEntity(int row, int column, bool onlySelf);
 
 	UFUNCTION(BlueprintCallable)
 		void SelectPage(int pageNum);
@@ -98,6 +98,8 @@ public:
 		float minimapSize;
 	UPROPERTY(BlueprintReadWrite)
 		bool bIsClickMinimap;
+	UPROPERTY(BlueprintReadWrite)
+		bool bIsHovered;
 	bool bIsMouseOnMinimap;
 
 private:

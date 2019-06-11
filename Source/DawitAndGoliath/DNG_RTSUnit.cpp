@@ -71,7 +71,6 @@ void ADNG_RTSUnit::BeginPlay()
 		if(fireSound)
 			fireAudioComponent->SetSound(fireSound);
 	}
-
 }
 
 void ADNG_RTSUnit::Server_BeginPlay_Implementation()
@@ -522,6 +521,8 @@ void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 
 	if (target)
 	{
+		//GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Has Target");
+
 		bool isMoving = GetCharacterMovement()->Velocity.Size2D() > 0;
 		bool isDealing = blackBoard->GetValueAsBool(key_IsWantToDeal);
 		bool isChasing = blackBoard->GetValueAsBool(key_IsChasing);
@@ -538,6 +539,8 @@ void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 		{
 			blackBoard->SetValueAsBool(key_IsWantToDeal, true);
 			blackBoard->SetValueAsBool(key_IsChasing, false);
+			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Fire!!");
+
 			Server_Stop(); 
 			return;
 		}
@@ -552,6 +555,11 @@ void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 			blackBoard->SetValueAsBool(key_IsWantToDeal, false);
 			blackBoard->SetValueAsBool(key_IsChasing, false);
 		}
+	}
+	else
+	{
+		//GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "None Target");
+
 	}
 
 	// 정확히 지정한 적이 없다면 모든 적 리스트에서 거리를 찾아서 제일 짧은 거리에 있는 적을 공격

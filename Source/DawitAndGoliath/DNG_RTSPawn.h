@@ -95,6 +95,11 @@ private:
 	void RMousePress();
 	void RMouseRelease();
 
+	void ShiftLMBPress() { bPressedShiftLMB = true; }
+	void ShiftLMBRelease() { bPressedShiftLMB = false; }
+	void CtrlLMBPress() { bPressedCtrlLMB = true; }
+	void CtrlLMBRelease() { bPressedCtrlLMB = false; }
+
 	void SelectAllSameType();
 	void DoubleClick();
 
@@ -164,14 +169,15 @@ public:
 		bool bPressedShiftKey;
 	UPROPERTY(BlueprintReadWrite)
 		bool bPressedShiftLMB;
+	UPROPERTY(BlueprintReadWrite)
+		bool bPressedCtrlLMB;
+	UPROPERTY(BlueprintReadWrite)
+		bool bPressedCtrlKey;
 
 private:
 	UPROPERTY(Replicated)
 		APlayerController *playerController;
 
-	// 이거 잘 해결하고 SHIFT 부대 눌렀을 떄 추가로 넣는것도 구현해라
-	// 그리고 미니맵
-	// 그리고 버그들
 	TArray<ADNG_RTSBaseObject*> selectedUnits;
 	UPROPERTY(Replicated)
 	TArray<FBaseObjectArray> squads;
@@ -209,6 +215,9 @@ private:
 	ADNG_RTSBaseObject *baseUnit;
 	ADNG_RTSBaseObject *mostUnit;
 	ADNG_RTSBaseObject *prevMostUnit;
+	
+	AActor *prevSelectUnit;
+	AActor *nowSelectUnit;
 
 	// Cam
 	float camScrollBoundary;
@@ -217,7 +226,6 @@ private:
 
 	bool bPressedRightMouse;
 	bool bPressedLeftMouse;
-	bool bPressedCtrlKey;
 
 private:
 	const int SQUAD_SIZE = 10;

@@ -20,6 +20,7 @@ URTS_UI::URTS_UI(const FObjectInitializer &objInitializer) : Super(objInitialize
 	maxPages = 10;
 	bIsClickMinimap = false;
 	bIsMouseOnMinimap = false;
+	bIsHovered = false;
 }
 
 void URTS_UI::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
@@ -305,7 +306,7 @@ void URTS_UI::ResetUnitEntityGrid()
 
 void URTS_UI::SelectEntity(int row, int column)
 {
-	int index = currentEntityPage * maxRow * maxColumn + (row * maxRow) + column;
+	int index = currentEntityPage * maxRow * maxColumn + (row * maxColumn) + column;
 	ADNG_RTSBaseObject *temp = (*objectsArray)[index];
 
 	for (int i = 0; i < (*objectsArray).Num(); ++i)
@@ -317,10 +318,16 @@ void URTS_UI::SelectEntity(int row, int column)
 	objectsArray->Add(temp);
 }
 
-void URTS_UI::ExceptEntity(int row, int column)
+void URTS_UI::ExceptEntity(int row, int column, bool onlySelf)
 {
-	int startIndex = currentEntityPage * maxRow * maxColumn + (row * maxRow) + column;
-	for (int i = startIndex; i < objectsArray->Num(); ++i)
+	int startIndex = currentEntityPage * maxRow * maxColumn + (row * maxColumn) + column;
+	int endIndex = objectsArray->Num() - 1;
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, FString::Printf(TEXT("%d / %d"), startIndex, objectsArray->Num()));
+	
+	if (onlySelf)
+		endIndex = startIndex;
+	
+	for (int i = endIndex; i >= startIndex; --i)
 	{
 		(*objectsArray)[i]->SetSelectedStatus(false);
 		objectsArray->RemoveAt(i);

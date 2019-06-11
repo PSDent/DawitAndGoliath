@@ -124,6 +124,7 @@ private:
 	void Server_CheckStopped_Implementation();
 	bool Server_CheckStopped_Validate() { return true; }
 
+
 protected:
 	virtual void Die() override;
 	UFUNCTION(Server, Reliable, WithValidation)
@@ -135,6 +136,7 @@ protected:
 		virtual void Server_AfterDie();
 	void Server_AfterDie_Implementation();
 	bool Server_AfterDie_Validate() { return true; }
+
 
 public:
 	int spawnTime = 0;
