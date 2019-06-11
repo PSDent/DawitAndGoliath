@@ -26,7 +26,9 @@ ADNG_RTSPawn::ADNG_RTSPawn() : Super()
 	rtsCamera->SetRelativeRotation(FRotator(-60.0f, 0.0f, 0.0f));
 
 	selectionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("SelectionBox"));
+	selectionBox->AttachTo(RootComponent);
 	selectionBox->SetCollisionProfileName("SelectionProfile");
+
 	selectionCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("SelectionCapsule"));
 	selectionCapsule->SetCollisionProfileName("SelectionProfile");
 
@@ -36,6 +38,7 @@ ADNG_RTSPawn::ADNG_RTSPawn() : Super()
 	
 	unitsPlacementOffset = 300.0f;
 	selectionAllRadius = 2000.0f;
+	doubleClickDelay = 0.2f;
 
 	bPressedShiftLMB = false;
 	bPressedCtrlLMB = false;
@@ -200,7 +203,7 @@ void ADNG_RTSPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAction("Shift9", IE_Pressed, this, &ADNG_RTSPawn::AddToSquad<9>);
 	PlayerInputComponent->BindAction("Shift0", IE_Pressed, this, &ADNG_RTSPawn::AddToSquad<0>);
 
-	PlayerInputComponent->BindAction("LMousePress", IE_DoubleClick, this, &ADNG_RTSPawn::SelectAllSameType);
+	//PlayerInputComponent->BindAction("LMousePress", IE_DoubleClick, this, &ADNG_RTSPawn::SelectAllSameType);
 	//PlayerInputComponent->BindAction("CtrlLMouse", IE_Pressed, this, &ADNG_RTSPawn::SelectAllSameType);
 }
 
@@ -251,7 +254,6 @@ bool ADNG_RTSPawn::Client_Init_Validate()
 	return true;
 }
 
-
 void ADNG_RTSPawn::MoveCam(float DeltaTime)
 {
 	if (mousePos.X < camScrollBoundary)
@@ -297,6 +299,21 @@ void ADNG_RTSPawn::MoveUpCam(float direction)
 
 void ADNG_RTSPawn::LMousePress()
 {
+	float remaining = GetWorld()->GetTimerManager().GetTimerRemaining(doubleClickHandle);
+	if (remaining != -1.0f)
+	{
+		bIsDoubleClicked = true;
+		SelectAllSameType();
+	}
+	else if(!bIsCommanding)
+	{
+		bIsCanDoubleClick = true;
+		doubleClickDele.BindLambda([&] {
+			bIsCanDoubleClick = false;
+		});
+		GetWorld()->GetTimerManager().SetTimer(doubleClickHandle, doubleClickDele, 0.1f, false, doubleClickDelay);
+	}
+
 	FHitResult outHit;
 	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "LMouse Press");
 
@@ -311,11 +328,10 @@ void ADNG_RTSPawn::LMousePress()
 		GetMinimapToWorldPos(userUI->GetMinimapWorldPos());
 		targetPos = minimapTargetPos;
 	}
-
+	 
 	if (Cast<ADNG_RTSBaseObject>(outHit.GetActor()) || Cast<AFPSCharacter>(outHit.GetActor()))
 	{
 		targetActor = outHit.GetActor();
-
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "Selecet Actor");
 	}
 	else
@@ -395,6 +411,8 @@ void ADNG_RTSPawn::RMouseRelease()
 // 더블클릭 or Ctrl + 좌클릭
 void ADNG_RTSPawn::SelectAllSameType()
 {
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "Select All Same Type");
+
 	ADNG_RTSBaseObject *obj = Cast<ADNG_RTSBaseObject>(targetActor);
 	if (!obj || !obj->bIsCurrentSelected) return;
 
@@ -450,11 +468,12 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 	FVector midPos(midPosX, midPosY, midPosZ);
 
 	TArray<AActor*> selectedActors;
-
+	selectedActors.Empty();
 	extent = FVector(abs(extent.X), abs(extent.Y), abs(extent.Z));
 	selectionBox->SetWorldLocation(midPos);
 	selectionBox->SetBoxExtent(extent);
 	selectionBox->GetOverlappingActors(selectedActors, ADNG_RTSBaseObject::StaticClass());
+	DrawDebugBox(GetWorld(), selectionBox->GetComponentLocation(), selectionBox->GetScaledBoxExtent(), FColor::Emerald, false, 2.0f);
 
 	for (auto actor : selectedActors)
 	{
@@ -471,6 +490,8 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 		for (int i = 0; i < selectedUnits.Num(); ++i)
 			selectedUnits[i]->SetSelectedStatus(false);
 		selectedUnits.Empty();
+
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "NON SHIFT");
 
 		for (auto actor : selectedActors)
 		{
@@ -490,6 +511,7 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 		if (selectedActors.Num() == 1)
 		{
 			ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(selectedActors[0]);
+			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "Add Unit");
 
 			bool status = !unit->GetSelectedStatus();
 			unit->SetSelectedStatus(status);

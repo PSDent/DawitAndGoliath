@@ -236,14 +236,14 @@ void ADNG_RTSUnit::Server_Move_Implementation(FVector dest, bool justMoveVal)
 {
 	if (!bIsAlive) return;
 
-	target = nullptr;
-
+	if (justMoveVal) 
+		target = nullptr;
 	blackBoard->SetValueAsBool(key_IsJustMoving, justMoveVal);
 	blackBoard->SetValueAsBool(key_IsChasing, false);
 	blackBoard->SetValueAsBool(key_IsWantToDeal, false);
 	aiController->MoveToLocation(dest);
 
-	arriveTrigger->SetWorldLocation(dest); // ¿ä³ðÀÌ ¹®Á¦¿´´Ù
+	arriveTrigger->SetWorldLocation(dest); // ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 }
 
 void ADNG_RTSUnit::Stop()
@@ -338,7 +338,7 @@ void ADNG_RTSUnit::Server_CheckPatrol_Implementation()
 	nextPatrolPointTrigger->GetOverlappingActors(objects, ADNG_RTSUnit::StaticClass());
 
 	DrawDebugSphere(GetWorld(), nextPatrolPointTrigger->GetComponentLocation(), 512.0f, 16, FColor::Red, false, 1.0f);
-	//»ó´ëÀ§Ä¡ °ü·ÃÀÖÀ»Áöµµ
+	//ï¿½ï¿½ï¿½ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	DrawDebugSphere(GetWorld(), arriveTrigger->GetComponentLocation(), 64.0f, 16, FColor::Cyan, false, 0.1f);
 
 	if (objects.Find(this) != INDEX_NONE)
@@ -504,19 +504,25 @@ void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 	if (obj)
 	{
 		if (obj->objProperty->GetHp() <= 0.0f)
+		{
 			target = nullptr;
+			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "UNIT DIE");
+		}
 	}
 
 	AFPSCharacter *fpsObj = Cast<AFPSCharacter>(target);
 	if (fpsObj)
 	{
 		if (fpsObj->GetHp() <= 0.0f)
+		{
 			target = nullptr;
+			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "CHARACTER DIE");
+		}
 	}
 
 	if (target)
 	{
-		//GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Has Target");
+		GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Has Target");
 
 		bool isMoving = GetCharacterMovement()->Velocity.Size2D() > 0;
 		bool isDealing = blackBoard->GetValueAsBool(key_IsWantToDeal);
@@ -525,6 +531,8 @@ void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 		if ((isMoving && isDealing && !isChasing))
 		{
 			target = nullptr;
+			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "End");
+
 			return;
 		}
 
@@ -542,21 +550,23 @@ void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 		{
 			blackBoard->SetValueAsBool(key_IsWantToDeal, false);
 			blackBoard->SetValueAsBool(key_IsChasing, true);
+			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "GOGO");
+
 			return;
 		}
 		else
 		{
 			blackBoard->SetValueAsBool(key_IsWantToDeal, false);
 			blackBoard->SetValueAsBool(key_IsChasing, false);
+			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "ELSE");
+
 		}
 	}
 	else
 	{
-		//GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "None Target");
-
 	}
 
-	// Á¤È®È÷ ÁöÁ¤ÇÑ ÀûÀÌ ¾ø´Ù¸é ¸ðµç Àû ¸®½ºÆ®¿¡¼­ °Å¸®¸¦ Ã£¾Æ¼­ Á¦ÀÏ ÂªÀº °Å¸®¿¡ ÀÖ´Â ÀûÀ» °ø°Ý
+	// ï¿½ï¿½È®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ù¸ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ï¿½ï¿½ ï¿½Å¸ï¿½ï¿½ï¿½ Ã£ï¿½Æ¼ï¿½ ï¿½ï¿½ï¿½ï¿½ Âªï¿½ï¿½ ï¿½Å¸ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	AFPSCharacter *shortestDistEnemy = nullptr;
 	float shortestDist = traceRange;
 	for (auto enemy : enemyPlayers)
