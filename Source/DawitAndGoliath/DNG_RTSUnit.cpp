@@ -207,8 +207,6 @@ void ADNG_RTSUnit::Move()
 {
 	FVector dest;
 
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "MoveCLICK");
-
 	GetWorld()->GetTimerManager().ClearTimer(commandCheckHandle);
 	pawn->SetCommandingFlag(true);
 	if (/*!pawn->GetLeftMouseStatus() && */!pawn->GetRightMouseStatus())
@@ -218,11 +216,9 @@ void ADNG_RTSUnit::Move()
 
 	commandCheckDele.BindLambda(
 		[&] {
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Time Ticking");
 
 		if (pawn->GetLeftMouseStatus() || pawn->GetRightMouseStatus())
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Detect Mouse Move Click");
 
 			Server_SetValueBool(key_IsPatrolling, false);
 			Server_Move(pawn->targetPos, true);
@@ -247,7 +243,7 @@ void ADNG_RTSUnit::Server_Move_Implementation(FVector dest, bool justMoveVal)
 	blackBoard->SetValueAsBool(key_IsWantToDeal, false);
 	aiController->MoveToLocation(dest);
 
-	arriveTrigger->SetWorldLocation(dest); // ¿ä³ðÀÌ ¹®Á¦¿´´Ù
+	arriveTrigger->SetWorldLocation(dest); // ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 }
 
 void ADNG_RTSUnit::Stop(bool bJustStop)
@@ -340,7 +336,7 @@ void ADNG_RTSUnit::Server_CheckPatrol_Implementation()
 	nextPatrolPointTrigger->GetOverlappingActors(objects, ADNG_RTSUnit::StaticClass());
 
 	DrawDebugSphere(GetWorld(), nextPatrolPointTrigger->GetComponentLocation(), 512.0f, 16, FColor::Red, false, 1.0f);
-	//»ó´ëÀ§Ä¡ °ü·ÃÀÖÀ»Áöµµ
+	//ï¿½ï¿½ï¿½ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	DrawDebugSphere(GetWorld(), arriveTrigger->GetComponentLocation(), 64.0f, 16, FColor::Cyan, false, 0.1f);
 
 	if (objects.Find(this) != INDEX_NONE)
@@ -560,7 +556,7 @@ void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 	{
 	}
 
-	// Á¤È®È÷ ÁöÁ¤ÇÑ ÀûÀÌ ¾ø´Ù¸é ¸ðµç Àû ¸®½ºÆ®¿¡¼­ °Å¸®¸¦ Ã£¾Æ¼­ Á¦ÀÏ ÂªÀº °Å¸®¿¡ ÀÖ´Â ÀûÀ» °ø°Ý
+	// ï¿½ï¿½È®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ù¸ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ï¿½ï¿½ ï¿½Å¸ï¿½ï¿½ï¿½ Ã£ï¿½Æ¼ï¿½ ï¿½ï¿½ï¿½ï¿½ Âªï¿½ï¿½ ï¿½Å¸ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	AFPSCharacter *shortestDistEnemy = nullptr;
 	float shortestDist = traceRange;
 	for (auto enemy : enemyPlayers)

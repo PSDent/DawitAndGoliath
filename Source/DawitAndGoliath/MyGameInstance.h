@@ -67,6 +67,9 @@ public:
 
 protected:
 
+	UPROPERTY(BlueprintReadWrite)
+		int LoadCount;	
+
 	TSharedPtr<FOnlineSessionSearch> SessionSearch;
 	
 	TSharedPtr<FOnlineSessionSettings> SessionSetting;
