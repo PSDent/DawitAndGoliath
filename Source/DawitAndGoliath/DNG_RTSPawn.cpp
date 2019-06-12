@@ -448,6 +448,8 @@ void ADNG_RTSPawn::SelectAllSameType()
 
 void ADNG_RTSPawn::SelectionUnitsInBox()
 {
+	if (bIsCommanding) return;
+
 	float extentX = (selectionEndPos.X - selectionStartPos.X) * 0.5f;
 	float extentY = (selectionEndPos.Y - selectionStartPos.Y) * 0.5f;
 	float extentZ = 2000.0f;
@@ -477,7 +479,7 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 		Cast<ADNG_RTSBaseObject>(selectedActors[0])->SetSelectedTimer();
 
 	if (!bPressedShiftKey)
-	{
+	{ 
 		for (int i = 0; i < selectedUnits.Num(); ++i)
 			selectedUnits[i]->SetSelectedStatus(false);
 		selectedUnits.Empty();

@@ -157,6 +157,7 @@ private:
 	FVector patrolPointOne;
 	FVector patrolPointTwo;
 	FVector nextPatrolPoint;
+	FVector destination;
 
 protected:
 	TArray<class AFPSCharacter*> enemyPlayers;

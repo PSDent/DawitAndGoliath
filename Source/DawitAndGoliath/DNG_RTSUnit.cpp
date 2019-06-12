@@ -33,13 +33,13 @@ ADNG_RTSUnit::ADNG_RTSUnit() : Super()
 
 	patrolPointTriggerOne = CreateDefaultSubobject<USphereComponent>(TEXT("patrolPointTriggerOne"));
 	patrolPointTriggerTwo = CreateDefaultSubobject<USphereComponent>(TEXT("patrolPointTriggerTwo"));
+	
 	arriveTrigger = CreateDefaultSubobject<USphereComponent>(TEXT("arriveTrigger"));
+	//arriveTrigger->RegisterComponent();
 
-	//patrolPointTriggerOne->AttachTo(RootComponent);
-	//patrolPointTriggerTwo->AttachTo(RootComponent);
-	//arriveTrigger->AttachTo(RootComponent);
-
-	//arriveTrigger->SetRelativeLocation(FVector(0, 0, 0));
+	patrolPointTriggerOne->AttachTo(RootComponent, NAME_None, EAttachLocation::KeepWorldPosition);
+	patrolPointTriggerTwo->AttachTo(RootComponent, NAME_None, EAttachLocation::KeepWorldPosition);
+	arriveTrigger->AttachTo(RootComponent, NAME_None, EAttachLocation::KeepWorldPosition);
 
 	patrolPointTriggerOne->SetSphereRadius(30.0f);
 	patrolPointTriggerTwo->SetSphereRadius(30.0f);
@@ -47,7 +47,6 @@ ADNG_RTSUnit::ADNG_RTSUnit() : Super()
 	bIsHold = false;
 	bIsWalk = false;
 	deadDelay = 1.0f;
-
 }
 
 void ADNG_RTSUnit::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
@@ -66,6 +65,7 @@ void ADNG_RTSUnit::BeginPlay()
 
 	Server_BeginPlay();
 
+
 	if (fireAudioComponent->IsValidLowLevelFast())
 	{
 		if(fireSound)
@@ -77,6 +77,9 @@ void ADNG_RTSUnit::Server_BeginPlay_Implementation()
 {
 	aiController->UseBlackboard(useBB, blackBoard);
 	aiController->RunBehaviorTree(useBT);
+
+	arriveTrigger->SetRelativeLocation(FVector::ZeroVector);
+	arriveTrigger->SetRelativeRotation(FRotator::ZeroRotator);
 
 	TArray<AActor*> actors;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AFPSCharacter::StaticClass(), actors);
@@ -121,8 +124,8 @@ void ADNG_RTSUnit::Server_CheckStopped_Implementation()
 	if (!isJustMoving || isPatrolling) return;
 
 	TArray<AActor*> actors;
+	arriveTrigger->SetWorldLocation(destination);
 	arriveTrigger->GetOverlappingActors(actors);
-
 	AActor *me = Cast<AActor>(this);
 	for (auto actor : actors)
 	{
@@ -145,10 +148,6 @@ void ADNG_RTSUnit::TurnToTarget()
 			FRotator deltaRot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), target->GetActorLocation());
 			deltaRot.Pitch = 0.0f;
 			SetActorRotation(deltaRot);
-		}
-		else
-		{
-			//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Magenta, "No Target");
 		}
 	}
 	else
@@ -238,11 +237,13 @@ void ADNG_RTSUnit::Server_Move_Implementation(FVector dest, bool justMoveVal)
 
 	if (justMoveVal) 
 		target = nullptr;
+	destination = dest;
 	blackBoard->SetValueAsBool(key_IsJustMoving, justMoveVal);
 	blackBoard->SetValueAsBool(key_IsChasing, false);
 	blackBoard->SetValueAsBool(key_IsWantToDeal, false);
 	aiController->MoveToLocation(dest);
 
+	arriveTrigger->SetRelativeLocation(FVector::ZeroVector);
 	arriveTrigger->SetWorldLocation(dest); // ����� ��������
 }
 
@@ -316,34 +317,27 @@ void ADNG_RTSUnit::Server_Patrol_Implementation(const FVector &posOne, const FVe
 	patrolPointTriggerTwo->SetWorldLocation(patrolPointTwo);
 	nextPatrolPointTrigger = patrolPointTriggerTwo;
 
+	nextPatrolPointTrigger->SetSphereRadius(32.0f);
+	nextPatrolPointTrigger->SetWorldLocation(nextPatrolPoint);
+	//nextPatrolPointTrigger->GetOverlappingActors(objects, ADNG_RTSUnit::StaticClass());
+
+
 	Server_Move(nextPatrolPoint, false);
 	blackBoard->SetValueAsBool(key_IsPatrolling, true);
 }
 
 void ADNG_RTSUnit::Server_CheckPatrol_Implementation()
 {
-	static bool test = false;
-	if (!blackBoard->GetValueAsBool(key_IsPatrolling) || test) return;
+	if (!blackBoard->GetValueAsBool(key_IsPatrolling)) return;
 
 	TArray<AActor*> objects;
-	//nextPatrolPointTrigger->SetSphereRadius(32.0f);		
 
-	//nextPatrolPointTrigger->GetOverlappingActors(objects, ADNG_RTSUnit::StaticClass());
-	//DrawDebugSphere(GetWorld(), arriveTrigger->GetComponentLocation(), 32.0f, 16, FColor::White, false, 1.0f);
-
-	nextPatrolPointTrigger->SetSphereRadius(16.0f);
+	//nextPatrolPointTrigger->SetSphereRadius(32.0f);
 	nextPatrolPointTrigger->SetWorldLocation(nextPatrolPoint);
 	nextPatrolPointTrigger->GetOverlappingActors(objects, ADNG_RTSUnit::StaticClass());
 
-	DrawDebugSphere(GetWorld(), nextPatrolPointTrigger->GetComponentLocation(), 512.0f, 16, FColor::Red, false, 1.0f);
-	//�����ġ ������������
-	DrawDebugSphere(GetWorld(), arriveTrigger->GetComponentLocation(), 64.0f, 16, FColor::Cyan, false, 0.1f);
-
 	if (objects.Find(this) != INDEX_NONE)
 	{
-
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Reached");
-
 		if (nextPatrolPoint == patrolPointOne)
 		{
 			nextPatrolPoint = patrolPointTwo;
@@ -358,7 +352,6 @@ void ADNG_RTSUnit::Server_CheckPatrol_Implementation()
 		Server_Move(nextPatrolPoint, false);
 	}
 }
-
 
 void ADNG_RTSUnit::Attack()
 {
