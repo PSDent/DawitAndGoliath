@@ -240,9 +240,6 @@ void ADNG_RTSUnit::Server_Move_Implementation(FVector dest, bool justMoveVal)
 {
 	if (!bIsAlive) return;
 
-	// target = nullptr;
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "MoveMove");
-
 	if (justMoveVal) 
 		target = nullptr;
 	blackBoard->SetValueAsBool(key_IsJustMoving, justMoveVal);
@@ -253,9 +250,9 @@ void ADNG_RTSUnit::Server_Move_Implementation(FVector dest, bool justMoveVal)
 	arriveTrigger->SetWorldLocation(dest); // 요놈이 문제였다
 }
 
-void ADNG_RTSUnit::Stop()
+void ADNG_RTSUnit::Stop(bool bJustStop)
 {
-	Server_Stop();
+	Server_Stop(bJustStop);
 }
 
 void ADNG_RTSUnit::Server_SetValueBool_Implementation(FName key, bool val)
@@ -263,12 +260,14 @@ void ADNG_RTSUnit::Server_SetValueBool_Implementation(FName key, bool val)
 	blackBoard->SetValueAsBool(key, val);
 }
 
-void ADNG_RTSUnit::Server_Stop_Implementation()
+void ADNG_RTSUnit::Server_Stop_Implementation(bool bJustStop)
 {
 	//GetWorld()->GetTimerManager().ClearTimer(commandCheckHandle);
 	aiController->StopMovement();
 	blackBoard->SetValueAsBool(key_IsPatrolling, false);
 	blackBoard->SetValueAsBool(key_IsJustMoving, false);
+	if(bJustStop)
+		target = nullptr;
 }
 
 
@@ -298,12 +297,8 @@ void ADNG_RTSUnit::Patrol()
 
 	commandCheckDele.BindLambda(
 		[&] {
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Time Ticking");
-
 		if (pawn->GetLeftMouseStatus() || pawn->GetRightMouseStatus())
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Detect Mouse Move Click");
-
 			Server_Patrol(GetActorLocation(), pawn->targetPos);
 
 			pawn->GetPlayerController()->CurrentMouseCursor = EMouseCursor::Default;
@@ -396,8 +391,7 @@ void ADNG_RTSUnit::Attack()
 
 			GetWorld()->GetTimerManager().ClearTimer(commandCheckHandle);
 		}
-	}
-	);
+	});
 	GetWorld()->GetTimerManager().SetTimer(commandCheckHandle, commandCheckDele, 0.001f, true, 0.0f);
 }
 
@@ -435,7 +429,7 @@ void ADNG_RTSUnit::Server_Deal_Implementation()
 	
 	if (bIsWalk)
 	{
-		Server_Stop();
+		Server_Stop(false);
 	}
 
 	Multicast_FireEffect(target->GetActorLocation());
@@ -513,7 +507,6 @@ void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 		if (obj->objProperty->GetHp() <= 0.0f)
 		{
 			target = nullptr;
-			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "UNIT DIE");
 		}
 	}
 
@@ -523,13 +516,11 @@ void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 		if (fpsObj->GetHp() <= 0.0f)
 		{
 			target = nullptr;
-			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "CHARACTER DIE");
 		}
 	}
 
 	if (target)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Has Target");
 
 		bool isMoving = GetCharacterMovement()->Velocity.Size2D() > 0;
 		bool isDealing = blackBoard->GetValueAsBool(key_IsWantToDeal);
@@ -538,7 +529,6 @@ void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 		if ((isMoving && isDealing && !isChasing))
 		{
 			target = nullptr;
-			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "End");
 
 			return;
 		}
@@ -549,16 +539,14 @@ void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 		{
 			blackBoard->SetValueAsBool(key_IsWantToDeal, true);
 			blackBoard->SetValueAsBool(key_IsChasing, false);
-			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Fire!!");
 
-			Server_Stop(); 
+			Server_Stop(false); 
 			return;
 		}
 		else if ((dist <= traceRange && !isJustMoving) || bIsMarkTarget)
 		{
 			blackBoard->SetValueAsBool(key_IsWantToDeal, false);
 			blackBoard->SetValueAsBool(key_IsChasing, true);
-			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "GOGO");
 
 			return;
 		}
@@ -566,8 +554,6 @@ void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 		{
 			blackBoard->SetValueAsBool(key_IsWantToDeal, false);
 			blackBoard->SetValueAsBool(key_IsChasing, false);
-			GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "ELSE");
-
 		}
 	}
 	else

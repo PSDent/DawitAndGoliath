@@ -85,7 +85,6 @@ void ADNG_RTSPawn::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "RTSCHARACTER");
 	GetWorld()->GetGameViewport()->SetMouseLockMode(EMouseLockMode::LockAlways);
 	
 	FVector newPos = GetActorLocation() + FVector::UpVector * height;
@@ -119,8 +118,6 @@ void ADNG_RTSPawn::Tick(float DeltaTime)
 template<int num>
 void ADNG_RTSPawn::SetSquad()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("Set Squad : %d"), num));
-	
 	squads[num].objArray.Empty();
 	for (auto unit : selectedUnits)
 	{
@@ -133,8 +130,6 @@ template<int num>
 void ADNG_RTSPawn::GetSquad()
 {
 	if (!squads[num].objArray.Num()) return;
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("Get Squad : %d, %d"), num, squads[num].objArray.Num()));
-
 	ResetSelectedUnits();
 	selectedUnits = squads[num].objArray;
 	SetSelectedUnits();
@@ -214,8 +209,6 @@ void ADNG_RTSPawn::ReleasedShiftKey()
 
 void ADNG_RTSPawn::Init()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Purple, "Init");
-
 	Client_Init();
 } 
 
@@ -226,7 +219,6 @@ void ADNG_RTSPawn::BasicInit()
 	playerController->bShowMouseCursor = true;
 	bIsInitialized = true;
 	//playerController->CurrentMouseCursor = EMouseCursor::Crosshairs;
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Purple, playerController->GetName());
 
 	userUI = CreateWidget<URTS_UI>(GetWorld(), UI_Class);
 	userUI->SetObjectsArray(&selectedUnits);
@@ -236,7 +228,6 @@ void ADNG_RTSPawn::BasicInit()
 
 	if (userUI)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "UI Created");
 		userUI->AddToViewport();
 	}
 	
@@ -499,6 +490,8 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 
 			if (unit)
 			{
+				GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "Selecting");
+
 				SetObjectOwner(unit, Controller);
 				unit->SetSelectedStatus(true);
 				selectedUnits.Add(unit);
@@ -573,7 +566,6 @@ void ADNG_RTSPawn::MoveUnits(FVector dest)
 		ADNG_RTSUnit *unit = Cast<ADNG_RTSUnit>(selectedUnits[i]);
 		if (unit)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Magenta, "Casted");
 			unit->Move();
 		}
 			//unit->Move();

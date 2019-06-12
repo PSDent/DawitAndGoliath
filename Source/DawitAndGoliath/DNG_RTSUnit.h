@@ -42,11 +42,11 @@ public:
 	bool Server_Move_Validate(FVector dest, bool justMoveVal) { return true; }
 
 	UFUNCTION(BlueprintCallable, category = "RTSMelee")
-		void Stop();
+		void Stop(bool bJustStop);
 	UFUNCTION(Server, Reliable, WithValidation)
-		virtual void Server_Stop();
-	void Server_Stop_Implementation();
-	bool Server_Stop_Validate() { return true; }
+		virtual void Server_Stop(bool bJustStop);
+	void Server_Stop_Implementation(bool bJustStop);
+	bool Server_Stop_Validate(bool bJustStop) { return true; }
 
 	UFUNCTION(BlueprintCallable, category = "RTSMelee")
 		void Hold();
