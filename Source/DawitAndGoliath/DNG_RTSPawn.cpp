@@ -2,7 +2,6 @@
 
 #include "DNG_RTSPawn.h"
 #include "Engine.h"
-#include "DrawDebugHelpers.h"
 #include "Net/UnrealNetwork.h"
 
 #include "DNG_RTSBarrack.h"
@@ -306,7 +305,7 @@ void ADNG_RTSPawn::LMousePress()
 	}
 
 	FHitResult outHit;
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "LMouse Press");
+	//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "LMouse Press");
 
 	playerController->GetHitResultUnderCursor(ECC_GameTraceChannel1, true, outHit);
 
@@ -323,7 +322,7 @@ void ADNG_RTSPawn::LMousePress()
 	if (Cast<ADNG_RTSBaseObject>(outHit.GetActor()) || Cast<AFPSCharacter>(outHit.GetActor()))
 	{
 		targetActor = outHit.GetActor();
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "Selecet Actor");
+		//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "Selecet Actor");
 	}
 	else
 		targetActor = nullptr;
@@ -345,7 +344,7 @@ void ADNG_RTSPawn::LMousePress()
 
 void ADNG_RTSPawn::LMouseRelease()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "LMB Downed");
+	//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "LMB Downed");
 
 	bPressedLeftMouse = false;
 	userUI->GetSelectionBoxImage()->SetVisibility(ESlateVisibility::Collapsed);
@@ -402,7 +401,7 @@ void ADNG_RTSPawn::RMouseRelease()
 // 더블클릭 or Ctrl + 좌클릭
 void ADNG_RTSPawn::SelectAllSameType()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "Select All Same Type");
+	//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "Select All Same Type");
 
 	ADNG_RTSBaseObject *obj = Cast<ADNG_RTSBaseObject>(targetActor);
 	if (!obj || !obj->bIsCurrentSelected) return;
@@ -412,8 +411,6 @@ void ADNG_RTSPawn::SelectAllSameType()
 	selectionCapsule->SetCapsuleRadius(selectionAllRadius);
 	selectionCapsule->SetCapsuleHalfHeight(1000.0f); 
 	selectionCapsule->SetWorldLocation(baseUnit->GetActorLocation());
-
-	DrawDebugCapsule(GetWorld(), baseUnit->GetActorLocation(), 1000.0f, selectionAllRadius, FQuat::Identity, FColor::Orange, true, 3.0f);
 
 	TArray<AActor*> selectedAllUnits;
 	selectionCapsule->GetOverlappingActors(selectedAllUnits, ADNG_RTSBaseObject::StaticClass());
@@ -435,11 +432,6 @@ void ADNG_RTSPawn::SelectAllSameType()
 			SetObjectOwner(unit, Controller);
 			selectedUnits.Add(unit);
 		}
-	}
-
-	for (int i = 0; i < selectedUnits.Num(); ++i)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, selectedUnits[i]->GetName());
 	}
 
 	bIsDoubleClicked = true;
@@ -466,7 +458,6 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 	selectionBox->SetWorldLocation(midPos);
 	selectionBox->SetBoxExtent(extent);
 	selectionBox->GetOverlappingActors(selectedActors, ADNG_RTSBaseObject::StaticClass());
-	DrawDebugBox(GetWorld(), selectionBox->GetComponentLocation(), selectionBox->GetScaledBoxExtent(), FColor::Emerald, false, 2.0f);
 
 	for (auto actor : selectedActors)
 	{
@@ -484,7 +475,7 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 			selectedUnits[i]->SetSelectedStatus(false);
 		selectedUnits.Empty();
 
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "NON SHIFT");
+		//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "NON SHIFT");
 
 		for (auto actor : selectedActors)
 		{
@@ -492,7 +483,7 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 
 			if (unit)
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "Selecting");
+				//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "Selecting");
 
 				SetObjectOwner(unit, Controller);
 				unit->SetSelectedStatus(true);
@@ -506,7 +497,7 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 		if (selectedActors.Num() == 1)
 		{
 			ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(selectedActors[0]);
-			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "Add Unit");
+			//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "Add Unit");
 
 			bool status = !unit->GetSelectedStatus();
 			unit->SetSelectedStatus(status);
@@ -606,7 +597,6 @@ void ADNG_RTSPawn::MoveUnits(FVector dest)
 
 	//		FVector pos(nX, nY, dest.Z);
 	//		int idx = i * (int)side + j;
-	//		DrawDebugSphere(GetWorld(), pos, 32.0f, 16, FColor::Yellow, 5.0f);
 	//		//selectedUnits[idx]->Move(pos);
 	//	} 
 	//}
@@ -653,7 +643,7 @@ void ADNG_RTSPawn::FindMostUnit()
 
 			if (!mostUnit || !unitCount.Contains(mostUnitName))
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, mostUnitName);
+				//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, mostUnitName);
 				return;
 			}
 			// 유닛의 종류가 달라졌을 때 
@@ -717,7 +707,7 @@ void ADNG_RTSPawn::ExecuteCommand(FKey key)
 			}
 			else
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, "FAIL?");
+				//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, "FAIL?");
 
 			}
 		}
@@ -784,7 +774,7 @@ void ADNG_RTSPawn::Server_RemoveFromSquad_Implementation(ADNG_RTSBaseObject *obj
 
 void ADNG_RTSPawn::Multicast_RemoveFromSquad_Implementation(class ADNG_RTSBaseObject *obj, int squadNum)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "DELETE");
+	//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "DELETE");
 	
 	if (squadNum >= 0)
 		squads[squadNum].objArray.Remove(obj);

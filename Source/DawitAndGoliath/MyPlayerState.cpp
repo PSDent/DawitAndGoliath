@@ -16,8 +16,6 @@ void AMyPlayerState::BeginPlay()
 
 	gameState = GetWorld()->GetGameState<AMyGameStateBase>();
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Orange, "MYPLAYERSTATE");
-
 }
 
 void AMyPlayerState::ChoosePlayerRoleInterface_Implementation(const FString &roleName, const FName &playerNameParam)
@@ -27,7 +25,6 @@ void AMyPlayerState::ChoosePlayerRoleInterface_Implementation(const FString &rol
 
 void AMyPlayerState::ChoosePlayerRole(const FString &roleName, const FName &playerNameParam)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Emerald, "Called ChoosePlayerRole");
 
 	if (Role < ROLE_Authority)
 	{
@@ -43,7 +40,6 @@ void AMyPlayerState::ChoosePlayerRole(const FString &roleName, const FName &play
 
  void AMyPlayerState::ServerChoosePlayerRole_Implementation(const FString &roleName, const FName &playerNameParam)
 {
-	 GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Emerald, "Called ServerChoosePlayerRole");
 	 ChoosePlayerRole(roleName, playerNameParam);
 }
 
@@ -81,13 +77,10 @@ void AMyPlayerState::ChoosePlayerRole(const FString &roleName, const FName &play
  {
 	 if (GetNetOwningPlayer()->GetPlayerController(GetWorld()))
 	 {
-		 GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Emerald, "Success");
 
 		 UClass *character = LoadObject<UClass>(this, *FString("Class'/Game/CharacterBP/FPSCharacter.FPSCharacter_C'"));
 		 APawn * pa = GetWorld()->SpawnActor<AFPSCharacter>(character);
 		 GetNetOwningPlayer()->GetPlayerController(GetWorld())->Possess(pa);
-		 if (pa)
-			 GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Emerald, "PAWANAWASDAWD");
 
 		 //GetNetOwningPlayer()->GetPlayerController(GetWorld())->Possess(pawn);
 	 }

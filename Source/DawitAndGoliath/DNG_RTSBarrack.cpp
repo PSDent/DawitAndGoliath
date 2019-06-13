@@ -286,6 +286,6 @@ void ADNG_RTSBarrack::NotifyDestroyed()
 void ADNG_RTSBarrack::ServerNotifyDestroyed_Implementation()
 {
 	if (!bIsAlive) return;
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Emerald, "destroyed");
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Emerald, "destroyed");
 	Cast<ADNGGameModeBase>(GetWorld()->GetAuthGameMode())->OnBarrackDestroyed();
 }

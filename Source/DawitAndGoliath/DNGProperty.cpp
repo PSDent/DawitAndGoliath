@@ -44,17 +44,14 @@ void UDNGProperty::DealDamage(float dmg)
 	if (Hp - dmg > MaxHp)
 	{
 		Hp = MaxHp;
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("overheal"));
 	}
 	else if (Hp <= dmg)
 	{
 		Hp = 0;
 		//»ç¸Á Ã³¸®
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Dead"));
 	}
 	else
 	{
 		Hp -= dmg;
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("Dealt %.0f, Left : %.0f"), dmg, Hp));
 	}
 }

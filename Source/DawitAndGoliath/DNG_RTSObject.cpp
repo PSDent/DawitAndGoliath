@@ -60,7 +60,6 @@ void ADNG_RTSObject::SetSelectedStatus(bool status)
 
 void ADNG_RTSObject::Move(FVector dest)
 {
-	
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Emerald, "Moving");
+
 }
 

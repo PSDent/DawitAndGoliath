@@ -2,7 +2,6 @@
 
 #include "Gun.h"
 #include "Engine/World.h"
-#include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
 
 void UGun::GunInit(FString name, float damage, float attackRate, float range, float splitRange, float reloadTime, int maxBulletCount, USoundBase * fireSound)
@@ -24,8 +23,6 @@ FHitResult UGun::GetTarget(FVector loc, FVector socLoc, FRotator rot, UWorld* wo
 	FVector start = loc;
 	FVector end = loc + (rot.Vector() * range);
 
-	//DrawDebugLine(world, start, end, FColor::Red, false, 3.0f);
-
 	if (world->LineTraceSingleByChannel(hit, start, end, ECC_GameTraceChannel1, params))
 	{
 		world->LineTraceSingleByChannel(
@@ -35,15 +32,6 @@ FHitResult UGun::GetTarget(FVector loc, FVector socLoc, FRotator rot, UWorld* wo
 			ECC_GameTraceChannel1,
 			params
 		);
-
-
-		if (hit.GetActor())
-		{
-			if (!hit.GetActor()->IsA(APawn::StaticClass()))
-				DrawDebugLine(world, start, end, FColor::Red, false, 3.0f);	
-			else
-				DrawDebugLine(world, socLoc, hit.Location, FColor::Yellow, false, 3.0f);
-		}
 	}
 
 	return hit;

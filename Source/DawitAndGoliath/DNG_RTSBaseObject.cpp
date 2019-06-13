@@ -6,7 +6,6 @@
 #include "DNG_RTSPawn.h"
 #include "RTS_UI.h"
 #include "MyPlayerState.h"
-
 #include "Net/UnrealNetwork.h"
 #include "Engine.h"
 
@@ -178,7 +177,7 @@ void ADNG_RTSBaseObject::RemoveMeFromSquad()
 
 		for (auto squadNum : attachSquadsArray)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "REMOVE");
+			//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "REMOVE");
 
 			pawn->RemoveFromSquad(this, squadNum);
 		}

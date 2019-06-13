@@ -326,14 +326,14 @@ bool AFPSCharacter::MulticastGiveDamage_Validate(AActor* target, float dmg, FVec
 
 void AFPSCharacter::NotifyDeath()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "Call NotifyDeath");
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "Call NotifyDeath");
 	ServerNotifyDeath();
 	IsDead = true;
 }
 
 void AFPSCharacter::ServerNotifyDeath_Implementation()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "Execute NotifyDeath");
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "Execute NotifyDeath");
 	Cast<ADNGGameModeBase>(GetWorld()->GetAuthGameMode())->OnPlayerKilled();
 }
 
@@ -370,7 +370,7 @@ bool AFPSCharacter::CheckFlameHit(FVector socLoc, AActor* target)
 void AFPSCharacter::Heal()
 {
 	if (!IsHealable || IsDead) return;
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Heal"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Heal"));
 	IsHealable = false;
 	Prop->DealDamage(-40);
 	GetWorldTimerManager().SetTimer(HealTimerHandle, this, &AFPSCharacter::EnableHeal, 1.f, false);
@@ -435,7 +435,7 @@ void AFPSCharacter::ChangeWeapon()
 
 void AFPSCharacter::EnableHeal()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Heal Ready"));
+	//Engine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Heal Ready"));
 	IsHealable = true;
 }
 

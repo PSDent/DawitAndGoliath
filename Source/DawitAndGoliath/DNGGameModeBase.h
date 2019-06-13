@@ -17,6 +17,7 @@ class DAWITANDGOLIATH_API ADNGGameModeBase : public AGameModeBase
 public:
 	ADNGGameModeBase();
 
+	virtual void BeginPlay() override;
 	void GameSet(bool isRts);
 	void OnBarrackDestroyed();
 	void OnPlayerKilled();
