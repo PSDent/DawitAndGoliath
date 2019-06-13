@@ -2,7 +2,6 @@
 
 #include "Gun.h"
 #include "Engine/World.h"
-#include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
 
 void UGun::GunInit(FString name, float damage, float attackRate, float range, float splitRange, float reloadTime, int maxBulletCount, USoundBase * fireSound)

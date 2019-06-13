@@ -26,8 +26,6 @@ void ATestEnemyPawn::BeginPlay()
 		Prop->SetMaxHp(100);
 		Prop->SetHp(100);
 	}
-	if (Prop)
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::Printf(TEXT("Hp : %f"), Prop->GetHp()));
 }
 
 // Called every frame

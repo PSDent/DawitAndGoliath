@@ -4,6 +4,7 @@
 #include "FPSCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "BaseController.h"
+#include "GameFramework/GameUserSettings.h"
 #include "Engine.h"
 
 ADNGGameModeBase::ADNGGameModeBase()
@@ -13,9 +14,14 @@ ADNGGameModeBase::ADNGGameModeBase()
 	
 }
 
+void ADNGGameModeBase::BeginPlay()
+{
+	Super::BeginPlay();
+
+}
+
 void ADNGGameModeBase::GameSet(bool isRts)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "Game Set");
 	TArray<AActor*> arr;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ABaseController::StaticClass(), arr);
 	for (auto a : arr)
@@ -27,7 +33,6 @@ void ADNGGameModeBase::GameSet(bool isRts)
 void ADNGGameModeBase::OnBarrackDestroyed()
 {
 	--BarrackCount;
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("Barrack left : %d"), BarrackCount));
 	if (BarrackCount == 0)
 	{
 		GameSet(false);
@@ -37,7 +42,6 @@ void ADNGGameModeBase::OnBarrackDestroyed()
 void ADNGGameModeBase::OnPlayerKilled()
 {
 	--CurrentPlayerCount;
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, FString::Printf(TEXT("Player left : %d"), CurrentPlayerCount));
 	if (CurrentPlayerCount == 0)
 	{
 		GameSet(true);

@@ -83,7 +83,6 @@ void ADNG_RTSUnit::Server_BeginPlay_Implementation()
 
 	TArray<AActor*> actors;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AFPSCharacter::StaticClass(), actors);
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, FString::Printf(TEXT("%d"), actors.Num()));
 
 	for (auto actor : actors)
 	{
@@ -131,7 +130,6 @@ void ADNG_RTSUnit::Server_CheckStopped_Implementation()
 	{
 		if (actor == me)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, "CheckStopped");
 
 			Server_SetValueBool(key_IsJustMoving, false);
 			return;
@@ -244,7 +242,7 @@ void ADNG_RTSUnit::Server_Move_Implementation(FVector dest, bool justMoveVal)
 	aiController->MoveToLocation(dest);
 
 	arriveTrigger->SetRelativeLocation(FVector::ZeroVector);
-	arriveTrigger->SetWorldLocation(dest); // ����� ��������
+	arriveTrigger->SetWorldLocation(dest); // �����?��������
 }
 
 void ADNG_RTSUnit::Stop(bool bJustStop)
@@ -373,7 +371,6 @@ void ADNG_RTSUnit::Attack()
 			{
 				bIsMarkTarget = false;
 				Server_Move(pawn->targetPos, false);
-				GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Attack Ground");
 			}
 
 			pawn->GetPlayerController()->CurrentMouseCursor = EMouseCursor::Default;
@@ -390,7 +387,6 @@ void ADNG_RTSUnit::Server_Attack_Implementation(AActor *targetActor)
 	blackBoard->SetValueAsBool(key_IsJustMoving, false);
 
 	target = targetActor;
-	GEngine->AddOnScreenDebugMessage(-1, 8.0f, FColor::Red, "Attack Target");
 	Deal();
 }
 
@@ -549,7 +545,7 @@ void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 	{
 	}
 
-	// ��Ȯ�� ������ ���� ���ٸ� ��� �� ����Ʈ���� �Ÿ��� ã�Ƽ� ���� ª�� �Ÿ��� �ִ� ���� ����
+	// ��Ȯ�� ������ ���� ���ٸ� ���?�� ����Ʈ���� �Ÿ��� ã�Ƽ� ���� ª�� �Ÿ��� �ִ� ���� ����
 	AFPSCharacter *shortestDistEnemy = nullptr;
 	float shortestDist = traceRange;
 	for (auto enemy : enemyPlayers)

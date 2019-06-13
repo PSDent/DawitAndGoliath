@@ -42,7 +42,7 @@ bool UMyGameInstance::HostSession(TSharedPtr<const FUniqueNetId> userId, FName S
 			//SessionSetting->Settings.Add(FName("SESSION_NAME"), SessionSetting);
 
 			OnCreateSessionCompleteDelegateHandle = Sessions->AddOnCreateSessionCompleteDelegate_Handle(OnCreateSessionCompleteDelegate);
-			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, "SUCCESS");
+			//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, "SUCCESS");
 
 			return Sessions->CreateSession(*userId, SessionName, *SessionSetting);
 		}
@@ -60,7 +60,7 @@ bool UMyGameInstance::HostSession(TSharedPtr<const FUniqueNetId> userId, FName S
 // 저장 된 정보를 통해 플레이어의 Player Controller를 달리 한다. (RTS / TPS)
 void UMyGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("OnCreateSessionComplete %s, %d"), *SessionName.ToString(), bWasSuccessful));
+	//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("OnCreateSessionComplete %s, %d"), *SessionName.ToString(), bWasSuccessful));
 
 	IOnlineSubsystem *OnlineSub = IOnlineSubsystem::Get();
 	if (OnlineSub)
@@ -100,7 +100,7 @@ void UMyGameInstance::OnStartOnlineGameComplete(FName SessionName, bool bWasSucc
 		if (Sessions.IsValid())
 		{
 			FString serverName = Sessions.Get()->GetNamedSession(SessionName)->OwningUserName;
-			GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "Server Name : " + serverName);
+			//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "Server Name : " + serverName);
 			sessionRoleInfo.Add(serverName, FSessionPlayersInfo());
 		}
 
@@ -142,7 +142,7 @@ void UMyGameInstance::FindSessions(TSharedPtr<const FUniqueNetId> userId, bool b
 
 void UMyGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("OnFindSessionsComplete bSuccess: %d"), bWasSuccessful));
+	//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("OnFindSessionsComplete bSuccess: %d"), bWasSuccessful));
 
 	IOnlineSubsystem * const OnlineSub = IOnlineSubsystem::Get();
 	if (OnlineSub)
@@ -153,7 +153,7 @@ void UMyGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 			UGameplayStatics::OpenLevel(GetWorld(), "ServerList_Level", true, "listen");
 
 			Sessions->ClearOnFindSessionsCompleteDelegate_Handle(OnFindSessionsCompleteDelegateHandle);
-			GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("Num Search Results: %d"), SessionSearch->SearchResults.Num()));
+			//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("Num Search Results: %d"), SessionSearch->SearchResults.Num()));
 
 			if (SessionSearch->SearchResults.Num() > 0)
 			{
@@ -164,7 +164,7 @@ void UMyGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 				{
 					sessionResultArray[SearchIdx].OnlineResult = SessionSearch->SearchResults[SearchIdx];
 
-					GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("Session Number: %d | Sessionname: %s "), SearchIdx + 1, *(SessionSearch->SearchResults[SearchIdx].Session.OwningUserName)));
+					//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("Session Number: %d | Sessionname: %s "), SearchIdx + 1, *(SessionSearch->SearchResults[SearchIdx].Session.OwningUserName)));
 				}
 			}
 
@@ -200,7 +200,7 @@ bool UMyGameInstance::JoinSession(TSharedPtr<const FUniqueNetId> UserId, FName S
 
 void UMyGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("OnJoinSessionComplete %s, %d"), *SessionName.ToString(), static_cast<int32>(Result)));
+	//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("OnJoinSessionComplete %s, %d"), *SessionName.ToString(), static_cast<int32>(Result)));
 
 	IOnlineSubsystem *OnlineSub = IOnlineSubsystem::Get();
 	if (OnlineSub)
@@ -281,7 +281,7 @@ void UMyGameInstance::DestroySessionAndLeaveGame()
 
 void UMyGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("OnDestroySessionComplete %s, %d"), *SessionName.ToString(), bWasSuccessful));
+	//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("OnDestroySessionComplete %s, %d"), *SessionName.ToString(), bWasSuccessful));
 
 	IOnlineSubsystem *OnlineSub = IOnlineSubsystem::Get();
 
@@ -389,12 +389,12 @@ void UMyGameInstance::InitPlayersPawn()
 				pawn = GetWorld()->SpawnActor<ADNG_RTSPawn>(rtsClass, rtsStartPos, rot, spawnInfo);
 			else
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, "Strange Name " + roleName);
+				//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, "Strange Name " + roleName);
 			}
 
 			if (!pawn)
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Purple, "No Pawn : " + roleName);
+				//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Purple, "No Pawn : " + roleName);
 				return;
 			}
 
