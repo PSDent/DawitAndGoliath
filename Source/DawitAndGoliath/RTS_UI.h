@@ -30,10 +30,30 @@ class DAWITANDGOLIATH_API URTS_UI : public UUserWidget
 
 public:
 	void NativeTick(const FGeometry& MyGeometry, float DeltaTime) override;
+	void NativeConstruct() override;
 
 	URTS_UI(const FObjectInitializer &objInitializer);
 	void DrawBox(FVector2D start, FVector2D end);
 	
+	UFUNCTION(BlueprintCallable, Category = "Minimap_UI")
+		 void DrawMinimapPoints(UPARAM(ref) FPaintContext &context) const;
+	//void DrawMinimapPoints_Implementation(FPaintContext &context);
+
+	//void NativePaint(FPaintContext &context) const override;
+	int32 NativePaint(
+		const FPaintArgs & Args,
+		const FGeometry & AllottedGeometry,
+		const FSlateRect & MyCullingRect,
+		FSlateWindowElementList & OutDrawElements,
+		int32 LayerId,
+		const FWidgetStyle & InWidgetStyle,
+		bool bParentEnabled)
+		const override;
+	//void OnPaint(FPaintContext &Context) const;
+
+	void SetMinimapPointArray(TArray<AActor*> *arr) { minimapPointArray = arr; };
+	void SetHUD(class ADNG_RTSHUD *hud) { this->hud = hud; }
+
 	void Display(TArray<class ADNG_RTSBaseObject*>*);
 	void ResetDisplay();
 
@@ -66,6 +86,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void RemoveQueueElement(int index);
 private:
+	void DrawMinimapPoint();
 
 	UFUNCTION(BlueprintCallable)
 		void SelectEntity(int row, int column);
@@ -79,7 +100,11 @@ private:
 protected:
 
 public:
-	class ADNG_RTSPawn *rtsPawn;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+		USlateBrushAsset *brush;
+
+	UPROPERTY(BlueprintReadWrite)
+		class ADNG_RTSPawn *rtsPawn;
 
 
 	UPROPERTY(BlueprintReadOnly)
@@ -106,12 +131,15 @@ private:
 	enum { SLOT_NUMBER, PRODUCTION_UNIT};
 	const int MAX_QUEUE_SIZE = 5;
 
+	class ADNG_RTSHUD *hud;
+	TArray<AActor*> *minimapPointArray;
 	class FViewport *viewPort;
 	class ADNG_RTSBarrack *focusingBarrack;
 	TArray<class ADNG_RTSBaseObject*> *objectsArray;
 
 	FVector2D minimapWorldPos;
 private:
+	float minimapPointSize;
 
 
 protected:

@@ -22,7 +22,6 @@ ADNG_RTSBaseObject::ADNG_RTSBaseObject() : Super()
 	ringDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("SelectionRing"));
 	ringDecal->SetupAttachment(RootComponent);
 
-
 	static ConstructorHelpers::FObjectFinder<UMaterial> decalMaterial(TEXT("Material'/Game/Blueprints/FriendlyRing.FriendlyRing'"));
 
 	if (decalMaterial.Succeeded())
@@ -53,7 +52,7 @@ ADNG_RTSBaseObject::ADNG_RTSBaseObject() : Super()
 		if (roleName == "RTS")
 			Client_Init();
 	}*/
-	Client_Init();
+	//Client_Init();
 
 	objProperty = CreateDefaultSubobject<UDNGProperty>(TEXT("DNGProperty"));
 
@@ -83,6 +82,11 @@ void ADNG_RTSBaseObject::BeginPlay()
 	Super::BeginPlay();
 
 	aiController = Cast<ADNG_RTSUnitAIController>(Controller);
+	if (GetOwner())
+	{
+		Cast<ADNG_RTSPawn>(GetOwner())->AddPoint(this);
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Cyan, "BEGINPLAY");
+	}
 }
 
 void ADNG_RTSBaseObject::SetSelectedTimer()

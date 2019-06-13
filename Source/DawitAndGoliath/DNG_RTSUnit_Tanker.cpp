@@ -16,9 +16,10 @@ ADNG_RTSUnit_Tanker::ADNG_RTSUnit_Tanker() : Super()
 
 	damage = 10.0f;
 	fireRate = 1.0f;
-	fireRange = 100.0f;
+	fireRange = 200.0f;
+	traceRange = 800.0f;
 
-	ringDecal->DecalSize = FVector(32.f, 64.f, 64.f);
+	ringDecal->DecalSize = FVector(32.f, 128.f, 128.f);
 	
 	GetCharacterMovement()->MaxWalkSpeed = 400.0f;
 	spawnTime = 15;

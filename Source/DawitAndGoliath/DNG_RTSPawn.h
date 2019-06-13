@@ -34,6 +34,9 @@ public:
 	// setter
 	void SetCommandingFlag(bool flag) { bIsCommanding = flag; }
 
+	void AddPoint(AActor *actor);
+	void RemovePoint(AActor *actor);
+
 	///### getter ###
 	bool GetLeftMouseStatus() { return bPressedLeftMouse; }
 	bool GetRightMouseStatus() { return bPressedRightMouse; }
@@ -150,6 +153,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widgets")
 		TSubclassOf<class URTS_UI> UI_Class;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "HUD")
+		TSubclassOf<class ADNG_RTSHUD> HUD_Class;
+
 	UPROPERTY(Replicated, BlueprintReadOnly)
 		UCameraComponent *rtsCamera;
 
@@ -181,6 +187,8 @@ private:
 	UPROPERTY(Replicated)
 		APlayerController *playerController;
 
+	UPROPERTY(Replicated)
+		TArray<AActor*> minimapPointArray;
 	TArray<ADNG_RTSBaseObject*> selectedUnits;
 	UPROPERTY(Replicated)
 	TArray<FBaseObjectArray> squads;

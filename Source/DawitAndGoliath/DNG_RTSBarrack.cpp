@@ -139,6 +139,10 @@ void ADNG_RTSBarrack::SpawnUnit(TSubclassOf<ADNG_RTSUnit> unitType)
 
 		ADNG_RTSUnit *spawnedUnit = GetWorld()->SpawnActor<ADNG_RTSUnit>(unitType, spawnPoint, FRotator::ZeroRotator, spawnInfo);
 		spawnedUnit->SetPawn(pawn);
+		pawn->AddPoint(spawnedUnit);
+		//spawnedUnit->SetOwner(GetOwner());
+		//spawnedUnit->GetController()->SetOwner(GetOwner());
+		
 		spawnedUnit->Server_Move(rallyPoint, true);
 	}
 	else

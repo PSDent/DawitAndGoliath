@@ -9,6 +9,7 @@
 #include "DNG_RTSUnit.h"
 #include "DNG_RTSUnit_Melee.h"
 #include "FPSCharacter.h"
+#include "DNG_RTSHUD.h"
 
 // Sets default values
 ADNG_RTSPawn::ADNG_RTSPawn() : Super()
@@ -26,7 +27,7 @@ ADNG_RTSPawn::ADNG_RTSPawn() : Super()
 	rtsCamera->SetRelativeRotation(FRotator(-60.0f, 0.0f, 0.0f));
 
 	selectionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("SelectionBox"));
-	selectionBox->AttachTo(RootComponent);
+	selectionBox->AttachTo(RootComponent, NAME_None, EAttachLocation::KeepWorldPosition);
 	selectionBox->SetCollisionProfileName("SelectionProfile");
 
 	selectionCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("SelectionCapsule"));
@@ -76,6 +77,7 @@ void ADNG_RTSPawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLife
 	DOREPLIFETIME(ADNG_RTSPawn, currentSupply);
 	DOREPLIFETIME(ADNG_RTSPawn, maxSupply);
 	DOREPLIFETIME(ADNG_RTSPawn, targetPos);
+	DOREPLIFETIME(ADNG_RTSPawn, minimapPointArray);
 	//DOREPLIFETIME(ADNG_RTSPawn, selectedUnits);
 	DOREPLIFETIME(ADNG_RTSPawn, squads);
 }
@@ -91,6 +93,62 @@ void ADNG_RTSPawn::BeginPlay()
 	SetActorLocation(newPos);
 	viewPort = GEngine->GameViewport;
 	viewPort->GetViewportSize(viewportSize);
+	
+	// Cast<APlayerController>(Controller)->ClientSetHUD();
+	TArray<AActor*> tpsAray;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AFPSCharacter::StaticClass(), tpsAray);
+
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ADNG_RTSBaseObject::StaticClass(), minimapPointArray);
+
+	for (auto actor : tpsAray)
+	{
+		minimapPointArray.Add(actor);
+	}
+}
+
+void ADNG_RTSPawn::Init()
+{
+	Client_Init();
+}
+
+void ADNG_RTSPawn::BasicInit()
+{
+	playerController = Cast<APlayerController>(Controller);
+
+	playerController->bShowMouseCursor = true;
+	bIsInitialized = true;
+	
+	viewPort = GEngine->GameViewport;
+
+	playerController->ClientSetHUD(HUD_Class.Get());
+	ADNG_RTSHUD *hud = Cast<ADNG_RTSHUD>(playerController->GetHUD());
+	hud->SetRtsViewPort(viewPort);
+	hud->SetMinimapPointArray(&minimapPointArray);
+
+	userUI = CreateWidget<URTS_UI>(GetWorld(), UI_Class);
+	userUI->SetObjectsArray(&selectedUnits);
+	userUI->SetMinimapPointArray(&minimapPointArray);
+
+	userUI->rtsPawn = this;
+	userUI->SetHUD(hud);
+
+	if (userUI)
+	{
+		userUI->AddToViewport();
+	}
+
+	rtsCamera->SetRelativeRotation(FRotator(-60.0f, 0.0f, 0.0f));
+
+}
+
+void ADNG_RTSPawn::Client_Init_Implementation()
+{
+	BasicInit();
+}
+
+bool ADNG_RTSPawn::Client_Init_Validate()
+{
+	return true;
 }
 
 // Called every frame
@@ -100,7 +158,8 @@ void ADNG_RTSPawn::Tick(float DeltaTime)
 
 	if (!bIsInitialized) return;
 
-	userUI->Display(&selectedUnits);
+	if(userUI)
+		userUI->Display(&selectedUnits);
 
 	if (viewPort->IsFocused(viewPort->Viewport))
 	{
@@ -108,7 +167,7 @@ void ADNG_RTSPawn::Tick(float DeltaTime)
 
 		MoveCam(DeltaTime);
 
-		if (bPressedLeftMouse && !bIsClickedPanel)
+		if (bPressedLeftMouse && !bIsClickedPanel && userUI && !userUI->bIsMouseOnMinimap)
 			DrawSelectBox();
 	}
 	CheckKeysAndExecute();
@@ -207,44 +266,6 @@ void ADNG_RTSPawn::ReleasedShiftKey()
 	bPressedShiftKey = false;	
 }
 
-void ADNG_RTSPawn::Init()
-{
-	Client_Init();
-} 
-
-void ADNG_RTSPawn::BasicInit()
-{
-	playerController = Cast<APlayerController>(Controller);
-
-	playerController->bShowMouseCursor = true;
-	bIsInitialized = true;
-	//playerController->CurrentMouseCursor = EMouseCursor::Crosshairs;
-
-	userUI = CreateWidget<URTS_UI>(GetWorld(), UI_Class);
-	userUI->SetObjectsArray(&selectedUnits);
-	userUI->rtsPawn = this;
-
-	viewPort = GEngine->GameViewport;
-
-	if (userUI)
-	{
-		userUI->AddToViewport();
-	}
-	
-	rtsCamera->SetRelativeRotation(FRotator(-60.0f, 0.0f, 0.0f));
-
-}
-
-void ADNG_RTSPawn::Client_Init_Implementation()
-{
-	BasicInit();
-}
-
-bool ADNG_RTSPawn::Client_Init_Validate()
-{
-	return true;
-}
-
 void ADNG_RTSPawn::MoveCam(float DeltaTime)
 {
 	if (mousePos.X < camScrollBoundary)
@@ -306,7 +327,6 @@ void ADNG_RTSPawn::LMousePress()
 	}
 
 	FHitResult outHit;
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "LMouse Press");
 
 	playerController->GetHitResultUnderCursor(ECC_GameTraceChannel1, true, outHit);
 
@@ -330,6 +350,7 @@ void ADNG_RTSPawn::LMousePress()
 
 	bPressedLeftMouse = true;
 
+
 	mouseStartPos.X = mousePos.X;
 	mouseStartPos.Y = mousePos.Y;
 
@@ -345,8 +366,6 @@ void ADNG_RTSPawn::LMousePress()
 
 void ADNG_RTSPawn::LMouseRelease()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "LMB Downed");
-
 	bPressedLeftMouse = false;
 	userUI->GetSelectionBoxImage()->SetVisibility(ESlateVisibility::Collapsed);
 	
@@ -463,6 +482,7 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 	TArray<AActor*> selectedActors;
 	selectedActors.Empty();
 	extent = FVector(abs(extent.X), abs(extent.Y), abs(extent.Z));
+	selectionBox->SetRelativeLocation(FVector::ZeroVector);
 	selectionBox->SetWorldLocation(midPos);
 	selectionBox->SetBoxExtent(extent);
 	selectionBox->GetOverlappingActors(selectedActors, ADNG_RTSBaseObject::StaticClass());
@@ -492,8 +512,6 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 
 			if (unit)
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "Selecting");
-
 				SetObjectOwner(unit, Controller);
 				unit->SetSelectedStatus(true);
 				selectedUnits.Add(unit);
@@ -817,4 +835,14 @@ void ADNG_RTSPawn::GetMinimapToWorldPos(FVector2D pos)
 	FVector end(pos.X, pos.Y, LOWER_HEIGHT);
 	GetWorld()->LineTraceSingleByChannel(outHit, start, end, ECC_Visibility);
 	minimapTargetPos = outHit.Location;
+}
+
+void ADNG_RTSPawn::AddPoint(AActor *actor)
+{
+	minimapPointArray.Add(actor);
+}
+
+void ADNG_RTSPawn::RemovePoint(AActor *actor)
+{
+	minimapPointArray.Remove(actor);
 }

@@ -42,7 +42,7 @@ void ABaseController::Possess(APawn *pawn)
 			ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(obj);
 			unit->SetOwner(pawn);
 			unit->Controller->SetOwner(pawn);
-			unit->Client_AfterInit();
+			//unit->Client_AfterInit();
 		}
 	}
 }
