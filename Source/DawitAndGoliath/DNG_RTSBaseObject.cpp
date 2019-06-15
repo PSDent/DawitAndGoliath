@@ -186,7 +186,7 @@ void ADNG_RTSBaseObject::RemoveMeFromSquad()
 			pawn->RemoveFromSquad(this, squadNum);
 		}
 		pawn->RemoveFromSquad(this, -1);
-
+		//Cast<ADNG_RTSPawn>(GetOwner())->RemovePoint(this);
 		//Multicast_RemoveMeFromSquad();
 	}
 	else

@@ -96,8 +96,9 @@ void ADNG_RTSPawn::BeginPlay()
 	// Cast<APlayerController>(Controller)->ClientSetHUD();
 	TArray<AActor*> tpsAray;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AFPSCharacter::StaticClass(), tpsAray);
-
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ADNG_RTSBaseObject::StaticClass(), minimapPointArray);
+
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Cyan, FString::Printf(TEXT("TPS : %d"), tpsAray.Num()));
 
 	for (auto actor : tpsAray)
 	{
@@ -326,10 +327,6 @@ void ADNG_RTSPawn::LMousePress()
 	}
 
 	FHitResult outHit;
-<<<<<<< HEAD
-=======
-	//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, "LMouse Press");
->>>>>>> 8d0d0c45c8e2ca4734fca972c43c4980af70ce44
 
 	playerController->GetHitResultUnderCursor(ECC_GameTraceChannel1, true, outHit);
 
@@ -369,11 +366,6 @@ void ADNG_RTSPawn::LMousePress()
 
 void ADNG_RTSPawn::LMouseRelease()
 {
-<<<<<<< HEAD
-=======
-	//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "LMB Downed");
-
->>>>>>> 8d0d0c45c8e2ca4734fca972c43c4980af70ce44
 	bPressedLeftMouse = false;
 	userUI->GetSelectionBoxImage()->SetVisibility(ESlateVisibility::Collapsed);
 	
@@ -512,11 +504,6 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 
 			if (unit)
 			{
-<<<<<<< HEAD
-=======
-				//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "Selecting");
-
->>>>>>> 8d0d0c45c8e2ca4734fca972c43c4980af70ce44
 				SetObjectOwner(unit, Controller);
 				unit->SetSelectedStatus(true);
 				selectedUnits.Add(unit);
