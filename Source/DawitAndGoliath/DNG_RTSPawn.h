@@ -7,7 +7,6 @@
 #include "Camera/CameraComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "RTS_UI.h"
-#include "DNG_RTSObject.h"
 #include "DNG_RTSBaseObject.h"
 #include "DNGDelegates.h"
 #include "Components/BoxComponent.h"
@@ -108,8 +107,6 @@ private:
 	void MappingCmdPanel();
 	
 	void ExecuteCommand(FKey key);
-	//UFUNCTION(Server, Reliable, WithValidation)
-
 
 	void ResetSelectedUnits();
 	UFUNCTION(Server, Reliable, WithValidation)

@@ -170,7 +170,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AI")
 		UBlackboardData *useBB;
-		//TSubclassOf<UBlackboardData> useBlackBoard;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AI")
 		UBehaviorTree *useBT;

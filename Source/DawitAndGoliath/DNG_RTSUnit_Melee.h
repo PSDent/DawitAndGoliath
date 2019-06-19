@@ -20,8 +20,6 @@ public:
 	void Tick(float DeltaTime) override;
 
 private:
-	//void OnDied() override;
-
 
 protected:
 	

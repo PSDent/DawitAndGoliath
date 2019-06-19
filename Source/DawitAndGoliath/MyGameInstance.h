@@ -95,7 +95,6 @@ protected:
 	FDelegateHandle OnDestroySessionCompleteDelegateHandle;
 
 	// Exit Session
-	//FOnEndSessionComplete
 
 protected:
 	virtual void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
