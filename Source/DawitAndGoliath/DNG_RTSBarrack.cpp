@@ -33,7 +33,6 @@ ADNG_RTSBarrack::ADNG_RTSBarrack() : Super()
 
 	dele.BindUFunction(this, FName("CancleCurrentSpawn"));
 	commandInfoMap.Add(EKeys::Escape, FCommandInfo("Cancle Producing", "Cancle Now Producing Unit", EKeys::Escape, 3, 3, dele));
-
 	
 	unitName = "Barrack";
 	initial = "B";

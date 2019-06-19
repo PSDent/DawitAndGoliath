@@ -17,8 +17,6 @@ ADNG_RTSBaseObject::ADNG_RTSBaseObject() : Super()
 	bNetLoadOnClient = true;
 
 	GetCharacterMovement()->MaxWalkSpeed = 600.0f;
-	// 검색해볼것
-	// unreal 4 spawned actor doesn't replication 
 
 	ringDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("SelectionRing"));
 	ringDecal->SetupAttachment(RootComponent);

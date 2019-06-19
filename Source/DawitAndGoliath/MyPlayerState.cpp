@@ -81,8 +81,6 @@ void AMyPlayerState::ChoosePlayerRole(const FString &roleName, const FName &play
 		 UClass *character = LoadObject<UClass>(this, *FString("Class'/Game/CharacterBP/FPSCharacter.FPSCharacter_C'"));
 		 APawn * pa = GetWorld()->SpawnActor<AFPSCharacter>(character);
 		 GetNetOwningPlayer()->GetPlayerController(GetWorld())->Possess(pa);
-
-		 //GetNetOwningPlayer()->GetPlayerController(GetWorld())->Possess(pawn);
 	 }
  }
 
@@ -94,7 +92,6 @@ void AMyPlayerState::ChoosePlayerRole(const FString &roleName, const FName &play
  void AMyPlayerState::SetPossessPawn(APawn *pawn)
  {
 	 GetNetOwningPlayer()->GetPlayerController(GetWorld())->Possess(pawn);
-	 //myPossessPawn = pawn;
  }
 
  APawn* AMyPlayerState::GetPossessPawn()

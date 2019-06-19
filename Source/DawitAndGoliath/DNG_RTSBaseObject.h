@@ -41,7 +41,6 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	//virtual void OnDied() = 0;
 
 	virtual void Die();
 	UFUNCTION(Server, Reliable, WithValidation)
@@ -54,11 +53,6 @@ protected:
 		virtual void Server_RemoveMeFromSquad();
 	void Server_RemoveMeFromSquad_Implementation();
 	bool Server_RemoveMeFromSquad_Validate() { return true; }
-
-	//UFUNCTION(NetMulticast, Reliable, WithValidation)
-	//	virtual void Multicast_RemoveMeFromSquad();
-	//void Multicast_RemoveMeFromSquad_Implementation();
-	//bool Multicast_RemoveMeFromSquad_Validate() { return true; };
 
 public:
 	// Called every frame

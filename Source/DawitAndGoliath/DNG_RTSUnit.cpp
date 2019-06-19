@@ -279,7 +279,7 @@ void ADNG_RTSUnit::Patrol()
 {
 	GetWorld()->GetTimerManager().ClearTimer(commandCheckHandle);
 	pawn->SetCommandingFlag(true);
-	if (/*!pawn->GetLeftMouseStatus() && */!pawn->GetRightMouseStatus())
+	if (!pawn->GetRightMouseStatus())
 	{
 		pawn->GetPlayerController()->CurrentMouseCursor = EMouseCursor::Crosshairs;
 	}
@@ -497,7 +497,6 @@ void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 
 	if (target)
 	{
-
 		bool isMoving = GetCharacterMovement()->Velocity.Size2D() > 0;
 		bool isDealing = blackBoard->GetValueAsBool(key_IsWantToDeal);
 		bool isChasing = blackBoard->GetValueAsBool(key_IsChasing);
@@ -532,11 +531,7 @@ void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 			blackBoard->SetValueAsBool(key_IsChasing, false);
 		}
 	}
-	else
-	{
-	}
 
-	// ��Ȯ�� ������ ���� ���ٸ� ���?�� ����Ʈ���� �Ÿ��� ã�Ƽ� ���� ª�� �Ÿ��� �ִ� ���� ����
 	AFPSCharacter *shortestDistEnemy = nullptr;
 	float shortestDist = traceRange;
 	for (auto enemy : enemyPlayers)

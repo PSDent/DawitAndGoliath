@@ -22,7 +22,6 @@ ADNG_RTSPawn::ADNG_RTSPawn() : Super()
 	rtsCamera->AttachTo(RootComponent);
 	rtsCamera->bUsePawnControlRotation = false;
 	
-	//rtsCamera->SetRelativeRotation(FRotator(-60.0f, -40.0f, 0.0f));
 	rtsCamera->SetRelativeRotation(FRotator(-60.0f, 0.0f, 0.0f));
 
 	selectionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("SelectionBox"));

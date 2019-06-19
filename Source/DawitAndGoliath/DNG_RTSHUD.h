@@ -27,7 +27,6 @@ public:
 
 private:
 	void DrawHUD() override;
-	// void OnPaint() override;
 
 protected:
 
