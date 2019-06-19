@@ -36,11 +36,6 @@ public:
 	void Server_AttachSquad_Implementation(int num);
 	bool Server_AttachSquad_Validate(int num) { return true; }
 
-	UFUNCTION(Reliable, Client, WithValidation)
-		virtual void Client_AfterInit();
-	void Client_AfterInit_Implementation();
-	bool Client_AfterInit_Validate() { return true; }
-
 	void SetSelectedTimer();
 
 protected:
@@ -59,13 +54,6 @@ protected:
 		virtual void Server_RemoveMeFromSquad();
 	void Server_RemoveMeFromSquad_Implementation();
 	bool Server_RemoveMeFromSquad_Validate() { return true; }
-
-	UFUNCTION(Reliable, Client, WithValidation)
-		virtual void Client_Init();
-	void Client_Init_Implementation();
-	bool Client_Init_Validate() { return true; }
-
-
 
 	//UFUNCTION(NetMulticast, Reliable, WithValidation)
 	//	virtual void Multicast_RemoveMeFromSquad();
@@ -95,19 +83,11 @@ private:
 	FTimerDelegate selectTimerDele;
 	FTimerHandle selectTimerHandle;
 
-	UTexture2D *minimapPointerTexture;
-	UMaterialBillboardComponent *minimapPointer;
-
-	UMaterial *friendlyPointMaterial;
-	UMaterial *enemyPointMaterial;
-
-
 protected:
 	UPROPERTY(Replicated)
 		TArray<int> attachSquadsArray;
 
 	UDecalComponent *ringDecal;
-	//UBillboardComponent *minimapPointer;
 
 	UPROPERTY(Replicated)
 		class ADNG_RTSPawn *pawn;

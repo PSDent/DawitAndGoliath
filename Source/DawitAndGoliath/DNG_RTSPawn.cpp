@@ -77,7 +77,6 @@ void ADNG_RTSPawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLife
 	DOREPLIFETIME(ADNG_RTSPawn, maxSupply);
 	DOREPLIFETIME(ADNG_RTSPawn, targetPos);
 	DOREPLIFETIME(ADNG_RTSPawn, minimapPointArray);
-	//DOREPLIFETIME(ADNG_RTSPawn, selectedUnits);
 	DOREPLIFETIME(ADNG_RTSPawn, squads);
 }
 
@@ -92,18 +91,26 @@ void ADNG_RTSPawn::BeginPlay()
 	SetActorLocation(newPos);
 	viewPort = GEngine->GameViewport;
 	viewPort->GetViewportSize(viewportSize);
-	
-	// Cast<APlayerController>(Controller)->ClientSetHUD();
-	TArray<AActor*> tpsAray;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AFPSCharacter::StaticClass(), tpsAray);
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ADNG_RTSBaseObject::StaticClass(), minimapPointArray);
 
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Cyan, FString::Printf(TEXT("TPS : %d"), tpsAray.Num()));
-
-	for (auto actor : tpsAray)
+	testDele.BindLambda([&]()
 	{
-		minimapPointArray.Add(actor);
-	}
+		TArray<AActor*> units;
+		TArray<AActor*> shooters;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ADNG_RTSBaseObject::StaticClass(), units);
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AFPSCharacter::StaticClass(), shooters);
+
+		minimapPointArray.Empty();
+		for (auto actor : units)
+		{
+			minimapPointArray.Add(actor);
+		}
+
+		for (auto actor : shooters)
+		{
+			minimapPointArray.Add(actor);
+		}
+	});
+	GetWorld()->GetTimerManager().SetTimer(testHandle, testDele, 0.5f, true, 0.0f);
 }
 
 void ADNG_RTSPawn::Init()
@@ -138,7 +145,6 @@ void ADNG_RTSPawn::BasicInit()
 	}
 
 	rtsCamera->SetRelativeRotation(FRotator(-60.0f, 0.0f, 0.0f));
-
 }
 
 void ADNG_RTSPawn::Client_Init_Implementation()
@@ -170,6 +176,9 @@ void ADNG_RTSPawn::Tick(float DeltaTime)
 		if (bPressedLeftMouse && !bIsClickedPanel && userUI && !userUI->bIsMouseOnMinimap)
 			DrawSelectBox();
 	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Cyan, FString::Printf(TEXT("%d"), minimapPointArray.Num()));
+
 	CheckKeysAndExecute();
 	FindMostUnit();
 }
@@ -256,9 +265,6 @@ void ADNG_RTSPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAction("Shift8", IE_Pressed, this, &ADNG_RTSPawn::AddToSquad<8>);
 	PlayerInputComponent->BindAction("Shift9", IE_Pressed, this, &ADNG_RTSPawn::AddToSquad<9>);
 	PlayerInputComponent->BindAction("Shift0", IE_Pressed, this, &ADNG_RTSPawn::AddToSquad<0>);
-
-	//PlayerInputComponent->BindAction("LMousePress", IE_DoubleClick, this, &ADNG_RTSPawn::SelectAllSameType);
-	//PlayerInputComponent->BindAction("CtrlLMouse", IE_Pressed, this, &ADNG_RTSPawn::SelectAllSameType);
 }
 
 void ADNG_RTSPawn::ReleasedShiftKey() 
@@ -343,7 +349,6 @@ void ADNG_RTSPawn::LMousePress()
 	if (Cast<ADNG_RTSBaseObject>(outHit.GetActor()) || Cast<AFPSCharacter>(outHit.GetActor()))
 	{
 		targetActor = outHit.GetActor();
-		//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "Selecet Actor");
 	}
 	else
 		targetActor = nullptr;
@@ -421,8 +426,6 @@ void ADNG_RTSPawn::RMouseRelease()
 // 더블클릭 or Ctrl + 좌클릭
 void ADNG_RTSPawn::SelectAllSameType()
 {
-	//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "Select All Same Type");
-
 	ADNG_RTSBaseObject *obj = Cast<ADNG_RTSBaseObject>(targetActor);
 	if (!obj || !obj->bIsCurrentSelected) return;
 
@@ -496,8 +499,6 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 			selectedUnits[i]->SetSelectedStatus(false);
 		selectedUnits.Empty();
 
-		//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "NON SHIFT");
-
 		for (auto actor : selectedActors)
 		{
 			ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(actor);
@@ -516,7 +517,6 @@ void ADNG_RTSPawn::SelectionUnitsInBox()
 		if (selectedActors.Num() == 1)
 		{
 			ADNG_RTSBaseObject *unit = Cast<ADNG_RTSBaseObject>(selectedActors[0]);
-			//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "Add Unit");
 
 			bool status = !unit->GetSelectedStatus();
 			unit->SetSelectedStatus(status);
@@ -553,11 +553,9 @@ void ADNG_RTSPawn::SetObjectOwner(ADNG_RTSBaseObject *obj, AController *ownContr
 {
 	if (Role == ROLE_Authority)
 	{
-		// 액터 자체에만 하는게 아니라
-		// 액터에 있는 Controller에도 오너를 설정하여야 함.
 		obj->SetOwner(ownController);
 		obj->GetController()->SetOwner(ownController);
-		obj->SetPawn(Cast<ADNG_RTSPawn>(ownController->GetPawn())/*this*/);
+		obj->SetPawn(Cast<ADNG_RTSPawn>(ownController->GetPawn()));
 	}
 	else
 	{
@@ -572,7 +570,6 @@ void ADNG_RTSPawn::Server_SetObjectOwner_Implementation(ADNG_RTSBaseObject *obj,
 
 void ADNG_RTSPawn::MoveUnits(FVector dest)
 {
-	
 	for (int i = 0; i < selectedUnits.Num(); ++i)
 	{
 		ADNG_RTSUnit *unit = Cast<ADNG_RTSUnit>(selectedUnits[i]);
@@ -580,45 +577,9 @@ void ADNG_RTSPawn::MoveUnits(FVector dest)
 		{
 			unit->Move();
 		}
-			//unit->Move();
 	}
 
 	return;
-
-	//int size = selectedUnits.Num();
-	//float root = sqrt(size);
-	//float side = (int)root;
-
-	//if (size == 0) return;
-
-	//if (root != side)
-	//{
-	//	side += 1;
-	//}
-
-	//int offsetX = (size / side + (size % (int)side == 0 ? 0 : 1)) - 1;
-	//int offsetY = side - 1;
-
-	//// X -> 위 아래, Y -> 왼 오른
-
-	//float startPointX = unitsPlacementOffset * (offsetX * 0.5f);
-	//float startPointY = unitsPlacementOffset * (-offsetY * 0.5f);
-
-	//float x = dest.X + startPointX, y = dest.Y + startPointY;
-
-	//for (int i = 0; i < (int)side; ++i)
-	//{
-	//	float nX = x - (unitsPlacementOffset * i);
-	//	for (int j = 0; ((j < (int)side) && (i * (int)side + j < size)); ++j)
-	//	{
-
-	//		float nY = y + (unitsPlacementOffset * j);
-
-	//		FVector pos(nX, nY, dest.Z);
-	//		int idx = i * (int)side + j;
-	//		//selectedUnits[idx]->Move(pos);
-	//	} 
-	//}
 }
 
 void ADNG_RTSPawn::DrawSelectBox()
@@ -662,7 +623,6 @@ void ADNG_RTSPawn::FindMostUnit()
 
 			if (!mostUnit || !unitCount.Contains(mostUnitName))
 			{
-				//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, mostUnitName);
 				return;
 			}
 			// 유닛의 종류가 달라졌을 때 
@@ -724,11 +684,6 @@ void ADNG_RTSPawn::ExecuteCommand(FKey key)
 			{
 				selectedUnits[j]->GetCmdInfoMap().Find(key)->commandDele.ExecuteIfBound();
 			}
-			else
-			{
-				//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, "FAIL?");
-
-			}
 		}
 	}
 }
@@ -744,7 +699,6 @@ void ADNG_RTSPawn::ReceiveCmdPanel(FKey key)
 
 void ADNG_RTSPawn::ResetSelectedUnits()
 {
-
 	for (auto unit : selectedUnits)
 	{
 		if (unit)
@@ -793,8 +747,6 @@ void ADNG_RTSPawn::Server_RemoveFromSquad_Implementation(ADNG_RTSBaseObject *obj
 
 void ADNG_RTSPawn::Multicast_RemoveFromSquad_Implementation(class ADNG_RTSBaseObject *obj, int squadNum)
 {
-	//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "DELETE");
-	
 	if (squadNum >= 0)
 		squads[squadNum].objArray.Remove(obj);
 	else
@@ -826,14 +778,4 @@ void ADNG_RTSPawn::GetMinimapToWorldPos(FVector2D pos)
 	FVector end(pos.X, pos.Y, LOWER_HEIGHT);
 	GetWorld()->LineTraceSingleByChannel(outHit, start, end, ECC_Visibility);
 	minimapTargetPos = outHit.Location;
-}
-
-void ADNG_RTSPawn::AddPoint(AActor *actor)
-{
-	minimapPointArray.Add(actor);
-}
-
-void ADNG_RTSPawn::RemovePoint(AActor *actor)
-{
-	minimapPointArray.Remove(actor);
 }

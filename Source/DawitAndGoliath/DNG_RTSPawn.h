@@ -34,9 +34,6 @@ public:
 	// setter
 	void SetCommandingFlag(bool flag) { bIsCommanding = flag; }
 
-	void AddPoint(AActor *actor);
-	void RemovePoint(AActor *actor);
-
 	///### getter ###
 	bool GetLeftMouseStatus() { return bPressedLeftMouse; }
 	bool GetRightMouseStatus() { return bPressedRightMouse; }
@@ -181,6 +178,9 @@ public:
 		bool bPressedCtrlKey;
 
 private:
+	FTimerDelegate testDele;
+	FTimerHandle testHandle;
+
 	FTimerDelegate doubleClickDele;
 	FTimerHandle doubleClickHandle;
 
