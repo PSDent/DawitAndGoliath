@@ -35,11 +35,6 @@ public:
 	URTS_UI(const FObjectInitializer &objInitializer);
 	void DrawBox(FVector2D start, FVector2D end);
 	
-	UFUNCTION(BlueprintCallable, Category = "Minimap_UI")
-		 void DrawMinimapPoints(UPARAM(ref) FPaintContext &context) const;
-	//void DrawMinimapPoints_Implementation(FPaintContext &context);
-
-	//void NativePaint(FPaintContext &context) const override;
 	int32 NativePaint(
 		const FPaintArgs & Args,
 		const FGeometry & AllottedGeometry,
@@ -49,7 +44,6 @@ public:
 		const FWidgetStyle & InWidgetStyle,
 		bool bParentEnabled)
 		const override;
-	//void OnPaint(FPaintContext &Context) const;
 
 	void SetMinimapPointArray(TArray<AActor*> *arr) { minimapPointArray = arr; };
 	void SetHUD(class ADNG_RTSHUD *hud) { this->hud = hud; }

@@ -24,29 +24,4 @@ void ADNG_RTSHUD::Tick(float DeltaTime)
 void ADNG_RTSHUD::DrawHUD()
 {
 	Super::DrawHUD();
-/*
-	FVector2D viewSize;
-	rtsViewPort->GetViewportSize(viewSize);
-
-	for (auto actor : *minimapPointArray)
-	{
-		FVector pos = actor->GetActorLocation();
-		float xPos = (pos.Y - leftBot_Point.Y) / mapRatio;
-		float yPos = viewSize.Y - (pos.X - leftBot_Point.X) / mapRatio;
-		DrawRect(FLinearColor::Green, xPos, yPos, minimapPointSize, minimapPointSize);
-	}*/
 }
-
-//void ADNG_RTSHUD::OnPaint()
-//{
-//	FVector2D viewSize;
-//	rtsViewPort->GetViewportSize(viewSize);
-//
-//	for (auto actor : *minimapPointArray)
-//	{
-//		FVector pos = actor->GetActorLocation();
-//		float xPos = (pos.Y - leftBot_Point.Y) / mapRatio;
-//		float yPos = viewSize.Y - (pos.X - leftBot_Point.X) / mapRatio;
-//		DrawRect(FLinearColor::Green, xPos, yPos, minimapPointSize, minimapPointSize);
-//	}
-//}

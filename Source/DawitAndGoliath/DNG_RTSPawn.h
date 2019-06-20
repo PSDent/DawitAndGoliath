@@ -7,7 +7,6 @@
 #include "Camera/CameraComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "RTS_UI.h"
-#include "DNG_RTSObject.h"
 #include "DNG_RTSBaseObject.h"
 #include "DNGDelegates.h"
 #include "Components/BoxComponent.h"
@@ -33,9 +32,6 @@ public:
 
 	// setter
 	void SetCommandingFlag(bool flag) { bIsCommanding = flag; }
-
-	void AddPoint(AActor *actor);
-	void RemovePoint(AActor *actor);
 
 	///### getter ###
 	bool GetLeftMouseStatus() { return bPressedLeftMouse; }
@@ -111,8 +107,6 @@ private:
 	void MappingCmdPanel();
 	
 	void ExecuteCommand(FKey key);
-	//UFUNCTION(Server, Reliable, WithValidation)
-
 
 	void ResetSelectedUnits();
 	UFUNCTION(Server, Reliable, WithValidation)
@@ -181,6 +175,9 @@ public:
 		bool bPressedCtrlKey;
 
 private:
+	FTimerDelegate testDele;
+	FTimerHandle testHandle;
+
 	FTimerDelegate doubleClickDele;
 	FTimerHandle doubleClickHandle;
 

@@ -35,7 +35,6 @@ ADNG_RTSUnit::ADNG_RTSUnit() : Super()
 	patrolPointTriggerTwo = CreateDefaultSubobject<USphereComponent>(TEXT("patrolPointTriggerTwo"));
 	
 	arriveTrigger = CreateDefaultSubobject<USphereComponent>(TEXT("arriveTrigger"));
-	//arriveTrigger->RegisterComponent();
 
 	patrolPointTriggerOne->AttachTo(RootComponent, NAME_None, EAttachLocation::KeepWorldPosition);
 	patrolPointTriggerTwo->AttachTo(RootComponent, NAME_None, EAttachLocation::KeepWorldPosition);
@@ -65,7 +64,6 @@ void ADNG_RTSUnit::BeginPlay()
 
 	Server_BeginPlay();
 
-
 	if (fireAudioComponent->IsValidLowLevelFast())
 	{
 		if(fireSound)
@@ -93,8 +91,6 @@ void ADNG_RTSUnit::Server_BeginPlay_Implementation()
 	blackBoard->SetValueAsBool(key_IsCanDeal, true);
 	blackBoard->SetValueAsBool(key_IsAlive, true);
 	blackBoard->SetValueAsBool(key_IsPatrolling, false);
-
-	//arriveTriggerRad = 20.0f;
 }
 
 void ADNG_RTSUnit::Tick(float DeltaTime)
@@ -130,7 +126,6 @@ void ADNG_RTSUnit::Server_CheckStopped_Implementation()
 	{
 		if (actor == me)
 		{
-
 			Server_SetValueBool(key_IsJustMoving, false);
 			return;
 		}
@@ -206,7 +201,7 @@ void ADNG_RTSUnit::Move()
 
 	GetWorld()->GetTimerManager().ClearTimer(commandCheckHandle);
 	pawn->SetCommandingFlag(true);
-	if (/*!pawn->GetLeftMouseStatus() && */!pawn->GetRightMouseStatus())
+	if (!pawn->GetRightMouseStatus())
 	{
 		pawn->GetPlayerController()->CurrentMouseCursor = EMouseCursor::Crosshairs;
 	}
@@ -242,7 +237,7 @@ void ADNG_RTSUnit::Server_Move_Implementation(FVector dest, bool justMoveVal)
 	aiController->MoveToLocation(dest);
 
 	arriveTrigger->SetRelativeLocation(FVector::ZeroVector);
-	arriveTrigger->SetWorldLocation(dest); // �����?��������
+	arriveTrigger->SetWorldLocation(dest); 
 }
 
 void ADNG_RTSUnit::Stop(bool bJustStop)
@@ -257,7 +252,6 @@ void ADNG_RTSUnit::Server_SetValueBool_Implementation(FName key, bool val)
 
 void ADNG_RTSUnit::Server_Stop_Implementation(bool bJustStop)
 {
-	//GetWorld()->GetTimerManager().ClearTimer(commandCheckHandle);
 	aiController->StopMovement();
 	blackBoard->SetValueAsBool(key_IsPatrolling, false);
 	blackBoard->SetValueAsBool(key_IsJustMoving, false);
@@ -285,7 +279,7 @@ void ADNG_RTSUnit::Patrol()
 {
 	GetWorld()->GetTimerManager().ClearTimer(commandCheckHandle);
 	pawn->SetCommandingFlag(true);
-	if (/*!pawn->GetLeftMouseStatus() && */!pawn->GetRightMouseStatus())
+	if (!pawn->GetRightMouseStatus())
 	{
 		pawn->GetPlayerController()->CurrentMouseCursor = EMouseCursor::Crosshairs;
 	}
@@ -317,8 +311,6 @@ void ADNG_RTSUnit::Server_Patrol_Implementation(const FVector &posOne, const FVe
 
 	nextPatrolPointTrigger->SetSphereRadius(32.0f);
 	nextPatrolPointTrigger->SetWorldLocation(nextPatrolPoint);
-	//nextPatrolPointTrigger->GetOverlappingActors(objects, ADNG_RTSUnit::StaticClass());
-
 
 	Server_Move(nextPatrolPoint, false);
 	blackBoard->SetValueAsBool(key_IsPatrolling, true);
@@ -330,7 +322,6 @@ void ADNG_RTSUnit::Server_CheckPatrol_Implementation()
 
 	TArray<AActor*> objects;
 
-	//nextPatrolPointTrigger->SetSphereRadius(32.0f);
 	nextPatrolPointTrigger->SetWorldLocation(nextPatrolPoint);
 	nextPatrolPointTrigger->GetOverlappingActors(objects, ADNG_RTSUnit::StaticClass());
 
@@ -506,7 +497,6 @@ void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 
 	if (target)
 	{
-
 		bool isMoving = GetCharacterMovement()->Velocity.Size2D() > 0;
 		bool isDealing = blackBoard->GetValueAsBool(key_IsWantToDeal);
 		bool isChasing = blackBoard->GetValueAsBool(key_IsChasing);
@@ -541,11 +531,7 @@ void ADNG_RTSUnit::Server_CompareDistance_Implementation()
 			blackBoard->SetValueAsBool(key_IsChasing, false);
 		}
 	}
-	else
-	{
-	}
 
-	// ��Ȯ�� ������ ���� ���ٸ� ���?�� ����Ʈ���� �Ÿ��� ã�Ƽ� ���� ª�� �Ÿ��� �ִ� ���� ����
 	AFPSCharacter *shortestDistEnemy = nullptr;
 	float shortestDist = traceRange;
 	for (auto enemy : enemyPlayers)

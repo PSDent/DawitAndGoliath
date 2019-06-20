@@ -33,7 +33,6 @@ ADNG_RTSBarrack::ADNG_RTSBarrack() : Super()
 
 	dele.BindUFunction(this, FName("CancleCurrentSpawn"));
 	commandInfoMap.Add(EKeys::Escape, FCommandInfo("Cancle Producing", "Cancle Now Producing Unit", EKeys::Escape, 3, 3, dele));
-
 	
 	unitName = "Barrack";
 	initial = "B";
@@ -134,15 +133,15 @@ void ADNG_RTSBarrack::SpawnUnit(TSubclassOf<ADNG_RTSUnit> unitType)
 		spawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		spawnInfo.bNoFail = true;
 		spawnInfo.Instigator = Instigator;
-		// SpawnActor�� �����ϴ� ���?Controller�� �ڵ����� ž�� ������ �ʴ´�
-		// �̸� ���� ���� BP���� Auto Posses AI ���� Placed in World or Spawn���� �ٲ��ش�.
 
 		ADNG_RTSUnit *spawnedUnit = GetWorld()->SpawnActor<ADNG_RTSUnit>(unitType, spawnPoint, FRotator::ZeroRotator, spawnInfo);
+		spawnedUnit->SetReplicates(true);
+		spawnedUnit->bAlwaysRelevant = true;
+		spawnedUnit->bNetLoadOnClient = true;
+
 		spawnedUnit->SetPawn(pawn);
-		//pawn->AddPoint(spawnedUnit);
-		//spawnedUnit->SetOwner(GetOwner());
-		//spawnedUnit->GetController()->SetOwner(GetOwner());
-		
+		spawnedUnit->SetOwner(GetOwner());
+		spawnedUnit->GetController()->SetOwner(GetOwner());
 		spawnedUnit->Server_Move(rallyPoint, true);
 	}
 	else
@@ -183,7 +182,7 @@ void ADNG_RTSBarrack::Spawning(float time)
 		spawnTime -= time;
 		if (spawnTime <= 0)
 		{
-			unitType = spawnQueue[0]; // �ڿ��ִ°� ������???
+			unitType = spawnQueue[0]; 
 			spawnQueue.RemoveAt(0);
 			SpawnUnit(unitType);
 
@@ -290,6 +289,5 @@ void ADNG_RTSBarrack::NotifyDestroyed()
 void ADNG_RTSBarrack::ServerNotifyDestroyed_Implementation()
 {
 	if (!bIsAlive) return;
-	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Emerald, "destroyed");
 	Cast<ADNGGameModeBase>(GetWorld()->GetAuthGameMode())->OnBarrackDestroyed();
 }

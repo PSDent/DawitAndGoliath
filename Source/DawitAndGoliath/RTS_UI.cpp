@@ -70,63 +70,7 @@ void URTS_UI::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
 		if (!rtsPawn->GetLeftMouseStatus())
 			bIsClickMinimap = false;
 	}
-
-
-	FVector2D start(100, 650);
-	FVector2D size(100, 100);
-
-	FPaintContext fp;
-	//UWidgetBlueprintLibrary::DrawBox(fp, start, size, brush, FLinearColor::Green);
-	
-
-	// DrawDebugCanvas2DBox()
-
-	//DrawMinimapPoint();
 }
-
-void URTS_UI::DrawMinimapPoints(UPARAM(ref) FPaintContext &context) const
-{
-	//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Cyan, "Begin");
-	//FVector2D viewSize;
-	//rtsPawn->GetViewportClient()->GetViewportSize(viewSize);
-
-	//for (auto actor : *minimapPointArray)
-	//{
-	//	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Cyan, "Drawing");
-	//	FVector pos = actor->GetActorLocation();
-	//	float xPos = (pos.Y - leftBot_Point.Y) / mapRatio;
-	//	float yPos = viewSize.Y - (pos.X - leftBot_Point.X) / mapRatio;
-
-	//	FVector2D point(xPos, yPos);
-	//	FVector2D size(minimapPointSize, minimapPointSize);
-	//	FLinearColor color = FLinearColor::Green;
-
-	//	UWidgetBlueprintLibrary::DrawBox(context, point, size, brush, color);
-	//}
-}
-
-//void URTS_UI::NativePaint(FPaintContext & context) const
-//{
-//	Super::NativePaint(context);
-//
-//	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Cyan, "Begin");
-//	FVector2D viewSize;
-//	rtsPawn->GetViewportClient()->GetViewportSize(viewSize);
-//
-//	for (auto actor : *minimapPointArray)
-//	{
-//		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Cyan, "Drawing");
-//		FVector pos = actor->GetActorLocation();
-//		float xPos = (pos.Y - leftBot_Point.Y) / mapRatio;
-//		float yPos = viewSize.Y - (pos.X - leftBot_Point.X) / mapRatio;
-//
-//		FVector2D point(xPos, yPos);
-//		FVector2D size(minimapPointSize, minimapPointSize);
-//		FLinearColor color = FLinearColor::Green;
-//
-//		UWidgetBlueprintLibrary::DrawBox(context, point, size, brush, color);
-//	}
-//}
 
 int32 URTS_UI::NativePaint(
 	const FPaintArgs & Args,
@@ -151,33 +95,22 @@ int32 URTS_UI::NativePaint(
 
 		FVector2D point(xPos, yPos);
 		FVector2D size(minimapPointSize, minimapPointSize);
-		FLinearColor color = FLinearColor::Green;
+		FLinearColor friendlyColor = FLinearColor::Green;
+		FLinearColor enemyColor = FLinearColor::Red;
 
 		FPaintContext context(AllottedGeometry, MyCullingRect, OutDrawElements, LayerId, InWidgetStyle, bParentEnabled);
-		UWidgetBlueprintLibrary::DrawBox(context, point, size, brush, color);
+		if (actor->IsA(ADNG_RTSBaseObject::StaticClass()))
+		{
+			UWidgetBlueprintLibrary::DrawBox(context, point, size, brush, friendlyColor);
+		}
+		else
+		{
+			UWidgetBlueprintLibrary::DrawBox(context, point, size, brush, enemyColor);
+		}
 	}
 
 	return LayerId;
 }
-
-//void URTS_UI::DrawMinimapPoints_Implementation(FPaintContext &context)
-//{
-//	FVector2D viewSize;
-//	rtsPawn->GetViewportClient()->GetViewportSize(viewSize);
-//
-//	for (auto actor : *minimapPointArray)
-//	{
-//		FVector pos = actor->GetActorLocation();
-//		float xPos = (pos.Y - leftBot_Point.Y) / mapRatio;
-//		float yPos = viewSize.Y - (pos.X - leftBot_Point.X) / mapRatio;
-//
-//		FVector2D point(xPos, yPos);
-//		FVector2D size(minimapPointSize, minimapPointSize);
-//		FLinearColor color = FLinearColor::Green;
-//
-//		UWidgetBlueprintLibrary::DrawBox(context, point, size, brush, color);
-//	}
-//}
 
 void URTS_UI::DrawBox(FVector2D start, FVector2D end)
 {
@@ -270,7 +203,6 @@ void URTS_UI::ResetUnitInform()
 
 void URTS_UI::DisplayProductionInform(ADNG_RTSBaseObject *construction)
 {
-	//ResetUnitInform();
 	DisplayUnitInform(construction);
 	ResetUnitEntityGrid();
 
@@ -440,8 +372,7 @@ void URTS_UI::ExceptEntity(int row, int column, bool onlySelf)
 {
 	int startIndex = currentEntityPage * maxRow * maxColumn + (row * maxColumn) + column;
 	int endIndex = objectsArray->Num() - 1;
-	//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, FString::Printf(TEXT("%d / %d"), startIndex, objectsArray->Num()));
-	
+
 	if (onlySelf)
 		endIndex = startIndex;
 	

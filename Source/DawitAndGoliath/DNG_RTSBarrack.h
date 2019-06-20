@@ -83,8 +83,6 @@ private:
 	void ServerNotifyDestroyed_Implementation();
 	bool ServerNotifyDestroyed_Validate() { return true; }
 
-
-
 public:
 
 
